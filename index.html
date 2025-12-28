@@ -8,7 +8,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .mining-card { background: linear-gradient(135deg, #0f172a 0%, #121a2e 100%); border: 1px solid #2a3d6a; border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .mining-card { 
+            background: linear-gradient(135deg, #0f172a 0%, #121a2e 100%); 
+            border: 1px solid #2a3d6a; 
+            border-radius: 16px; 
+            padding: 1.5rem; 
+            margin-bottom: 1.5rem; 
+        }
         .booster-card { 
             background: linear-gradient(135deg, #1a2642 0%, #121a2e 100%); 
             border: 1px solid #2a3d6a; 
@@ -36,15 +42,22 @@
         }
         .auth-tab { padding: 0.5rem 1rem; cursor: pointer; border-radius: 0.5rem; }
         .auth-tab.active { background: rgba(0, 193, 106, 0.2); color: #00c16a; }
-        .countdown-display { font-family: monospace; font-size: 1.5rem; background: rgba(18, 26, 46, 0.7); padding: 0.5rem 1rem; border-radius: 0.5rem; min-width: 180px; text-align: center; }
+        .countdown-display {
+            font-family: 'Courier New', monospace;
+            font-size: 1.8rem;
+            background: rgba(0, 30, 20, 0.6);
+            color: #00ff9d;
+            border: 1px solid #00c16a;
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            min-width: 160px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 193, 106, 0.2);
+            letter-spacing: 2px;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
-    <!-- Testing Banner -->
-    <div class="bg-amber-900 text-amber-200 text-center py-1 text-sm">
-        🧪 TESTING VERSION — NOT FOR REAL FUNDS
-    </div>
-
     <div class="container mx-auto px-4 py-6">
         <header class="flex justify-between items-center mb-8">
             <div class="flex items-center space-x-3">
@@ -89,21 +102,34 @@
                 <button id="editProfileBtn" class="border border-green-500 text-green-500 px-4 py-1 rounded-lg text-sm">Set Wallet</button>
             </div>
 
-            <!-- Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div class="mining-card">
-                    <p class="text-gray-400 text-sm">Balance</p>
-                    <p id="balanceUGX" class="text-2xl font-bold">0 UGX</p>
-                    <p id="balanceUSDT" class="text-gray-500 text-xs">~0.00 USDT</p>
-                </div>
-                <div class="mining-card">
+            <!-- MODERN MINING CARD -->
+            <div class="flex justify-center mb-6">
+              <div class="mining-card w-full max-w-2xl text-center">
+                <p class="text-gray-400 text-sm">Your Balance</p>
+                <p id="balanceUGX" class="text-4xl md:text-5xl font-bold text-white my-2">0 UGX</p>
+                <p id="balanceUSDT" class="text-gray-500 text-sm mb-4">~0.00 USDT</p>
+
+                <div class="flex flex-wrap justify-center gap-4 mb-4">
+                  <div>
+                    <p class="text-gray-400 text-sm">Next Claim</p>
+                    <p id="nextClaimAmount" class="font-bold text-green-400">+10,000 UGX</p>
+                  </div>
+                  <div>
                     <p class="text-gray-400 text-sm">Mining Cycle</p>
-                    <p id="miningCycleDisplay" class="text-2xl font-bold">24h</p>
+                    <p id="miningCycleDisplay" class="font-bold">24h</p>
+                  </div>
                 </div>
-                <div class="mining-card text-center">
-                    <div id="miningCountdown" class="countdown-display mb-2">Ready!</div>
-                    <button id="miningBtn" class="w-full bg-green-600 py-2 rounded-lg font-bold">Claim 10,000 UGX</button>
+
+                <div class="flex justify-center items-center mb-4">
+                  <div id="miningCountdown" class="countdown-display text-2xl px-4 py-2 min-w-[160px]">
+                    Ready!
+                  </div>
                 </div>
+
+                <button id="miningBtn" class="mt-2 w-full max-w-xs mx-auto bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 py-3 rounded-lg font-bold text-white shadow-lg hover:shadow-xl transition">
+                  Claim Reward
+                </button>
+              </div>
             </div>
 
             <!-- BOOSTERS (Dynamic Pricing) -->
@@ -330,10 +356,15 @@
         }
 
         function updateUI() {
-            document.getElementById('balanceUGX').textContent = (user.balance || 0).toLocaleString() + " UGX";
-            document.getElementById('balanceUSDT').textContent = "~" + ((user.balance || 0)/3700).toFixed(2) + " USDT";
+            const balance = user.balance || 0;
+            const reward = user.mining_reward || 10000;
+            
+            document.getElementById('balanceUGX').textContent = balance.toLocaleString() + " UGX";
+            document.getElementById('balanceUSDT').textContent = "~" + (balance / 3700).toFixed(2) + " USDT";
             document.getElementById('miningCycleDisplay').textContent = (user.mining_cycle_hours || 24) + "h";
-            updateBoosterPrices(); // 👈 update prices when balance changes
+            document.getElementById('nextClaimAmount').textContent = "+" + reward.toLocaleString() + " UGX";
+
+            updateBoosterPrices();
         }
 
         function updateBoosterPrices() {
