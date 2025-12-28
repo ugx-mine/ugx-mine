@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UGX Mining Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .mining-card { 
+            background: linear-gradient(135deg, #0f172a 0%, #121a2e 100%); 
+            border: 1px solid #2a3d6a; 
+            border-radius: 16px; 
+            padding: 1.5rem; 
+            margin-bottom: 1.5rem; 
+        }
+        .booster-card {
+            background: linear-gradient(135deg, #1a2642 0%, #121a2e 100%);
+            border: 1px solid #2a3d6a;
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .booster-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #00c16a, #00a870);
+        }
+        .booster-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 193, 106, 0.2);
+            border-color: #00c16a;
+        }
+        .booster-duration {
+            background: rgba(0, 193, 106, 0.15);
+            color: #00c16a;
+            border: 1px solid rgba(0, 193, 106, 0.3);
+            padding: 0.1rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .countdown-display { 
+            font-family: monospace; 
+            font-size: 1.5rem; 
+            background: rgba(18, 26, 46, 0.7); 
+            padding: 0.5rem 1rem; 
+            border-radius: 0.5rem; 
+            min-width: 180px; 
+            text-align: center; 
+        }
+        .status-pending { 
+            background-color: rgba(245, 158, 11, 0.15); 
+            color: #f59e0b; 
+            padding: 0.25rem 0.75rem; 
+            border-radius: 9999px; 
+            font-size: 0.75rem; 
+        }
+        .no-transactions { 
+            text-align: center; 
+            padding: 2rem; 
+            color: #64748b; 
+        }
+        .currency-display {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+        .edit-profile-btn {
+            background: transparent;
+            border: 1px solid #00c16a;
+            color: #00c16a;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: all 0.2s;
+        }
+        .edit-profile-btn:hover {
+            background: rgba(0, 193, 106, 0.1);
+        }
+        .action-buttons-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .action-button {
+            flex: 1;
+            min-width: 200px;
+        }
+        .auth-tab {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 0.5rem;
+        }
+        .auth-tab.active {
+            background: rgba(0, 193, 106, 0.2);
+            color: #00c16a;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        #withdrawSuccessBanner {
+            animation: slideIn 0.3s ease-out;
+        }
+        @media (max-width: 768px) {
+            .action-buttons-section {
+                flex-direction: column;
+            }
+            .grid.grid-cols-1.md\:grid-cols-3 {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
+    <div class="container mx-auto px-4 py-6">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <div class="flex items-center space-x-3">
+                <div class="bg-green-500 p-2 rounded-lg">
+                    <i class="fas fa-coins text-xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold">UGX<span class="text-white">Mine</span></h1>
+            </div>
+            <div class="flex gap-2">
+                <button id="adminPanelBtn" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm hidden">
+                    Admin Panel
+                </button>
+                <button id="authToggle" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg">
+                    Sign Up / Login
+                </button>
+            </div>
+        </header>
+
+        <!-- Auth Card -->
+        <div id="authCard" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center hidden">
+            <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
+                <!-- Tab Switcher -->
+                <div class="flex mb-4 bg-gray-700 rounded-lg p-1">
+                    <div id="tabSignup" class="auth-tab active">Sign Up</div>
+                    <div id="tabLogin" class="auth-tab">Login</div>
+                </div>
+
+                <!-- Sign Up Form -->
+                <form id="signupForm" class="hidden">
+                    <div class="mb-4">
+                        <label class="block text-gray-300 mb-2">Username</label>
+                        <input type="text" id="signupUsername" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-300 mb-2">Email</label>
+                        <input type="email" id="signupEmail" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-300 mb-2">Password</label>
+                        <input type="password" id="signupPassword" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg">
+                        Create Account
+                    </button>
+                </form>
+
+                <!-- Login Form -->
+                <form id="loginForm">
+                    <div class="mb-4">
+                        <label class="block text-gray-300 mb-2">Username</label>
+                        <input type="text" id="loginUsername" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-300 mb-2">Password</label>
+                        <input type="password" id="loginPassword" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 rounded-lg">
+                        Login
+                    </button>
+                </form>
+
+                <button id="closeAuth" class="w-full mt-4 bg-gray-700 hover:bg-gray-600 py-2 rounded-lg">
+                    Cancel
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main id="mainContent" class="hidden">
+            <!-- User Profile Card -->
+            <div class="mining-card mb-6">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 rounded-full bg-emerald-900/30 flex items-center justify-center">
+                            <i class="fas fa-user text-emerald-400"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-lg" id="profileUserName">JohnDoe</div>
+                            <div class="text-gray-400 text-sm" id="profileUserEmail">johndoe@example.com</div>
+                            <div class="text-gray-500 text-xs mt-1" id="profileUserId">User ID: UGX-789456</div>
+                        </div>
+                    </div>
+                    <button id="editProfileBtn" class="edit-profile-btn">
+                        <i class="fas fa-edit"></i> Wallet
+                    </button>
+                </div>
+            </div>
+
+            <!-- Withdrawal Success Banner -->
+            <div id="withdrawSuccessBanner" class="mining-card bg-emerald-900/20 border-emerald-700 hidden mb-4">
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle text-emerald-400 mr-2"></i>
+                    <span>✅ Withdrawal approved! Funds will be sent to your wallet.</span>
+                </div>
+            </div>
+
+            <!-- Mining Summary Card -->
+            <div class="mining-card mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Balance - ENHANCED -->
+                    <div>
+                        <p class="text-gray-400 text-sm">Current Balance</p>
+                        <p class="text-3xl font-bold currency-display" id="balanceUGX">0 UGX</p>
+                        <p class="text-gray-500 text-sm mt-1" id="balanceUSDT">(~0.00 USDT)</p>
+                    </div>
+
+                    <!-- Next Claim -->
+                    <div>
+                        <p class="text-gray-400 text-sm">Next Claim</p>
+                        <p class="text-xl font-bold text-emerald-400" id="nextClaimAmount">10,000 UGX</p>
+                        <p class="text-gray-500 text-xs mt-1">
+                            <span id="claimCountdown">Ready!</span>
+                        </p>
+                    </div>
+
+                    <!-- Mining Cycle -->
+                    <div>
+                        <p class="text-gray-400 text-sm">Mining Cycle</p>
+                        <p class="text-xl font-bold" id="miningCycle">24 hours</p>
+                        <p class="text-gray-500 text-xs" id="miningReward">10,000 UGX per cycle</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons-section">
+                <div class="action-button">
+                    <div class="mining-card">
+                        <h2 class="text-lg font-bold mb-2">Mining Control</h2>
+                        <p class="text-gray-400 text-sm mb-4" id="miningDescription">Claim your first 10,000 UGX reward</p>
+                        <div class="countdown-display" id="miningCountdown">Ready!</div>
+                        <button id="miningBtn" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 py-2 rounded-lg">
+                            <i class="fas fa-coins mr-2"></i> Claim Rewards
+                        </button>
+                    </div>
+                </div>
+                <div class="action-button">
+                    <div class="mining-card">
+                        <h2 class="text-lg font-bold mb-2">Withdraw Funds</h2>
+                        <p class="text-gray-400 text-sm mb-4">20% processing fee required</p>
+                        <button id="withdrawBtn" class="w-full bg-amber-600 hover:bg-amber-700 py-2 rounded-lg">
+                            <i class="fas fa-wallet mr-2"></i> Request Withdrawal
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Boosters Section -->
+            <div class="mb-8">
+                <h2 class="text-xl font-bold mb-4">Mining Boosters</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Booster 1 - 8 Hours -->
+                    <div class="booster-card">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="font-bold text-lg text-green-400">Speed Booster</h3>
+                            <span class="booster-duration">8 HOURS</span>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-4">Earn 10,000 UGX every 8 hours</p>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-gray-300 text-sm">Cost: 2x Balance</p>
+                                <p class="font-bold currency-display mt-1" id="booster1CostUGX">0 UGX</p>
+                                <p class="text-gray-500 text-xs" id="booster1CostUSDT">(~0.00 USDT)</p>
+                            </div>
+                            <button id="buyBooster1" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm">
+                                Activate
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Booster 2 - 6 Hours -->
+                    <div class="booster-card">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="font-bold text-lg text-blue-400">Power Booster</h3>
+                            <span class="booster-duration">6 HOURS</span>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-4">Earn 10,000 UGX every 6 hours</p>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-gray-300 text-sm">Cost: 4x Balance</p>
+                                <p class="font-bold currency-display mt-1" id="booster2CostUGX">0 UGX</p>
+                                <p class="text-gray-500 text-xs" id="booster2CostUSDT">(~0.00 USDT)</p>
+                            </div>
+                            <button id="buyBooster2" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm">
+                                Activate
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Booster 3 - 4 Hours -->
+                    <div class="booster-card">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="font-bold text-lg text-purple-400">Quantum Booster</h3>
+                            <span class="booster-duration">4 HOURS</span>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-4">Earn 10,000 UGX every 4 hours</p>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-gray-300 text-sm">Cost: 8x Balance</p>
+                                <p class="font-bold currency-display mt-1" id="booster3CostUGX">0 UGX</p>
+                                <p class="text-gray-500 text-xs" id="booster3CostUSDT">(~0.00 USDT)</p>
+                            </div>
+                            <button id="buyBooster3" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm">
+                                Activate
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction History -->
+            <div class="mining-card">
+                <h2 class="text-xl font-bold mb-4">Transaction History</h2>
+                <div id="transactionList">
+                    <div class="no-transactions">No transactions yet</div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Enhanced Admin Panel -->
+        <div id="adminPanel" class="hidden">
+            <button id="backToMain" class="mb-4 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center gap-1">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </button>
+
+            <h2 class="text-2xl font-bold mb-6 text-emerald-400">Admin Dashboard</h2>
+
+            <!-- Stats Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="mining-card bg-gradient-to-r from-blue-900/50 to-blue-800/30 border-blue-700">
+                    <p class="text-gray-400">Total Users</p>
+                    <p class="text-2xl font-bold" id="adminTotalUsers">0</p>
+                </div>
+                <div class="mining-card bg-gradient-to-r from-emerald-900/50 to-emerald-800/30 border-emerald-700">
+                    <p class="text-gray-400">Total Balance</p>
+                    <p class="text-2xl font-bold" id="adminTotalBalance">0 UGX</p>
+                </div>
+                <div class="mining-card bg-gradient-to-r from-amber-900/50 to-amber-800/30 border-amber-700">
+                    <p class="text-gray-400">Pending Requests</p>
+                    <p class="text-2xl font-bold" id="adminPendingRequests">0</p>
+                </div>
+                <div class="mining-card bg-gradient-to-r from-purple-900/50 to-purple-800/30 border-purple-700">
+                    <p class="text-gray-400">Active Boosters</p>
+                    <p class="text-2xl font-bold" id="adminActiveBoosters">0</p>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Balance Distribution -->
+                <div class="mining-card">
+                    <h3 class="font-bold mb-4">User Balance Distribution</h3>
+                    <canvas id="balanceChart" height="200"></canvas>
+                </div>
+
+                <!-- Transaction Types -->
+                <div class="mining-card">
+                    <h3 class="font-bold mb-4">Transaction Types</h3>
+                    <canvas id="txTypeChart" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Advanced Transaction Table -->
+            <div class="mining-card">
+                <div class="flex flex-wrap justify-between items-center mb-4">
+                    <h3 class="font-bold">All Transactions</h3>
+                    <div class="flex gap-2 mt-2 md:mt-0">
+                        <input type="text" id="adminSearch" placeholder="Search user or TXID..." class="bg-gray-700 rounded-lg px-3 py-1 text-sm">
+                        <select id="adminFilter" class="bg-gray-700 rounded-lg px-3 py-1 text-sm">
+                            <option value="all">All Types</option>
+                            <option value="Booster Payment">Booster Payments</option>
+                            <option value="Withdrawal Request">Withdrawals</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-700">
+                                <th class="text-left py-2">User</th>
+                                <th class="text-left py-2">Wallet</th>
+                                <th class="text-left py-2">Type</th>
+                                <th class="text-left py-2">Amount</th>
+                                <th class="text-left py-2">Status</th>
+                                <th class="text-left py-2">Date</th>
+                                <th class="text-left py-2">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminTxTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-gray-500">Loading transactions...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- User List -->
+            <div class="mining-card mt-6">
+                <h3 class="font-bold mb-4">User List</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-700">
+                                <th class="text-left py-2">Username</th>
+                                <th class="text-left py-2">Email</th>
+                                <th class="text-left py-2">Balance</th>
+                                <th class="text-left py-2">Wallet</th>
+                                <th class="text-left py-2">Cycle</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminUserTableBody">
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-gray-500">Loading users...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals -->
+        <div id="withdrawModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-gray-800 rounded-2xl p-6 w-full max-w-md">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Withdraw Funds</h2>
+                    <button id="closeWithdraw" class="text-gray-400">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mb-5">
+                    <p class="text-gray-300 mb-2">You will receive your full balance:</p>
+                    <p class="text-xl font-bold currency-display" id="withdrawAmountUGX">0 UGX</p>
+                    <p class="text-gray-400 text-sm mb-4" id="withdrawAmountUSDT">(~0.00 USDT)</p>
+
+                    <p class="text-gray-300 mb-2">Processing fee (20% — paid separately):</p>
+                    <p class="text-lg text-amber-400 font-bold" id="withdrawFeeUGX">0 UGX</p>
+                    <p class="text-gray-500 text-sm mb-4" id="withdrawFeeUSDT">(~0.00 USDT)</p>
+
+                    <div id="userWalletSection" class="mb-4 p-3 bg-gray-700/50 rounded-lg hidden">
+                        <p class="text-gray-300 text-sm">Withdrawal destination:</p>
+                        <p class="font-mono text-sm break-all" id="displayUserWallet">T...</p>
+                        <p class="text-gray-500 text-xs mt-1">Funds will be sent here after approval</p>
+                    </div>
+
+                    <p class="mt-2 mb-3">Send the fee to admin wallet:</p>
+                    <div class="bg-gray-700 p-3 rounded-xl break-all flex items-center justify-between">
+                        <p class="font-mono text-sm" id="adminWallet">TX3CWq6CPLpJdPeSsEDdY5vjGyYF5f1Csg</p>
+                        <button id="copyWallet" class="bg-amber-600 hover:bg-amber-700 text-xs px-2 py-1 rounded">
+                            Copy
+                        </button>
+                    </div>
+                    <p class="text-gray-500 text-xs mt-2">USDT (TRC20) or UGX tokens accepted</p>
+                </div>
+                <div>
+                    <label class="block text-gray-300 mb-2">Transaction ID (for fee payment)</label>
+                    <input type="text" id="withdrawTxId" class="w-full bg-gray-700 rounded-lg px-4 py-2" placeholder="Enter transaction ID">
+                    <p class="text-gray-500 text-xs mt-1">Admin will approve your withdrawal after fee confirmation</p>
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button id="confirmWithdraw" class="flex-1 bg-green-600 hover:bg-green-700 py-2 rounded-lg">Submit Request</button>
+                    <button id="cancelWithdraw" class="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded-lg">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-gray-800 rounded-2xl p-6 w-full max-w-md">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold" id="paymentTitle">Booster Payment</h2>
+                    <button id="closePayment" class="text-gray-400">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="mb-4 p-3 bg-gray-700 rounded-lg">
+                    <p class="text-gray-300 text-sm">Currently mining:</p>
+                    <p class="font-bold" id="currentMiningInfo">24 hours → 10,000 UGX/cycle</p>
+                </div>
+
+                <div class="mb-4 p-3 bg-emerald-900/30 border border-emerald-700 rounded-lg">
+                    <p class="text-gray-300 text-sm">After activation:</p>
+                    <p class="font-bold text-emerald-400" id="newMiningInfo">8 hours → 10,000 UGX/cycle</p>
+                </div>
+
+                <div class="mb-5">
+                    <p class="mb-3">Send payment to admin wallet:</p>
+                    <div class="bg-gray-700 p-3 rounded-xl break-all flex items-center justify-between">
+                        <p class="font-mono text-sm" id="paymentWalletAddress">TX3CWq6CPLpJdPeSsEDdY5vjGyYF5f1Csg</p>
+                        <button id="copyBoosterWallet" class="bg-emerald-600 hover:bg-emerald-700 text-xs px-2 py-1 rounded">
+                            Copy
+                        </button>
+                    </div>
+                    <p class="text-gray-500 text-xs mt-2">USDT (TRC20) or UGX tokens accepted</p>
+                </div>
+                <div>
+                    <label class="block text-gray-300 mb-2">Transaction ID</label>
+                    <input type="text" id="transactionId" class="w-full bg-gray-700 rounded-lg px-4 py-2" placeholder="Enter transaction ID">
+                    <p class="text-gray-500 text-xs mt-1">Admin will approve your booster after payment confirmation</p>
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button id="confirmPayment" class="flex-1 bg-green-600 hover:bg-green-700 py-2 rounded-lg">Submit Payment</button>
+                    <button id="cancelPayment" class="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded-lg">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="editProfileModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-gray-800 rounded-2xl p-6 w-full max-w-md">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Edit Profile</h2>
+                    <button id="closeEditProfile" class="text-gray-400">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-300 mb-2">Withdrawal Wallet Address (USDT TRC20 or UGX)</label>
+                    <input type="text" id="userWalletInput" class="w-full bg-gray-700 rounded-lg px-4 py-2" placeholder="Enter wallet address">
+                    <p class="text-gray-500 text-xs mt-1">Funds will be sent to this address after withdrawal approval</p>
+                </div>
+                <div class="flex gap-3">
+                    <button id="saveProfile" class="flex-1 bg-green-600 hover:bg-green-700 py-2 rounded-lg">Save</button>
+                    <button id="cancelEditProfile" class="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded-lg">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Receipt Modal -->
+        <div id="receiptModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-gray-800 rounded-2xl p-6 w-full max-w-md">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Transaction Receipt</h2>
+                    <button id="closeReceipt" class="text-gray-400">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="receiptContent" class="bg-gray-900 p-4 rounded-lg font-mono text-sm whitespace-pre-wrap break-all">
+                    Loading receipt...
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button id="copyReceipt" class="flex-1 bg-emerald-600 hover:bg-emerald-700 py-2 rounded-lg">
+                        <i class="fas fa-copy mr-2"></i> Copy
+                    </button>
+                    <button id="printReceipt" class="flex-1 bg-blue-600 hover:bg-blue-700 py-2 rounded-lg">
+                        <i class="fas fa-print mr-2"></i> Print
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // === CONFIG ===
+            const ADMIN_USER = 'asutex2020';
+            const ADMIN_PASS = 'Asu12@ada24';
+
+            // === USER STORAGE ===
+            function saveUser(username, userData) {
+                const users = JSON.parse(localStorage.getItem('ugx_users') || '{}');
+                users[username] = userData;
+                localStorage.setItem('ugx_users', JSON.stringify(users));
+            }
+
+            function getUser(username) {
+                const users = JSON.parse(localStorage.getItem('ugx_users') || '{}');
+                return users[username] || null;
+            }
+
+            function getAllUsers() {
+                const users = JSON.parse(localStorage.getItem('ugx_users') || '{}');
+                return Object.entries(users).map(([username, data]) => ({ username, ...data }));
+            }
+
+            function getAllTransactions() {
+                const users = getAllUsers();
+                let allTx = [];
+                users.forEach(user => {
+                    (user.transactions || []).forEach(tx => {
+                        allTx.push({ ...tx, username: user.username });
+                    });
+                });
+                return allTx;
+            }
+
+            function getAllPendingTransactions() {
+                return getAllTransactions().filter(tx => tx.status === 'pending');
+            }
+
+            // === APP STATE ===
+            let appState = {
+                isAuthenticated: false,
+                currentUser: null,
+                balance: 0,
+                miningReward: 10000,
+                miningCycleHours: 24,
+                nextClaimTime: 0,
+                pendingBoosterTxId: null,
+                pendingBooster: null,
+                transactions: [],
+                userWallet: "",
+                userEmail: "",
+                userId: ""
+            };
+
+            // === DOM ELEMENTS ===
+            const authCard = document.getElementById('authCard');
+            const authToggle = document.getElementById('authToggle');
+            const adminPanelBtn = document.getElementById('adminPanelBtn');
+            const closeAuth = document.getElementById('closeAuth');
+            const signupForm = document.getElementById('signupForm');
+            const loginForm = document.getElementById('loginForm');
+            const tabSignup = document.getElementById('tabSignup');
+            const tabLogin = document.getElementById('tabLogin');
+            const mainContent = document.getElementById('mainContent');
+            const adminPanel = document.getElementById('adminPanel');
+            const backToMain = document.getElementById('backToMain');
+
+            // Mining UI elements
+            const profileUserId = document.getElementById('profileUserId');
+            const profileUserName = document.getElementById('profileUserName');
+            const profileUserEmail = document.getElementById('profileUserEmail');
+            const editProfileBtn = document.getElementById('editProfileBtn');
+            const miningBtn = document.getElementById('miningBtn');
+            const miningDescription = document.getElementById('miningDescription');
+            const miningCountdown = document.getElementById('miningCountdown');
+            const withdrawBtn = document.getElementById('withdrawBtn');
+            const balanceUGX = document.getElementById('balanceUGX');
+            const balanceUSDT = document.getElementById('balanceUSDT');
+            const nextClaimAmount = document.getElementById('nextClaimAmount');
+            const claimCountdown = document.getElementById('claimCountdown');
+            const miningCycle = document.getElementById('miningCycle');
+            const miningRewardEl = document.getElementById('miningReward');
+            const transactionList = document.getElementById('transactionList');
+            const withdrawSuccessBanner = document.getElementById('withdrawSuccessBanner');
+
+            // Modals
+            const withdrawModal = document.getElementById('withdrawModal');
+            const closeWithdraw = document.getElementById('closeWithdraw');
+            const copyWallet = document.getElementById('copyWallet');
+            const withdrawTxId = document.getElementById('withdrawTxId');
+            const confirmWithdraw = document.getElementById('confirmWithdraw');
+            const cancelWithdraw = document.getElementById('cancelWithdraw');
+            const withdrawAmountUGX = document.getElementById('withdrawAmountUGX');
+            const withdrawAmountUSDT = document.getElementById('withdrawAmountUSDT');
+            const withdrawFeeUGX = document.getElementById('withdrawFeeUGX');
+            const withdrawFeeUSDT = document.getElementById('withdrawFeeUSDT');
+            const userWalletSection = document.getElementById('userWalletSection');
+            const displayUserWallet = document.getElementById('displayUserWallet');
+
+            const paymentModal = document.getElementById('paymentModal');
+            const paymentTitle = document.getElementById('paymentTitle');
+            const closePayment = document.getElementById('closePayment');
+            const paymentWalletAddress = document.getElementById('paymentWalletAddress');
+            const transactionId = document.getElementById('transactionId');
+            const confirmPayment = document.getElementById('confirmPayment');
+            const cancelPayment = document.getElementById('cancelPayment');
+            const buyBooster1 = document.getElementById('buyBooster1');
+            const buyBooster2 = document.getElementById('buyBooster2');
+            const buyBooster3 = document.getElementById('buyBooster3');
+            const booster1CostUGX = document.getElementById('booster1CostUGX');
+            const booster1CostUSDT = document.getElementById('booster1CostUSDT');
+            const booster2CostUGX = document.getElementById('booster2CostUGX');
+            const booster2CostUSDT = document.getElementById('booster2CostUSDT');
+            const booster3CostUGX = document.getElementById('booster3CostUGX');
+            const booster3CostUSDT = document.getElementById('booster3CostUSDT');
+            const currentMiningInfo = document.getElementById('currentMiningInfo');
+            const newMiningInfo = document.getElementById('newMiningInfo');
+            const copyBoosterWallet = document.getElementById('copyBoosterWallet');
+
+            const editProfileModal = document.getElementById('editProfileModal');
+            const closeEditProfile = document.getElementById('closeEditProfile');
+            const userWalletInput = document.getElementById('userWalletInput');
+            const saveProfile = document.getElementById('saveProfile');
+            const cancelEditProfile = document.getElementById('cancelEditProfile');
+
+            // Admin elements
+            const adminTotalUsers = document.getElementById('adminTotalUsers');
+            const adminTotalBalance = document.getElementById('adminTotalBalance');
+            const adminPendingRequests = document.getElementById('adminPendingRequests');
+            const adminActiveBoosters = document.getElementById('adminActiveBoosters');
+            const adminSearch = document.getElementById('adminSearch');
+            const adminFilter = document.getElementById('adminFilter');
+            const adminTxTableBody = document.getElementById('adminTxTableBody');
+            const adminUserTableBody = document.getElementById('adminUserTableBody');
+            const receiptModal = document.getElementById('receiptModal');
+            const closeReceipt = document.getElementById('closeReceipt');
+            const copyReceipt = document.getElementById('copyReceipt');
+            const printReceipt = document.getElementById('printReceipt');
+            const receiptContent = document.getElementById('receiptContent');
+            let balanceChart = null;
+            let txTypeChart = null;
+
+            let countdownInterval = null;
+
+            // === AUTH TABS ===
+            tabSignup.addEventListener('click', () => {
+                tabSignup.classList.add('active');
+                tabLogin.classList.remove('active');
+                signupForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+            });
+
+            tabLogin.addEventListener('click', () => {
+                tabLogin.classList.add('active');
+                tabSignup.classList.remove('active');
+                loginForm.classList.remove('hidden');
+                signupForm.classList.add('hidden');
+            });
+
+            // === SIGN UP ===
+            signupForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('signupUsername').value.trim();
+                const email = document.getElementById('signupEmail').value.trim();
+                const password = document.getElementById('signupPassword').value;
+
+                if (!username || !email || !password) {
+                    alert('All fields required');
+                    return;
+                }
+
+                if (getUser(username)) {
+                    alert('Username already exists');
+                    return;
+                }
+
+                const newUser = {
+                    username,
+                    userEmail: email,
+                    password,
+                    balance: 0,
+                    miningReward: 10000,
+                    miningCycleHours: 24,
+                    nextClaimTime: 0,
+                    pendingBoosterTxId: null,
+                    pendingBooster: null,
+                    transactions: [],
+                    userWallet: "",
+                    userId: `UGX-${Math.floor(100000 + Math.random() * 900000)}`
+                };
+
+                saveUser(username, newUser);
+                login(username, password);
+            });
+
+            // === LOGIN ===
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('loginUsername').value.trim();
+                const password = document.getElementById('loginPassword').value;
+                login(username, password);
+            });
+
+            function login(username, password) {
+                if (username === ADMIN_USER && password === ADMIN_PASS) {
+                    appState = {
+                        isAuthenticated: true,
+                        currentUser: ADMIN_USER,
+                        balance: 0,
+                        miningReward: 10000,
+                        miningCycleHours: 24,
+                        nextClaimTime: 0,
+                        pendingBoosterTxId: null,
+                        pendingBooster: null,
+                        transactions: [],
+                        userWallet: "",
+                        userEmail: "admin@ugxmine.com",
+                        userId: "ADMIN"
+                    };
+                    afterLogin();
+                    return true;
+                }
+
+                const user = getUser(username);
+                if (!user) {
+                    alert('User not found');
+                    return false;
+                }
+                if (user.password !== password) {
+                    alert('Incorrect password');
+                    return false;
+                }
+
+                appState = {
+                    isAuthenticated: true,
+                    currentUser: username,
+                    balance: user.balance || 0,
+                    miningReward: user.miningReward || 10000,
+                    miningCycleHours: user.miningCycleHours || 24,
+                    nextClaimTime: user.nextClaimTime || 0,
+                    pendingBoosterTxId: user.pendingBoosterTxId || null,
+                    pendingBooster: user.pendingBooster || null,
+                    transactions: user.transactions || [],
+                    userWallet: user.userWallet || "",
+                    userEmail: user.userEmail || "",
+                    userId: user.userId || `UGX-${Math.floor(100000 + Math.random() * 900000)}`
+                };
+
+                // ✅ SHOW WITHDRAWAL BANNER IF RECENTLY APPROVED
+                if (user.lastWithdrawalApproved && (Date.now() - user.lastWithdrawalApproved < 60000)) {
+                    setTimeout(() => {
+                        if (withdrawSuccessBanner) {
+                            withdrawSuccessBanner.classList.remove('hidden');
+                            setTimeout(() => withdrawSuccessBanner.classList.add('hidden'), 5000);
+                        }
+                    }, 500);
+                    user.lastWithdrawalApproved = null;
+                    saveUser(username, user);
+                }
+
+                afterLogin();
+                return true;
+            }
+
+            function afterLogin() {
+                authCard.classList.add('hidden');
+                mainContent.classList.remove('hidden');
+                saveState();
+                updateAuthButton();
+                adminPanelBtn.classList.toggle('hidden', appState.currentUser !== ADMIN_USER);
+                updateUI();
+                if (appState.nextClaimTime > 0 && Date.now() < appState.nextClaimTime) {
+                    startCountdown();
+                }
+            }
+
+            function updateAuthButton() {
+                if (appState.isAuthenticated) {
+                    authToggle.textContent = 'Logout';
+                    authToggle.className = 'px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg';
+                } else {
+                    authToggle.textContent = 'Sign Up / Login';
+                    authToggle.className = 'px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg';
+                }
+            }
+
+            function saveState() {
+                localStorage.setItem('ugx_current_user', appState.currentUser);
+                if (appState.currentUser !== ADMIN_USER) {
+                    const user = getUser(appState.currentUser);
+                    saveUser(appState.currentUser, {
+                        ...user,
+                        balance: appState.balance,
+                        miningCycleHours: appState.miningCycleHours,
+                        nextClaimTime: appState.nextClaimTime,
+                        pendingBoosterTxId: appState.pendingBoosterTxId,
+                        pendingBooster: appState.pendingBooster,
+                        transactions: appState.transactions,
+                        userWallet: appState.userWallet,
+                        userId: appState.userId
+                    });
+                }
+            }
+
+            // === INIT ===
+            function initApp() {
+                const savedUser = localStorage.getItem('ugx_current_user');
+                if (savedUser) {
+                    const user = getUser(savedUser);
+                    if (user && login(savedUser, user.password)) return;
+                }
+                authCard.classList.remove('hidden');
+                updateAuthButton();
+            }
+
+            // === UI UPDATE ===
+            function updateUI() {
+                if (appState.isAuthenticated) {
+                    profileUserId.textContent = `User ID: ${appState.userId}`;
+                    profileUserName.textContent = appState.currentUser;
+                    profileUserEmail.textContent = appState.userEmail;
+                    userWalletInput.value = appState.userWallet || '';
+                }
+                
+                balanceUGX.textContent = `${formatUGX(appState.balance)} UGX`;
+                balanceUSDT.textContent = `(~${toUSDT(appState.balance)} USDT)`;
+                nextClaimAmount.textContent = `${formatUGX(appState.miningReward)} UGX`;
+                miningCycle.textContent = `${appState.miningCycleHours} hours`;
+                miningRewardEl.textContent = `${formatUGX(appState.miningReward)} UGX per cycle`;
+                
+                // Update booster costs
+                const booster1Cost = appState.balance * 2;
+                const booster2Cost = appState.balance * 4;
+                const booster3Cost = appState.balance * 8;
+                booster1CostUGX.textContent = `${formatUGX(booster1Cost)} UGX`;
+                booster1CostUSDT.textContent = `(~${toUSDT(booster1Cost)} USDT)`;
+                booster2CostUGX.textContent = `${formatUGX(booster2Cost)} UGX`;
+                booster2CostUSDT.textContent = `(~${toUSDT(booster2Cost)} USDT)`;
+                booster3CostUGX.textContent = `${formatUGX(booster3Cost)} UGX`;
+                booster3CostUSDT.textContent = `(~${toUSDT(booster3Cost)} USDT)`;
+                
+                // Update mining button
+                const now = Date.now();
+                if (appState.nextClaimTime === 0 || now >= appState.nextClaimTime) {
+                    miningCountdown.textContent = 'Ready!';
+                    claimCountdown.textContent = 'Ready!';
+                    miningBtn.innerHTML = '<i class="fas fa-coins mr-2"></i> Claim Rewards';
+                    miningDescription.textContent = `Claim your ${formatUGX(appState.miningReward)} UGX reward`;
+                } else {
+                    const distance = appState.nextClaimTime - now;
+                    const h = Math.floor(distance / (1000 * 60 * 60));
+                    const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((distance % (1000 * 60)) / 1000);
+                    const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                    miningCountdown.textContent = timeStr;
+                    claimCountdown.textContent = timeStr;
+                    miningBtn.innerHTML = '<i class="fas fa-clock mr-2"></i> Mining...';
+                    miningDescription.textContent = `Next: +${formatUGX(appState.miningReward)} UGX`;
+                }
+                
+                // Update transactions
+                if (appState.transactions.length === 0) {
+                    transactionList.innerHTML = '<div class="no-transactions">No transactions yet</div>';
+                } else {
+                    let html = '';
+                    const sortedTransactions = [...appState.transactions].sort((a, b) => b.timestamp - a.timestamp);
+                    sortedTransactions.forEach(t => {
+                        html += `
+                        <div class="flex justify-between py-3 border-b border-gray-700">
+                            <div>
+                                <div class="font-bold">${t.type}</div>
+                                <div class="text-gray-400 text-sm">${t.description}</div>
+                            </div>
+                            <div class="text-right flex items-center gap-2">
+                                <div class="text-right">
+                                    <div class="font-bold">${formatUGX(t.amount)} UGX</div>
+                                    <div class="status-pending">${t.status}</div>
+                                </div>
+                                <button class="view-receipt-btn text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded" 
+                                        data-txid="${t.id}">
+                                    View Receipt
+                                </button>
+                            </div>
+                        </div>
+                        `;
+                    });
+                    transactionList.innerHTML = html;
+
+                    // Add event listeners to new buttons
+                    document.querySelectorAll('.view-receipt-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const txId = e.target.dataset.txid;
+                            const tx = appState.transactions.find(t => t.id === txId);
+                            showReceipt(tx);
+                        });
+                    });
+                }
+            }
+
+            function formatUGX(amount) {
+                return new Intl.NumberFormat('en-UG', { 
+                    style: 'currency', 
+                    currency: 'UGX',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(amount).replace('UGX', '').trim();
+            }
+
+            function toUSDT(ugx) {
+                return (ugx / 3700).toFixed(2);
+            }
+
+            function startCountdown() {
+                if (countdownInterval) clearInterval(countdownInterval);
+                countdownInterval = setInterval(() => {
+                    const now = Date.now();
+                    const distance = appState.nextClaimTime - now;
+
+                    if (distance <= 0) {
+                        clearInterval(countdownInterval);
+                        miningCountdown.textContent = 'Ready!';
+                        claimCountdown.textContent = 'Ready!';
+                        miningBtn.innerHTML = '<i class="fas fa-coins mr-2"></i> Claim Rewards';
+                        miningDescription.textContent = `Claim your ${formatUGX(appState.miningReward)} UGX reward`;
+                        return;
+                    }
+
+                    const h = Math.floor(distance / (1000 * 60 * 60));
+                    const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((distance % (1000 * 60)) / 1000);
+                    const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                    miningCountdown.textContent = timeStr;
+                    claimCountdown.textContent = timeStr;
+                }, 1000);
+            }
+
+            // ✅ ONLY APPLY BOOSTER IF APPROVED
+            function claimReward() {
+                appState.balance += appState.miningReward;
+
+                if (appState.pendingBoosterTxId) {
+                    const tx = appState.transactions.find(t => t.id === appState.pendingBoosterTxId);
+                    if (tx && tx.status === 'approved') {
+                        appState.miningCycleHours = appState.pendingBooster;
+                        appState.pendingBooster = null;
+                        appState.pendingBoosterTxId = null;
+                    }
+                }
+
+                const cycleMs = appState.miningCycleHours * 60 * 60 * 1000;
+                appState.nextClaimTime = Date.now() + cycleMs;
+                saveState();
+                updateUI();
+                startCountdown();
+                alert(`Claimed ${formatUGX(appState.miningReward)} UGX!`);
+            }
+
+            // === MODAL HANDLERS ===
+            authToggle.addEventListener('click', () => {
+                if (appState.isAuthenticated) {
+                    appState.isAuthenticated = false;
+                    appState.currentUser = null;
+                    localStorage.removeItem('ugx_current_user');
+                    mainContent.classList.add('hidden');
+                    adminPanel.classList.add('hidden');
+                    authCard.classList.add('hidden');
+                    updateAuthButton();
+                } else {
+                    authCard.classList.remove('hidden');
+                }
+            });
+
+            closeAuth.addEventListener('click', () => authCard.classList.add('hidden'));
+
+            miningBtn.addEventListener('click', () => {
+                const now = Date.now();
+                if (appState.nextClaimTime === 0 || now >= appState.nextClaimTime) {
+                    claimReward();
+                }
+            });
+
+            withdrawBtn.addEventListener('click', () => {
+                if (!appState.userWallet) {
+                    alert('Please set your withdrawal wallet address in Edit Profile first!');
+                    return;
+                }
+                const fee = Math.floor(appState.balance * 0.2);
+                withdrawAmountUGX.textContent = `${formatUGX(appState.balance)} UGX`;
+                withdrawAmountUSDT.textContent = `(~${toUSDT(appState.balance)} USDT)`;
+                withdrawFeeUGX.textContent = `${formatUGX(fee)} UGX`;
+                withdrawFeeUSDT.textContent = `(~${toUSDT(fee)} USDT)`;
+                userWalletSection.classList.remove('hidden');
+                displayUserWallet.textContent = appState.userWallet;
+                withdrawTxId.value = '';
+                withdrawModal.classList.remove('hidden');
+            });
+
+            closeWithdraw.addEventListener('click', () => withdrawModal.classList.add('hidden'));
+            cancelWithdraw.addEventListener('click', () => withdrawModal.classList.add('hidden'));
+
+            confirmWithdraw.addEventListener('click', () => {
+                const txId = withdrawTxId.value.trim();
+                if (!txId) {
+                    alert('Please enter a transaction ID for the fee payment.');
+                    return;
+                }
+
+                const fee = Math.floor(appState.balance * 0.2);
+                appState.transactions.push({
+                    id: 'TXN-' + Date.now(),
+                    type: 'Withdrawal Request',
+                    description: `Fee payment TxID: ${txId}. Full balance: ${formatUGX(appState.balance)} UGX`,
+                    amount: appState.balance,
+                    fee: fee,
+                    status: 'pending',
+                    timestamp: Date.now(),
+                    wallet: appState.userWallet
+                });
+
+                saveState();
+                updateUI();
+                withdrawModal.classList.add('hidden');
+                alert('Withdrawal request submitted for admin approval!');
+            });
+
+            buyBooster1.addEventListener('click', () => showPaymentModal(1, 8));
+            buyBooster2.addEventListener('click', () => showPaymentModal(2, 6));
+            buyBooster3.addEventListener('click', () => showPaymentModal(3, 4));
+
+            function showPaymentModal(boosterType, duration) {
+                let boosterName;
+                switch(boosterType) {
+                    case 1: boosterName = "Speed Booster"; break;
+                    case 2: boosterName = "Power Booster"; break;
+                    case 3: boosterName = "Quantum Booster"; break;
+                }
+                paymentTitle.textContent = `${boosterName} Payment`;
+                currentMiningInfo.textContent = `${appState.miningCycleHours} hours → ${formatUGX(appState.miningReward)} UGX/cycle`;
+                newMiningInfo.textContent = `${duration} hours → ${formatUGX(appState.miningReward)} UGX/cycle`;
+                transactionId.value = '';
+                paymentModal.dataset.boosterType = boosterType;
+                paymentModal.dataset.duration = duration;
+                paymentModal.classList.remove('hidden');
+            }
+
+            closePayment.addEventListener('click', () => paymentModal.classList.add('hidden'));
+            cancelPayment.addEventListener('click', () => paymentModal.classList.add('hidden'));
+
+            confirmPayment.addEventListener('click', () => {
+                const txId = transactionId.value.trim();
+                if (!txId) {
+                    alert('Please enter a transaction ID');
+                    return;
+                }
+
+                const boosterType = parseInt(paymentModal.dataset.boosterType);
+                const duration = parseInt(paymentModal.dataset.duration);
+                let cost;
+                switch(boosterType) {
+                    case 1: cost = appState.balance * 2; break;
+                    case 2: cost = appState.balance * 4; break;
+                    case 3: cost = appState.balance * 8; break;
+                }
+
+                const newTxId = 'TXN-' + Date.now();
+                appState.transactions.push({
+                    id: newTxId,
+                    type: 'Booster Payment',
+                    description: `Payment for booster (TxID: ${txId})`,
+                    amount: cost,
+                    status: 'pending',
+                    timestamp: Date.now(),
+                    duration: duration
+                });
+
+                appState.pendingBoosterTxId = newTxId;
+                appState.pendingBooster = duration;
+
+                saveState();
+                updateUI();
+                paymentModal.classList.add('hidden');
+                alert('Payment submitted for admin approval!');
+            });
+
+            // === COPY FUNCTIONS ===
+            copyWallet.addEventListener('click', () => {
+                navigator.clipboard.writeText('TX3CWq6CPLpJdPeSsEDdY5vjGyYF5f1Csg').then(() => {
+                    const original = copyWallet.textContent;
+                    copyWallet.textContent = 'Copied!';
+                    setTimeout(() => copyWallet.textContent = original, 1500);
+                });
+            });
+
+            copyBoosterWallet.addEventListener('click', () => {
+                navigator.clipboard.writeText('TX3CWq6CPLpJdPeSsEDdY5vjGyYF5f1Csg').then(() => {
+                    const original = copyBoosterWallet.textContent;
+                    copyBoosterWallet.textContent = 'Copied!';
+                    setTimeout(() => copyBoosterWallet.textContent = original, 1500);
+                });
+            });
+
+            // === EDIT PROFILE ===
+            editProfileBtn.addEventListener('click', () => {
+                userWalletInput.value = appState.userWallet || '';
+                editProfileModal.classList.remove('hidden');
+            });
+
+            closeEditProfile.addEventListener('click', () => editProfileModal.classList.add('hidden'));
+            cancelEditProfile.addEventListener('click', () => editProfileModal.classList.add('hidden'));
+
+            saveProfile.addEventListener('click', () => {
+                const wallet = userWalletInput.value.trim();
+                if (wallet && !wallet.startsWith('T')) {
+                    alert('Please enter a valid TRC20 (USDT) or UGX wallet address starting with "T"');
+                    return;
+                }
+                appState.userWallet = wallet;
+                saveState();
+                updateUI();
+                editProfileModal.classList.add('hidden');
+                alert('Profile updated successfully!');
+            });
+
+            // === RECEIPT FUNCTIONS ===
+            function showReceipt(tx) {
+                const user = getUser(appState.currentUser);
+                let receiptText = `===============================
+UGX MINING PLATFORM
+Transaction Receipt
+===============================
+
+Transaction ID: ${tx.id}
+Type: ${tx.type}
+Status: ${tx.status}
+Amount: ${formatUGX(tx.amount)} UGX
+Date: ${new Date(tx.timestamp).toLocaleString()}
+
+`;
+
+                if (tx.type === 'Withdrawal Request') {
+                    receiptText += `Wallet: ${user?.userWallet || 'Not set'}\n`;
+                    receiptText += `Note: Funds will be sent to this wallet.\n`;
+                } else if (tx.type === 'Booster Payment') {
+                    receiptText += `Cycle: ${tx.duration} hours\n`;
+                }
+
+                receiptText += `\nThank you for using UGX Mine!`;
+
+                receiptContent.textContent = receiptText;
+                receiptModal.classList.remove('hidden');
+            }
+
+            copyReceipt.addEventListener('click', () => {
+                const text = receiptContent.textContent;
+                navigator.clipboard.writeText(text).then(() => {
+                    const original = copyReceipt.innerHTML;
+                    copyReceipt.innerHTML = '<i class="fas fa-check mr-2"></i> Copied!';
+                    setTimeout(() => {
+                        copyReceipt.innerHTML = original;
+                    }, 2000);
+                });
+            });
+
+            printReceipt.addEventListener('click', () => {
+                const printContent = receiptContent.textContent;
+                const printWindow = window.open('', '', 'height=400,width=600');
+                printWindow.document.write('<html><head><title>Receipt</title>');
+                printWindow.document.write('<style>body{font-family:monospace;padding:20px;}</style></head><body>');
+                printWindow.document.write('<pre>' + printContent + '</pre>');
+                printWindow.document.write('</body></html>');
+                printWindow.document.close();
+                printWindow.print();
+            });
+
+            closeReceipt.addEventListener('click', () => {
+                receiptModal.classList.add('hidden');
+            });
+
+            // Close receipt modal on backdrop click
+            receiptModal.addEventListener('click', (e) => {
+                if (e.target === receiptModal) {
+                    receiptModal.classList.add('hidden');
+                }
+            });
+
+            // === ✅ ENHANCED ADMIN PANEL LOGIC ===
+            adminPanelBtn.addEventListener('click', () => {
+                mainContent.classList.add('hidden');
+                adminPanel.classList.remove('hidden');
+                loadAdminPanel();
+            });
+
+            backToMain.addEventListener('click', () => {
+                adminPanel.classList.add('hidden');
+                mainContent.classList.remove('hidden');
+            });
+
+            function loadAdminPanel() {
+                const users = getAllUsers();
+                const allTransactions = getAllTransactions();
+                const pendingTx = allTransactions.filter(tx => tx.status === 'pending');
+
+                // Update stats
+                adminTotalUsers.textContent = users.length;
+                const totalBalance = users.reduce((sum, u) => sum + (u.balance || 0), 0);
+                adminTotalBalance.textContent = `${formatUGX(totalBalance)} UGX`;
+                adminPendingRequests.textContent = pendingTx.length;
+                const activeBoosters = users.filter(u => 
+                    u.pendingBoosterTxId && u.transactions?.find(t => t.id === u.pendingBoosterTxId)?.status === 'approved'
+                ).length;
+                adminActiveBoosters.textContent = activeBoosters;
+
+                // Render tables
+                renderTransactionTable(allTransactions);
+                renderUserTable(users);
+
+                // Render charts
+                renderBalanceChart(users);
+                renderTxTypeChart(allTransactions);
+            }
+
+            function renderTransactionTable(transactions) {
+                const searchTerm = adminSearch.value.toLowerCase();
+                const filterType = adminFilter.value;
+
+                let filtered = transactions.filter(tx => {
+                    const matchesSearch = 
+                        tx.username.toLowerCase().includes(searchTerm) ||
+                        (tx.id && tx.id.toLowerCase().includes(searchTerm));
+                    const matchesType = filterType === 'all' || tx.type === filterType;
+                    return matchesSearch && matchesType;
+                });
+
+                if (filtered.length === 0) {
+                    adminTxTableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">No transactions found</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                filtered.sort((a, b) => b.timestamp - a.timestamp);
+                filtered.forEach(tx => {
+                    const user = getUser(tx.username);
+                    const wallet = user?.userWallet || 'Not set';
+                    const date = new Date(tx.timestamp).toLocaleString();
+                    const statusClass = 
+                        tx.status === 'approved' ? 'text-green-400' : 
+                        tx.status === 'rejected' ? 'text-red-400' : 'text-yellow-400';
+
+                    html += `
+                    <tr class="border-b border-gray-800 hover:bg-gray-800/50">
+                        <td class="py-2 font-mono">${tx.username}</td>
+                        <td class="py-2 font-mono text-xs">${wallet}</td>
+                        <td class="py-2">${tx.type}</td>
+                        <td class="py-2">${formatUGX(tx.amount)} UGX</td>
+                        <td class="py-2"><span class="${statusClass}">${tx.status}</span></td>
+                        <td class="py-2 text-xs">${date}</td>
+                        <td class="py-2">
+                    `;
+
+                    if (tx.status === 'pending') {
+                        html += `
+                            <button class="bg-green-600 hover:bg-green-700 text-xs px-2 py-1 rounded mr-1 approve-btn" 
+                                    data-username="${tx.username}" data-txid="${tx.id}">Approve</button>
+                            <button class="bg-red-600 hover:bg-red-700 text-xs px-2 py-1 rounded reject-btn" 
+                                    data-username="${tx.username}" data-txid="${tx.id}">Reject</button>
+                        `;
+                    } else {
+                        html += `<span class="text-gray-500">—</span>`;
+                    }
+
+                    html += `</td></tr>`;
+                });
+                adminTxTableBody.innerHTML = html;
+
+                // Re-attach event listeners
+                document.querySelectorAll('.approve-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const username = e.target.dataset.username;
+                        const txId = e.target.dataset.txid;
+                        approveRequest(username, txId);
+                    });
+                });
+
+                document.querySelectorAll('.reject-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const username = e.target.dataset.username;
+                        const txId = e.target.dataset.txid;
+                        rejectRequest(username, txId);
+                    });
+                });
+            }
+
+            function renderUserTable(users) {
+                if (users.length === 0) {
+                    adminUserTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-500">No users</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                users.forEach(user => {
+                    const cycle = user.miningCycleHours || 24;
+                    html += `
+                    <tr class="border-b border-gray-800 hover:bg-gray-800/50">
+                        <td class="py-2 font-mono">${user.username}</td>
+                        <td class="py-2">${user.userEmail || '—'}</td>
+                        <td class="py-2">${formatUGX(user.balance || 0)} UGX</td>
+                        <td class="py-2 font-mono text-xs">${user.userWallet || 'Not set'}</td>
+                        <td class="py-2">${cycle}h</td>
+                    </tr>
+                    `;
+                });
+                adminUserTableBody.innerHTML = html;
+            }
+
+            function renderBalanceChart(users) {
+                const ctx = document.getElementById('balanceChart').getContext('2d');
+                if (balanceChart) balanceChart.destroy();
+
+                const topUsers = users
+                    .sort((a, b) => (b.balance || 0) - (a.balance || 0))
+                    .slice(0, 10);
+
+                balanceChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: topUsers.map(u => u.username),
+                        datasets: [{
+                            label: 'Balance (UGX)',
+                            data: topUsers.map(u => u.balance || 0),
+                            backgroundColor: 'rgba(0, 193, 106, 0.7)',
+                            borderColor: 'rgba(0, 193, 106, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: '#94a3b8',
+                                    callback: (value) => formatUGX(value)
+                                }
+                            },
+                            x: {
+                                ticks: { color: '#94a3b8' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function renderTxTypeChart(transactions) {
+                const ctx = document.getElementById('txTypeChart').getContext('2d');
+                if (txTypeChart) txTypeChart.destroy();
+
+                const typeCounts = transactions.reduce((acc, tx) => {
+                    acc[tx.type] = (acc[tx.type] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const labels = Object.keys(typeCounts);
+                const data = Object.values(typeCounts);
+
+                txTypeChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: [
+                                'rgba(0, 193, 106, 0.8)',
+                                'rgba(245, 158, 11, 0.8)',
+                                'rgba(96, 165, 250, 0.8)'
+                            ],
+                            borderWidth: 2,
+                            borderColor: '#0f172a'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { 
+                                labels: {
+                                    color: '#e2e8f0'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Live search/filter
+            adminSearch.addEventListener('input', () => loadAdminPanel());
+            adminFilter.addEventListener('change', () => loadAdminPanel());
+
+            // === APPROVAL LOGIC ===
+            function approveRequest(username, txId) {
+                const user = getUser(username);
+                if (!user) return;
+
+                const tx = user.transactions.find(t => t.id === txId);
+                if (!tx) return;
+
+                const updatedTxs = user.transactions.map(t => 
+                    t.id === txId ? { ...t, status: 'approved' } : t
+                );
+                
+                let updatedUser = { ...user, transactions: updatedTxs };
+
+                if (tx.type === 'Withdrawal Request') {
+                    updatedUser.balance = 0;
+                    updatedUser.miningCycleHours = 24;
+                    updatedUser.pendingBooster = null;
+                    updatedUser.pendingBoosterTxId = null;
+                    updatedUser.nextClaimTime = Date.now() + (24 * 60 * 60 * 1000);
+                    updatedUser.lastWithdrawalApproved = Date.now();
+                    alert(`Withdrawal approved for ${username}. Balance reset and boosters cleared.`);
+                } else if (tx.type === 'Booster Payment') {
+                    alert(`Booster approved for ${username}.`);
+                }
+
+                saveUser(username, updatedUser);
+
+                if (appState.currentUser === username) {
+                    login(username, user.password);
+                }
+
+                loadAdminPanel();
+            }
+
+            function rejectRequest(username, txId) {
+                const user = getUser(username);
+                if (!user) return;
+
+                const updatedTxs = user.transactions.map(tx => 
+                    tx.id === txId ? { ...tx, status: 'rejected' } : tx
+                );
+                saveUser(username, { ...user, transactions: updatedTxs });
+
+                if (appState.currentUser === username) {
+                    login(username, user.password);
+                }
+
+                alert(`Rejected request for ${username}`);
+                loadAdminPanel();
+            }
+
+            // === INIT APP ===
+            document.addEventListener('DOMContentLoaded', initApp);
+        </script>
+    </div>
+</body>
+</html>
