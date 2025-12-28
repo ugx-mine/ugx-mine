@@ -9,8 +9,31 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .mining-card { background: linear-gradient(135deg, #0f172a 0%, #121a2e 100%); border: 1px solid #2a3d6a; border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; }
-        .booster-card { background: linear-gradient(135deg, #1a2642 0%, #121a2e 100%); border: 1px solid #2a3d6a; border-radius: 16px; padding: 1.5rem; transition: all 0.3s ease; position: relative; overflow: hidden; }
-        .booster-card:hover { transform: translateY(-5px); border-color: #00c16a; box-shadow: 0 10px 25px rgba(0, 193, 106, 0.2); }
+        .booster-card { 
+            background: linear-gradient(135deg, #1a2642 0%, #121a2e 100%); 
+            border: 1px solid #2a3d6a; 
+            border-radius: 16px; 
+            padding: 1.5rem; 
+            transition: all 0.3s ease; 
+            position: relative; 
+            overflow: hidden; 
+        }
+        .booster-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(30deg);
+            pointer-events: none;
+        }
+        .booster-card:hover {
+            transform: translateY(-5px);
+            border-color: #00c16a;
+            box-shadow: 0 10px 25px rgba(0, 193, 106, 0.2);
+        }
         .auth-tab { padding: 0.5rem 1rem; cursor: pointer; border-radius: 0.5rem; }
         .auth-tab.active { background: rgba(0, 193, 106, 0.2); color: #00c16a; }
         .countdown-display { font-family: monospace; font-size: 1.5rem; background: rgba(18, 26, 46, 0.7); padding: 0.5rem 1rem; border-radius: 0.5rem; min-width: 180px; text-align: center; }
@@ -83,29 +106,31 @@
                 </div>
             </div>
 
-            <!-- Boosters -->
+            <!-- BOOSTERS (Dynamic Pricing) -->
             <h3 class="text-lg font-bold mb-4">Boosters</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div class="booster-card">
-                <h4 class="font-bold text-lg">Speed Miner</h4>
-                <p class="text-gray-400 text-sm mt-1">8h cycle</p>
-                <p class="font-bold text-green-400 mt-1">15,000 UGX / 8h</p>
-                <p class="text-gray-500 text-xs mt-1">Price: 5.00 USDT</p>
-                <button onclick="showBoosterModal(8, 15000, 5.00)" class="w-full mt-2 bg-blue-600 py-1 rounded text-sm">Buy for 5 USDT</button>
+              <div class="booster-card relative overflow-hidden">
+                <h4 class="font-bold text-lg">Eagle Miner</h4>
+                <p class="text-gray-400 text-sm mt-1">12h cycle</p>
+                <p class="font-bold text-green-400 mt-1">10,000 UGX / claim</p>
+                <p class="text-gray-500 text-xs mt-1">Earn twice as fast</p>
+                <button onclick="showBoosterModal(12, 10000, calculateBoosterPrice(2))" class="w-full mt-2 bg-blue-600 py-1 rounded text-sm">Buy for <span id="price12h">—</span></button>
               </div>
-              <div class="booster-card">
-                <h4 class="font-bold text-lg">Power Miner</h4>
+
+              <div class="booster-card relative overflow-hidden">
+                <h4 class="font-bold text-lg">Falcon Miner</h4>
                 <p class="text-gray-400 text-sm mt-1">6h cycle</p>
-                <p class="font-bold text-green-400 mt-1">20,000 UGX / 6h</p>
-                <p class="text-gray-500 text-xs mt-1">Price: 7.50 USDT</p>
-                <button onclick="showBoosterModal(6, 20000, 7.50)" class="w-full mt-2 bg-purple-600 py-1 rounded text-sm">Buy for 7.5 USDT</button>
+                <p class="font-bold text-green-400 mt-1">10,000 UGX / claim</p>
+                <p class="text-gray-500 text-xs mt-1">Earn 4× faster</p>
+                <button onclick="showBoosterModal(6, 10000, calculateBoosterPrice(4))" class="w-full mt-2 bg-purple-600 py-1 rounded text-sm">Buy for <span id="price6h">—</span></button>
               </div>
-              <div class="booster-card">
-                <h4 class="font-bold text-lg">Quantum Miner</h4>
-                <p class="text-gray-400 text-sm mt-1">4h cycle</p>
-                <p class="font-bold text-green-400 mt-1">30,000 UGX / 4h</p>
-                <p class="text-gray-500 text-xs mt-1">Price: 12.00 USDT</p>
-                <button onclick="showBoosterModal(4, 30000, 12.00)" class="w-full mt-2 bg-emerald-600 py-1 rounded text-sm">Buy for 12 USDT</button>
+
+              <div class="booster-card relative overflow-hidden">
+                <h4 class="font-bold text-lg">Phoenix Miner</h4>
+                <p class="text-gray-400 text-sm mt-1">2h cycle</p>
+                <p class="font-bold text-green-400 mt-1">10,000 UGX / claim</p>
+                <p class="text-gray-500 text-xs mt-1">Earn 8× faster</p>
+                <button onclick="showBoosterModal(2, 10000, calculateBoosterPrice(8))" class="w-full mt-2 bg-emerald-600 py-1 rounded text-sm">Buy for <span id="price2h">—</span></button>
               </div>
             </div>
 
@@ -168,7 +193,7 @@
             <p id="boosterModalCurrent" class="text-gray-400 text-sm mb-1">Currently: ...</p>
             <p id="boosterModalNew" class="text-green-400 font-bold mb-4">After: ...</p>
 
-            <p class="text-sm mb-2">Send <span id="boosterModalPrice"></span> USDT (TRC20) to:</p>
+            <p class="text-sm mb-2">Send <span id="boosterModalPrice"></span> to:</p>
             <div class="flex items-center bg-gray-700 p-2 rounded mb-3">
               <code id="adminWalletDisplay" class="text-xs break-all flex-1">TX3CWq6CPLpJdPeSsEDdY5vjGyYF5f1Csg</code>
               <button onclick="copyAdminWallet()" class="text-green-500 ml-2 text-sm">Copy</button>
@@ -217,7 +242,7 @@
     </div>
 
     <script>
-        // ✅ REPLACE THESE WITH YOUR ACTUAL SUPABASE CREDENTIALS (remove spaces!)
+        // ✅ REPLACE WITH YOUR ACTUAL SUPABASE CREDENTIALS
         const SUPABASE_URL = 'https://rryvibgbpqyumfmgsiua.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeXZpYmdicHF5dW1mbWdzaXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTUwNTUsImV4cCI6MjA4MjQ3MTA1NX0.IMqZtMEiPyMwb8AW1gyFao9Yz2qWgMDibfbpVWOeG8o';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -226,7 +251,7 @@
         let timer;
         let withdrawFeeUSDT = 0;
 
-        // Get referrer from URL (for signup)
+        // Referrer from URL
         const urlParams = new URLSearchParams(window.location.search);
         const referrer = urlParams.get('ref');
 
@@ -254,11 +279,16 @@
             const bonus = referrer ? 5000 : 0;
 
             const { error } = await _supabase.from('users').insert([{
-                username: u, password: p, user_email: em, balance: bonus, 
-                mining_reward: 10000, mining_cycle_hours: 24, 
+                username: u,
+                password: p,
+                user_email: em,
+                balance: bonus,
+                mining_reward: 10000,
+                mining_cycle_hours: 24,
                 next_claim_time: new Date().toISOString(),
                 user_id: 'UGX' + Math.floor(Math.random()*1000000),
-                referrer: referrer
+                referrer: referrer,
+                user_wallet: null
             }]);
             if (error) alert(error.message); 
             else {
@@ -274,9 +304,6 @@
             const u = document.getElementById('loginUsername').value;
             const p = document.getElementById('loginPassword').value;
 
-            // 🔒 Admin access via secret hash only (not in public code)
-            // if (u === 'asutex2020' && p === 'Asu12@ada24') return loadAdmin();
-
             const { data, error } = await _supabase.from('users').select('*').eq('username', u).eq('password', p).maybeSingle();
             if (!data) return alert("Wrong credentials");
             user = data;
@@ -291,7 +318,6 @@
             document.getElementById('profileUserEmail').textContent = user.user_email;
             document.getElementById('profileUserId').textContent = "ID: " + user.user_id;
             
-            // Referral link
             const refLink = `${window.location.origin}${window.location.pathname}?ref=${user.username}`;
             document.getElementById('refLink').value = refLink;
 
@@ -307,6 +333,24 @@
             document.getElementById('balanceUGX').textContent = (user.balance || 0).toLocaleString() + " UGX";
             document.getElementById('balanceUSDT').textContent = "~" + ((user.balance || 0)/3700).toFixed(2) + " USDT";
             document.getElementById('miningCycleDisplay').textContent = (user.mining_cycle_hours || 24) + "h";
+            updateBoosterPrices(); // 👈 update prices when balance changes
+        }
+
+        function updateBoosterPrices() {
+            const p12 = calculateBoosterPrice(2);
+            const p6 = calculateBoosterPrice(4);
+            const p2 = calculateBoosterPrice(8);
+
+            document.getElementById('price12h').textContent = `${p12.priceUGX.toLocaleString()} UGX (~${p12.priceUSDT} USDT)`;
+            document.getElementById('price6h').textContent = `${p6.priceUGX.toLocaleString()} UGX (~${p6.priceUSDT} USDT)`;
+            document.getElementById('price2h').textContent = `${p2.priceUGX.toLocaleString()} UGX (~${p2.priceUSDT} USDT)`;
+        }
+
+        function calculateBoosterPrice(multiplier) {
+            const balance = user.balance || 0;
+            const priceUGX = balance * multiplier;
+            const priceUSDT = (priceUGX / 3700).toFixed(2);
+            return { priceUGX, priceUSDT };
         }
 
         function startTimer() {
@@ -339,24 +383,27 @@
         let selectedBoosterHours = null;
         let selectedBoosterReward = null;
         let selectedBoosterPriceUSDT = null;
+        let selectedBoosterPriceUGX = null;
 
-        function showBoosterModal(hours, reward, priceUSDT) {
+        function showBoosterModal(hours, reward, priceObj) {
             selectedBoosterHours = hours;
             selectedBoosterReward = reward;
-            selectedBoosterPriceUSDT = priceUSDT;
+            selectedBoosterPriceUSDT = parseFloat(priceObj.priceUSDT);
+            selectedBoosterPriceUGX = priceObj.priceUGX;
 
             const currentReward = user.mining_reward || 10000;
             const currentHours = user.mining_cycle_hours || 24;
 
             document.getElementById('boosterModalTitle').textContent = 
-                hours === 8 ? 'Speed Miner' :
-                hours === 6 ? 'Power Miner' : 'Quantum Miner';
+                hours === 12 ? 'Eagle Miner' :
+                hours === 6 ? 'Falcon Miner' : 'Phoenix Miner';
 
             document.getElementById('boosterModalCurrent').textContent = 
                 `Currently: ${currentReward.toLocaleString()} UGX / ${currentHours}h`;
             document.getElementById('boosterModalNew').textContent = 
                 `After: ${reward.toLocaleString()} UGX / ${hours}h`;
-            document.getElementById('boosterModalPrice').textContent = priceUSDT.toFixed(2);
+            document.getElementById('boosterModalPrice').textContent = 
+                `${priceObj.priceUGX.toLocaleString()} UGX (~${priceObj.priceUSDT} USDT)`;
 
             document.getElementById('txIdInput').value = '';
             document.getElementById('boosterModal').classList.remove('hidden');
@@ -415,7 +462,7 @@
                     })
                     .eq('username', user.username);
 
-                const { data: updated } = await _supabase
+                const {  updated } = await _supabase
                     .from('users')
                     .select('*')
                     .eq('username', user.username)
@@ -458,9 +505,9 @@
             };
 
             const getBoosterName = (hours) => {
-                if (hours === 8) return 'Speed Miner';
-                if (hours === 6) return 'Power Miner';
-                if (hours === 4) return 'Quantum Miner';
+                if (hours === 12) return 'Eagle Miner';
+                if (hours === 6) return 'Falcon Miner';
+                if (hours === 2) return 'Phoenix Miner';
                 return 'Custom';
             };
 
@@ -613,15 +660,19 @@
 
         document.getElementById('authToggle').onclick = () => location.reload();
 
-        // --- ADMIN (secret access) ---
+        // --- ADMIN ---
         async function loadAdmin() {
             document.getElementById('authCard').classList.add('hidden');
             document.getElementById('adminPanel').classList.remove('hidden');
             const { data } = await _supabase.from('users').select('*');
-            document.getElementById('adminUserList').innerHTML = data.map(u => `<div class="p-2 bg-gray-800 rounded">${u.username} - ${u.balance} UGX</div>`).join('');
+            document.getElementById('adminUserList').innerHTML = data.map(u => 
+                `<div class="p-2 bg-gray-800 rounded">
+                    ${u.username} - ${u.balance} UGX<br>
+                    <span class="text-xs text-gray-400">Wallet: ${u.user_wallet || '—'}</span>
+                </div>`
+            ).join('');
         }
 
-        // Secret admin access
         window.onload = () => {
             if (window.location.hash === '#admin999') {
                 loadAdmin();
