@@ -1,190 +1,193 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UGX Mining Platform</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        .mining-card { background: linear-gradient(135deg, #0f172a 0%, #121a2e 100%); border: 1px solid #2a3d6a; border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; }
-        .booster-card { background: linear-gradient(135deg, #1a2642 0%, #121a2e 100%); border: 1px solid #2a3d6a; border-radius: 16px; padding: 1.5rem; transition: all 0.3s ease; position: relative; overflow: hidden; }
-        .booster-card:hover { transform: translateY(-5px); border-color: #00c16a; }
-        .auth-tab { padding: 0.5rem 1rem; cursor: pointer; border-radius: 0.5rem; transition: 0.3s; }
-        .auth-tab.active { background: rgba(0, 193, 106, 0.2); color: #00c16a; }
-        .countdown-display { font-family: monospace; font-size: 1.5rem; background: rgba(18, 26, 46, 0.7); padding: 0.5rem 1rem; border-radius: 0.5rem; min-width: 180px; text-align: center; }
-        .edit-profile-btn { border: 1px solid #00c16a; color: #00c16a; padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; }
-    </style>
-</head>
-<body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
-    <div class="container mx-auto px-4 py-6">
-        <header class="flex justify-between items-center mb-8">
-            <div class="flex items-center space-x-3">
-                <div class="bg-green-500 p-2 rounded-lg"><i class="fas fa-coins text-xl"></i></div>
-                <h1 class="text-2xl font-bold">UGX<span class="text-white">Mine</span></h1>
-            </div>
-            <div class="flex gap-2">
-                <button id="adminPanelBtn" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm hidden">Admin Panel</button>
-                <button id="authToggle" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg">Sign Up / Login</button>
-            </div>
-        </header>
+<script>
+    // === CONFIG ===
+    const SUPABASE_URL = 'https://rryvibgbpqyumfmgsiua.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeXZpYmdicHF5dW1mbWdzaXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTUwNTUsImV4cCI6MjA4MjQ3MTA1NX0.IMqZtMEiPyMwb8AW1gyFao9Yz2qWgMDibfbpVWOeG8o';
+    const ADMIN_USER = 'asutex2020';
+    const ADMIN_PASS = 'Asu12@ada24';
 
-        <div id="authCard" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center hidden">
-            <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
-                <div class="flex mb-4 bg-gray-700 rounded-lg p-1">
-                    <div id="tabSignup" class="auth-tab active flex-1 text-center">Sign Up</div>
-                    <div id="tabLogin" class="auth-tab flex-1 text-center">Login</div>
-                </div>
-                <form id="signupForm" class="space-y-4">
-                    <div><label class="block text-gray-300 mb-2">Username</label><input type="text" id="signupUsername" class="w-full bg-gray-700 rounded-lg px-4 py-2" required></div>
-                    <div><label class="block text-gray-300 mb-2">Email</label><input type="email" id="signupEmail" class="w-full bg-gray-700 rounded-lg px-4 py-2" required></div>
-                    <div><label class="block text-gray-300 mb-2">Password</label><input type="password" id="signupPassword" class="w-full bg-gray-700 rounded-lg px-4 py-2" required></div>
-                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg">Create Account</button>
-                </form>
-                <form id="loginForm" class="hidden space-y-4">
-                    <div><label class="block text-gray-300 mb-2">Username</label><input type="text" id="loginUsername" class="w-full bg-gray-700 rounded-lg px-4 py-2" required></div>
-                    <div><label class="block text-gray-300 mb-2">Password</label><input type="password" id="loginPassword" class="w-full bg-gray-700 rounded-lg px-4 py-2" required></div>
-                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 rounded-lg">Login</button>
-                </form>
-                <button id="closeAuth" class="w-full mt-4 text-gray-400 hover:text-white text-sm">Cancel</button>
-            </div>
-        </div>
+    const { createClient } = supabase;
+    const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        <main id="mainContent" class="hidden">
-            <div class="mining-card">
-                <div class="flex flex-wrap items-center justify-between gap-4">
-                    <div class="flex items-center space-x-4">
-                        <div class="w-12 h-12 rounded-full bg-emerald-900/30 flex items-center justify-center"><i class="fas fa-user text-emerald-400"></i></div>
-                        <div>
-                            <div class="font-bold text-lg" id="profileUserName">---</div>
-                            <div class="text-gray-400 text-sm" id="profileUserEmail">---</div>
-                            <div class="text-gray-500 text-xs mt-1" id="profileUserId">User ID: ---</div>
-                        </div>
-                    </div>
-                    <button id="editProfileBtn" class="edit-profile-btn"><i class="fas fa-wallet"></i> Wallet</button>
-                </div>
-            </div>
+    let appState = {};
+    let timerInterval;
 
-            <div class="mining-card">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div><p class="text-gray-400 text-sm">Current Balance</p><p class="text-3xl font-bold" id="balanceUGX">0 UGX</p><p class="text-gray-500 text-sm" id="balanceUSDT">(~0.00 USDT)</p></div>
-                    <div><p class="text-gray-400 text-sm">Next Claim</p><p class="text-xl font-bold text-emerald-400" id="nextClaimAmount">10,000 UGX</p><p id="claimCountdown" class="text-gray-500 text-xs">Ready!</p></div>
-                    <div><p class="text-gray-400 text-sm">Mining Cycle</p><p class="text-xl font-bold" id="miningCycle">24 hours</p><p class="text-gray-500 text-xs">10,000 UGX / cycle</p></div>
-                </div>
-            </div>
+    // --- AUTHENTICATION ---
+    async function handleSignup(e) {
+        e.preventDefault();
+        const u = document.getElementById('signupUsername').value;
+        const em = document.getElementById('signupEmail').value;
+        const p = document.getElementById('signupPassword').value;
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="mining-card text-center">
-                    <h2 class="text-lg font-bold mb-2">Mining Control</h2>
-                    <div class="countdown-display mx-auto my-4" id="miningCountdown">Ready!</div>
-                    <button id="miningBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 py-3 rounded-lg font-bold">Claim Rewards</button>
-                </div>
-                <div class="mining-card text-center">
-                    <h2 class="text-lg font-bold mb-2">Withdraw Funds</h2>
-                    <button id="withdrawBtn" class="w-full bg-amber-600 hover:bg-amber-700 py-3 rounded-lg font-bold mt-8">Request Withdrawal</button>
-                </div>
-            </div>
-        </main>
+        const { data: exists } = await _supabase.from('users').select('username').eq('username', u).maybeSingle();
+        if (exists) return alert("Username exists!");
 
-        <div id="adminPanel" class="hidden space-y-6">
-            <button onclick="location.reload()" class="px-4 py-2 bg-gray-700 rounded-lg">← Back</button>
-            <div class="mining-card"><h2 class="text-xl font-bold">Admin Overview</h2><p id="adminTotalUsers">Total Users: 0</p></div>
-        </div>
-    </div>
+        const { error } = await _supabase.from('users').insert([{
+            username: u, password: p, user_email: em, balance: 0, 
+            mining_reward: 10000, mining_cycle_hours: 24, 
+            next_claim_time: new Date().toISOString(),
+            user_id: 'UGX' + Math.floor(Math.random()*1000000),
+            transactions: []
+        }]);
 
-    <script>
-        const SUPABASE_URL = 'https://rryvibgbpqyumfmgsiua.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeXZpYmdicHF5dW1mbWdzaXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTUwNTUsImV4cCI6MjA4MjQ3MTA1NX0.IMqZtMEiPyMwb8AW1gyFao9Yz2qWgMDibfbpVWOeG8o';
-        const ADMIN_USER = 'asutex2020';
-        const ADMIN_PASS = 'Asu12@ada24';
+        if (error) alert(error.message);
+        else { alert("Success! Please Login."); document.getElementById('tabLogin').click(); }
+    }
 
-        const { createClient } = supabase;
-        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    async function handleLogin(e) {
+        e.preventDefault();
+        const u = document.getElementById('loginUsername').value;
+        const p = document.getElementById('loginPassword').value;
 
-        let appState = { currentUser: null, balance: 0, nextClaimTime: 0 };
-
-        // --- SIGNUP LOGIC ---
-        async function handleSignup(e) {
-            e.preventDefault();
-            const u = document.getElementById('signupUsername').value;
-            const em = document.getElementById('signupEmail').value;
-            const p = document.getElementById('signupPassword').value;
-
-            const { data: exists } = await _supabase.from('users').select('username').eq('username', u).maybeSingle();
-            if (exists) return alert("Username exists!");
-
-            const { error } = await _supabase.from('users').insert([{
-                username: u, password: p, user_email: em, balance: 0, 
-                mining_reward: 10000, mining_cycle_hours: 24, 
-                next_claim_time: new Date().toISOString(),
-                user_id: 'UGX' + Math.floor(Math.random()*1000000),
-                transactions: []
-            }]);
-
-            if (error) alert(error.message);
-            else { alert("Success! Please Login."); document.getElementById('tabLogin').click(); }
-        }
-
-        // --- LOGIN LOGIC ---
-        async function handleLogin(e) {
-            e.preventDefault();
-            const u = document.getElementById('loginUsername').value;
-            const p = document.getElementById('loginPassword').value;
-
-            if (u === ADMIN_USER && p === ADMIN_PASS) {
-                document.getElementById('authCard').classList.add('hidden');
-                document.getElementById('adminPanel').classList.remove('hidden');
-                return;
-            }
-
-            const { data, error } = await _supabase.from('users').select('*').eq('username', u).eq('password', p).maybeSingle();
-            if (error || !data) return alert("Invalid Login");
-
-            appState = { ...data, nextClaimTime: new Date(data.next_claim_time).getTime() };
-            localStorage.setItem('ugx_u', u); localStorage.setItem('ugx_p', p);
-            showDashboard();
-        }
-
-        function showDashboard() {
+        if (u === ADMIN_USER && p === ADMIN_PASS) {
             document.getElementById('authCard').classList.add('hidden');
-            document.getElementById('mainContent').classList.remove('hidden');
-            document.getElementById('profileUserName').textContent = appState.username;
-            document.getElementById('profileUserEmail').textContent = appState.user_email;
-            document.getElementById('profileUserId').textContent = "ID: " + appState.user_id;
-            updateUI();
+            document.getElementById('adminPanel').classList.remove('hidden');
+            return;
         }
 
-        function updateUI() {
-            document.getElementById('balanceUGX').textContent = appState.balance.toLocaleString() + " UGX";
-            document.getElementById('balanceUSDT').textContent = "(~" + (appState.balance/3700).toFixed(2) + " USDT)";
+        const { data, error } = await _supabase.from('users').select('*').eq('username', u).eq('password', p).maybeSingle();
+        if (error || !data) return alert("Invalid Login");
+
+        appState = { ...data, nextClaimTime: new Date(data.next_claim_time).getTime() };
+        localStorage.setItem('ugx_u', u); localStorage.setItem('ugx_p', p);
+        showDashboard();
+    }
+
+    // --- CORE MINING ENGINE ---
+    async function claimReward() {
+        if (Date.now() < appState.nextClaimTime) return alert("Mining still in progress!");
+
+        const newBalance = Number(appState.balance) + Number(appState.mining_reward);
+        const newClaimDate = new Date(Date.now() + (appState.mining_cycle_hours * 3600000)).toISOString();
+
+        const { error } = await _supabase.from('users').update({ 
+            balance: newBalance, next_claim_time: newClaimDate 
+        }).eq('username', appState.username);
+
+        if (error) return alert(error.message);
+
+        appState.balance = newBalance;
+        appState.nextClaimTime = new Date(newClaimDate).getTime();
+        updateUI();
+        startCountdown();
+        alert("Success! Reward Claimed.");
+    }
+
+    // --- BOOSTERS ---
+    async function activateBooster(hours, label) {
+        if (!confirm(`Activate ${label} Booster? This will change your mining cycle to ${hours} hours.`)) return;
+
+        const { error } = await _supabase.from('users').update({ 
+            mining_cycle_hours: hours 
+        }).eq('username', appState.username);
+
+        if (error) return alert(error.message);
+        
+        appState.mining_cycle_hours = hours;
+        alert(`${label} Activated! Your next cycle will be shorter.`);
+        location.reload(); // Refresh to apply new cycle
+    }
+
+    // --- WITHDRAWALS & WALLET ---
+    async function requestWithdrawal() {
+        if (!appState.user_wallet || appState.user_wallet === "") {
+            return alert("Please set your TRC20 wallet address first!");
+        }
+        if (appState.balance < 50000) {
+            return alert("Minimum withdrawal is 50,000 UGX");
         }
 
-        // --- TAB SWITCHING ---
-        document.getElementById('tabSignup').onclick = () => {
-            document.getElementById('signupForm').classList.remove('hidden');
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('tabSignup').classList.add('active');
-            document.getElementById('tabLogin').classList.remove('active');
-        };
-        document.getElementById('tabLogin').onclick = () => {
-            document.getElementById('loginForm').classList.remove('hidden');
-            document.getElementById('signupForm').classList.add('hidden');
-            document.getElementById('tabLogin').classList.add('active');
-            document.getElementById('tabSignup').classList.remove('active');
-        };
+        const amount = appState.balance;
+        const newTx = { type: 'Withdrawal', amount: amount, status: 'pending', date: new Date().toISOString() };
+        const updatedTxs = [...(appState.transactions || []), newTx];
 
-        document.getElementById('signupForm').onsubmit = handleSignup;
-        document.getElementById('loginForm').onsubmit = handleLogin;
-        document.getElementById('authToggle').onclick = () => { localStorage.clear(); location.reload(); };
-        document.getElementById('closeAuth').onclick = () => document.getElementById('authCard').classList.add('hidden');
+        const { error } = await _supabase.from('users').update({ 
+            balance: 0, 
+            transactions: updatedTxs 
+        }).eq('username', appState.username);
 
-        window.onload = () => {
-            const u = localStorage.getItem('ugx_u'), p = localStorage.getItem('ugx_p');
-            if (u && p) { document.getElementById('loginUsername').value=u; document.getElementById('loginPassword').value=p; }
-            document.getElementById('authCard').classList.remove('hidden');
-        };
-    </script>
-</body>
-</html>
+        if (error) return alert(error.message);
+        
+        appState.balance = 0;
+        appState.transactions = updatedTxs;
+        updateUI();
+        alert("Withdrawal Request Sent! 20% Fee will be deducted during processing.");
+    }
+
+    async function saveWallet() {
+        const addr = document.getElementById('userWalletInput').value;
+        if (!addr.startsWith('T')) return alert("Invalid TRC20 Address!");
+
+        const { error } = await _supabase.from('users').update({ user_wallet: addr }).eq('username', appState.username);
+        if (error) return alert(error.message);
+
+        appState.user_wallet = addr;
+        document.getElementById('editProfileModal').classList.add('hidden');
+        alert("Wallet Saved!");
+    }
+
+    // --- UI UPDATES ---
+    function showDashboard() {
+        document.getElementById('authCard').classList.add('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+        document.getElementById('profileUserName').textContent = appState.username;
+        document.getElementById('profileUserEmail').textContent = appState.user_email;
+        document.getElementById('profileUserId').textContent = "ID: " + appState.user_id;
+        document.getElementById('miningCycle').textContent = appState.mining_cycle_hours + " hours";
+        updateUI();
+        startCountdown();
+    }
+
+    function updateUI() {
+        document.getElementById('balanceUGX').textContent = Number(appState.balance).toLocaleString() + " UGX";
+        document.getElementById('balanceUSDT').textContent = "(~" + (appState.balance/3700).toFixed(2) + " USDT)";
+        
+        const list = document.getElementById('transactionList');
+        if (appState.transactions && appState.transactions.length > 0) {
+            list.innerHTML = appState.transactions.map(tx => `
+                <div class="flex justify-between border-b border-gray-800 py-2 text-sm">
+                    <span>${tx.type} (${Number(tx.amount).toLocaleString()})</span>
+                    <span class="${tx.status === 'pending' ? 'text-amber-500' : 'text-green-500'}">${tx.status}</span>
+                </div>
+            `).join('');
+        }
+    }
+
+    function startCountdown() {
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            const diff = appState.nextClaimTime - Date.now();
+            if (diff <= 0) {
+                document.getElementById('miningCountdown').textContent = "Ready!";
+                document.getElementById('claimCountdown').textContent = "Ready!";
+                return clearInterval(timerInterval);
+            }
+            const h = Math.floor(diff/3600000).toString().padStart(2,'0');
+            const m = Math.floor((diff%3600000)/60000).toString().padStart(2,'0');
+            const s = Math.floor((diff%60000)/1000).toString().padStart(2,'0');
+            document.getElementById('miningCountdown').textContent = `${h}:${m}:${s}`;
+        }, 1000);
+    }
+
+    // --- LISTENERS ---
+    document.getElementById('signupForm').onsubmit = handleSignup;
+    document.getElementById('loginForm').onsubmit = handleLogin;
+    document.getElementById('miningBtn').onclick = claimReward;
+    document.getElementById('withdrawBtn').onclick = requestWithdrawal;
+    document.getElementById('saveProfile').onclick = saveWallet;
+    
+    // Booster Buttons
+    document.getElementById('buyBooster1').onclick = () => activateBooster(8, 'Speed');
+    document.getElementById('buyBooster2').onclick = () => activateBooster(6, 'Power');
+    document.getElementById('buyBooster3').onclick = () => activateBooster(4, 'Quantum');
+
+    // UI Toggles
+    document.getElementById('editProfileBtn').onclick = () => document.getElementById('editProfileModal').classList.remove('hidden');
+    document.getElementById('closeEditProfile').onclick = () => document.getElementById('editProfileModal').classList.add('hidden');
+    document.getElementById('tabSignup').onclick = () => { /* ... switch logic ... */ }; // Already handled in previous step
+    
+    window.onload = () => {
+        const u = localStorage.getItem('ugx_u'), p = localStorage.getItem('ugx_p');
+        if (u && p) { handleLogin({ preventDefault: () => {}, target: { loginUsername: {value: u}, loginPassword: {value: p} } }); }
+        else document.getElementById('authCard').classList.remove('hidden');
+    };
+</script>
