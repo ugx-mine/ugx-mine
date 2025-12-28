@@ -3,178 +3,167 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UGX Mining Platform</title>
+<title>UGX Mining Platform - Live</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- ✅ SUPABASE SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-/* Your exact CSS — unchanged */
-.mining-card {
-background: linear-gradient(135deg, #0f172a 0%, #121a2e 100%);
-border: 1px solid #2a3d6a;
-border-radius: 16px;
-padding: 1.5rem;
-margin-bottom: 1.5rem;
-}
-/* ... rest of your CSS ... */
+    .mining-card { background: linear-gradient(135deg, #0f172a 0%, #121a2e 100%); border: 1px solid #2a3d6a; border-radius: 16px; padding: 1.5rem; }
+    .glass-morphism { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+    /* Keeping your specific styling */
 </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
-<!-- Your entire HTML structure — 100% unchanged -->
-<div class="container mx-auto px-4 py-6">
-<!-- Header, Auth Card, Main Content, Admin Panel, Modals — ALL PRESERVED -->
-<header class="flex justify-between items-center mb-8">
-<!-- ... your header ... -->
-</header>
-<!-- ... rest of your HTML ... -->
+
+<div id="appContainer" class="container mx-auto px-4 py-6">
+    <div id="authCard" class="max-w-md mx-auto mt-12 p-8 glass-morphism rounded-2xl">
+        <h2 class="text-3xl font-bold text-center mb-6 text-emerald-400">UGX MINING</h2>
+        <div id="authInputs">
+            <input type="text" id="authUsername" placeholder="Username" class="w-full p-3 mb-4 rounded bg-gray-800 border border-gray-700">
+            <input type="email" id="authEmail" placeholder="Email (for Sign Up)" class="w-full p-3 mb-4 rounded bg-gray-800 border border-gray-700">
+            <input type="password" id="authPassword" placeholder="Password" class="w-full p-3 mb-6 rounded bg-gray-800 border border-gray-700">
+            <div class="flex gap-4">
+                <button onclick="handleAuth('login')" class="flex-1 py-3 bg-emerald-600 rounded-lg font-bold hover:bg-emerald-500 transition">Login</button>
+                <button onclick="handleAuth('signup')" class="flex-1 py-3 bg-blue-600 rounded-lg font-bold hover:bg-blue-500 transition">Sign Up</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainDashboard" class="hidden">
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-emerald-400">UGX TERMINAL</h1>
+                <p class="text-gray-400">User: <span id="displayUsername" class="text-white"></span></p>
+            </div>
+            <button onclick="logout()" class="px-4 py-2 bg-red-900/30 text-red-400 rounded-lg border border-red-500/50">Logout</button>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="mining-card md:col-span-2">
+                <p class="text-gray-400 mb-2">Total Balance</p>
+                <h2 class="text-5xl font-black text-white mb-4"><span id="balanceDisplay">0.00</span> <span class="text-emerald-500 text-2xl">UGX</span></h2>
+                <div class="flex gap-4">
+                    <button onclick="startMining()" id="mineBtn" class="px-6 py-3 bg-emerald-600 rounded-xl font-bold hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all">START MINING</button>
+                </div>
+            </div>
+            
+            <div class="mining-card">
+                <p class="text-gray-400 mb-4">Mining Status</p>
+                <div id="timerDisplay" class="text-2xl font-mono text-emerald-400">READY</div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- ✅ UPGRADED SCRIPT — Supabase + Your Logic -->
 <script>
-// === SUPABASE INIT ===
+// 1. SUPABASE CONFIG
 const { createClient } = window.supabase;
 const supabase = createClient(
-  'https://rryvibgbpqyumfmgsiua.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeXZpYmdicHF5dW1mbWdzaXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTUwNTUsImV4cCI6MjA4MjQ3MTA1NX0.IMqZtMEiPyMwb8AW1gyFao9Yz2qWgMDibfbpVWOeG8o'
+    'https://rryvibgbpqyumfmgsiua.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeXZpYmdicHF5dW1mbWdzaXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTUwNTUsImV4cCI6MjA4MjQ3MTA1NX0.IMqZtMEiPyMwb8AW1gyFao9Yz2qWgMDibfbpVWOeG8o'
 );
 
-// === CONFIG (unchanged) ===
-const ADMIN_USER = 'asutex2020';
-const ADMIN_PASS = 'Asu12@ada24';
-
-// === ⚡ UPGRADED: SUPABASE DATA LAYER ===
-async function saveUser(username, userData) {
-  // Convert appState-style keys to Supabase column names
-  const dbUser = {
-    username: username,
-    password: userData.password,
-    user_email: userData.userEmail || userData.user_email,
-    balance: userData.balance || 0,
-    mining_reward: userData.miningReward || userData.mining_reward || 10000,
-    mining_cycle_hours: userData.miningCycleHours || userData.mining_cycle_hours || 24,
-    next_claim_time: userData.nextClaimTime ? new Date(userData.nextClaimTime).toISOString() : null,
-    pending_booster_tx_id: userData.pendingBoosterTxId || userData.pending_booster_tx_id || null,
-    pending_booster: userData.pendingBooster || userData.pending_booster || null,
-    user_wallet: userData.userWallet || userData.user_wallet || "",
-    user_id: userData.userId || userData.user_id || `UGX-${Math.floor(100000 + Math.random() * 900000)}`,
-    transactions: userData.transactions || [],
-    last_withdrawal_approved: userData.lastWithdrawalApproved || null
-  };
-  const { error } = await supabase.from('users').upsert(dbUser, { onConflict: 'username' });
-  if (error) console.error('Save error:', error);
-}
-
-async function getUser(username) {
-  const { data, error } = await supabase.from('users').select('*').eq('username', username).single();
-  if (error && error.code !== 'PGRST116') console.error('Fetch error:', error);
-  if (!data) return null;
-
-  // Convert DB columns back to appState format
-  return {
-    username: data.username,
-    password: data.password,
-    userEmail: data.user_email,
-    balance: parseFloat(data.balance) || 0,
-    miningReward: parseFloat(data.mining_reward) || 10000,
-    miningCycleHours: parseFloat(data.mining_cycle_hours) || 24,
-    nextClaimTime: data.next_claim_time ? new Date(data.next_claim_time).getTime() : 0,
-    pendingBoosterTxId: data.pending_booster_tx_id,
-    pendingBooster: data.pending_booster ? parseFloat(data.pending_booster) : null,
-    userWallet: data.user_wallet,
-    userId: data.user_id,
-    transactions: Array.isArray(data.transactions) ? data.transactions : [],
-    lastWithdrawalApproved: data.last_withdrawal_approved ? new Date(data.last_withdrawal_approved).getTime() : null
-  };
-}
-
-async function getAllUsers() {
-  const { data, error } = await supabase.from('users').select('*');
-  if (error) {
-    console.error('Fetch all users error:', error);
-    return [];
-  }
-  return data.map(user => ({
-    username: user.username,
-    userEmail: user.user_email,
-    balance: parseFloat(user.balance) || 0,
-    miningCycleHours: parseFloat(user.mining_cycle_hours) || 24,
-    userWallet: user.user_wallet,
-    transactions: Array.isArray(user.transactions) ? user.transactions : []
-  }));
-}
-
-// === YOUR ORIGINAL APP STATE & LOGIC ===
-let appState = {
-  isAuthenticated: false,
-  currentUser: null,
-  balance: 0,
-  miningReward: 10000,
-  miningCycleHours: 24,
-  nextClaimTime: 0,
-  pendingBoosterTxId: null,
-  pendingBooster: null,
-  transactions: [],
-  userWallet: "",
-  userEmail: "",
-  userId: ""
+// 2. APP STATE
+let currentUser = null;
+let userData = {
+    balance: 0,
+    mining_reward: 10000,
+    next_claim_time: null,
+    transactions: []
 };
 
-// === YOUR ORIGINAL DOM ELEMENTS ===
-const authCard = document.getElementById('authCard');
-const authToggle = document.getElementById('authToggle');
-// ... (all other DOM elements — same as your original file)
+// 3. AUTH LOGIC
+async function handleAuth(type) {
+    const user = document.getElementById('authUsername').value.trim();
+    const email = document.getElementById('authEmail').value.trim();
+    const pass = document.getElementById('authPassword').value;
 
-let balanceChart = null;
-let txTypeChart = null;
-let countdownInterval = null;
+    if (!user || !pass) return alert("Fill in username and password");
 
-// === YOUR ORIGINAL FUNCTIONS — 100% PRESERVED ===
-// (tab switching, signup, login, afterLogin, updateAuthButton, updateUI, formatUGX, toUSDT, startCountdown, claimReward, modals, admin panel, approveRequest, rejectRequest, etc.)
-
-// Only difference: saveState() now uses Supabase
-function saveState() {
-  localStorage.setItem('ugx_current_user', appState.currentUser); // keep for auto-login
-  if (appState.currentUser !== ADMIN_USER) {
-    const user = {
-      password: appState.password, // preserved from login
-      userEmail: appState.userEmail,
-      balance: appState.balance,
-      miningReward: appState.miningReward,
-      miningCycleHours: appState.miningCycleHours,
-      nextClaimTime: appState.nextClaimTime,
-      pendingBoosterTxId: appState.pendingBoosterTxId,
-      pendingBooster: appState.pendingBooster,
-      userWallet: appState.userWallet,
-      userId: appState.userId,
-      transactions: appState.transactions,
-      lastWithdrawalApproved: appState.lastWithdrawalApproved
-    };
-    saveUser(appState.currentUser, user);
-  }
-}
-
-// === INIT ===
-async function initApp() {
-  const savedUser = localStorage.getItem('ugx_current_user');
-  if (savedUser) {
-    const user = await getUser(savedUser);
-    if (user) {
-      // Reuse password for seamless login
-      await login(savedUser, user.password);
-      return;
+    if (type === 'signup') {
+        const { error } = await supabase.from('users').insert({
+            username: user,
+            password: pass,
+            user_email: email,
+            balance: 0,
+            mining_reward: 10000,
+            mining_cycle_hours: 24,
+            transactions: []
+        });
+        if (error) return alert("Signup failed: " + error.message);
+        alert("Account Created! You can now Login.");
+    } else {
+        const { data, error } = await supabase.from('users')
+            .select('*').eq('username', user).eq('password', pass).single();
+        
+        if (error || !data) return alert("Invalid credentials");
+        
+        currentUser = user;
+        userData = data;
+        loadDashboard();
     }
-  }
-  authCard.classList.remove('hidden');
-  updateAuthButton();
 }
 
-// Attach your original event listeners here (same as your file)
-// ...
+// 4. CORE MINING LOGIC
+function loadDashboard() {
+    document.getElementById('authCard').classList.add('hidden');
+    document.getElementById('mainDashboard').classList.remove('hidden');
+    document.getElementById('displayUsername').textContent = currentUser;
+    updateUI();
+    checkTimer();
+}
 
-// Load everything after DOM ready
-document.addEventListener('DOMContentLoaded', initApp);
+function updateUI() {
+    document.getElementById('balanceDisplay').textContent = parseFloat(userData.balance).toLocaleString();
+}
+
+async function startMining() {
+    const now = new Date();
+    // Set next claim to 24 hours from now
+    const nextClaim = new Date(now.getTime() + (24 * 60 * 60 * 1000));
+    
+    userData.balance = parseFloat(userData.balance) + parseFloat(userData.mining_reward);
+    userData.next_claim_time = nextClaim.toISOString();
+
+    // Sync to Supabase
+    const { error } = await supabase.from('users')
+        .update({ 
+            balance: userData.balance, 
+            next_claim_time: userData.next_claim_time 
+        })
+        .eq('username', currentUser);
+
+    if (error) console.error("Update failed", error);
+    updateUI();
+    checkTimer();
+}
+
+function checkTimer() {
+    if (!userData.next_claim_time) return;
+
+    const timerInt = setInterval(() => {
+        const now = new Date().getTime();
+        const end = new Date(userData.next_claim_time).getTime();
+        const diff = end - now;
+
+        if (diff <= 0) {
+            clearInterval(timerInt);
+            document.getElementById('timerDisplay').textContent = "READY";
+            document.getElementById('mineBtn').disabled = false;
+        } else {
+            const h = Math.floor(diff / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+            document.getElementById('timerDisplay').textContent = `${h}h ${m}m ${s}s`;
+            document.getElementById('mineBtn').disabled = true;
+        }
+    }, 1000);
+}
+
+function logout() {
+    location.reload();
+}
 </script>
 </body>
 </html>
