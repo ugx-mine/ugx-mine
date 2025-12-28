@@ -3,56 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UGXMine - Cloud</title>
+    <title>UGX Mining Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-black text-white p-4">
+<body class="bg-black text-white font-sans">
 
-    <div id="auth" class="max-w-sm mx-auto mt-20">
-        <h1 class="text-2xl font-bold text-yellow-500 mb-4">UGXMine Login</h1>
-        <input id="user" type="text" placeholder="Username" class="w-full p-2 bg-gray-900 border border-gray-700 rounded mb-4">
-        <button onclick="login()" class="w-full bg-yellow-500 text-black font-bold py-2 rounded">Enter</button>
+    <div id="auth-screen" class="flex flex-col items-center justify-center min-h-screen p-6">
+        <h1 class="text-4xl font-black text-yellow-500 mb-8">UGX MINE</h1>
+        <div class="w-full max-w-sm bg-gray-900 p-8 rounded-3xl border border-gray-800 shadow-2xl">
+            <input id="login-username" type="text" placeholder="Enter Username" class="w-full p-4 bg-black border border-gray-700 rounded-2xl mb-4 focus:border-yellow-500 outline-none text-center text-xl">
+            <button onclick="handleLogin()" class="w-full bg-yellow-500 text-black font-bold py-4 rounded-2xl text-xl hover:bg-yellow-600 active:scale-95 transition-all">START MINING</button>
+        </div>
     </div>
 
-    <div id="game" class="hidden max-w-sm mx-auto mt-10 text-center">
-        <h2 id="name" class="text-gray-400"></h2>
-        <div class="text-4xl font-bold text-yellow-500 my-6" id="bal">0 UGX</div>
-        <button onclick="mine()" class="w-full bg-yellow-500 text-black font-black py-6 rounded-2xl text-2xl">CLAIM 10,000</button>
+    <div id="dashboard-screen" class="hidden min-h-screen p-4 max-w-md mx-auto">
+        <div class="flex justify-between items-center py-6">
+            <h2 class="text-2xl font-bold text-yellow-500">UGX DASHBOARD</h2>
+            <span id="display-name" class="text-gray-500 text-sm"></span>
+        </div>
+
+        <div class="bg-gray-900 rounded-3xl p-8 border border-yellow-500/20 text-center mb-8 shadow-xl">
+            <p class="text-gray-400 uppercase tracking-widest text-xs mb-2">Total Balance</p>
+            <h2 id="balance-amount" class="text-5xl font-black text-yellow-500">0</h2>
+            <p class="text-yellow-500/50 text-sm mt-1 font-bold">UGX TOKEN</p>
+        </div>
+
+        <button id="mine-button" onclick="claimUGX()" class="w-full py-8 bg-yellow-500 text-black font-black text-3xl rounded-3xl shadow-lg shadow-yellow-500/20 active:scale-95 transition-all mb-4">
+            CLAIM 10,000
+        </button>
+        
+        <p class="text-center text-gray-600 text-[10px] uppercase tracking-tighter">Connected to Supabase Cloud Node: rryvibg...</p>
     </div>
 
     <script>
-        const url = 'https://rryvibgbpqyumfmgsiua.supabase.co';
-        const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeXZpYmdicHF5dW1mbWdzaXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTUwNTUsImV4cCI6MjA4MjQ3MTA1NX0.IMqZtMEiPyMwb8AW1gyFao9Yz2qWgMDibfbpVWOeG8o';
-        const sb = supabase.createClient(url, key);
+        // YOUR UNIQUE KEYS
+        const SUPABASE_URL = 'https://rryvibgbpqyumfmgsiua.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeXZpYmdicHF5dW1mbWdzaXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTUwNTUsImV4cCI6MjA4MjQ3MTA1NX0.IMqZtMEiPyMwb8AW1gyFao9Yz2qWgMDibfbpVWOeG8o';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let currentUser = null;
+        let userState = null;
 
-        async function login() {
-            const name = document.getElementById('user').value;
-            const { data } = await sb.from('ugx_users').select('*').eq('username', name).single();
-            
-            if (data) { 
-                currentUser = data.data; 
+        async function handleLogin() {
+            const username = document.getElementById('login-username').value.trim();
+            if (!username) return alert("Please enter a name");
+
+            // 1. Check if user exists in cloud
+            const { data, error } = await _supabase
+                .from('ugx_users')
+                .select('*')
+                .eq('username', username)
+                .single();
+
+            if (data) {
+                userState = data.data; // Load their saved data
             } else {
-                currentUser = { username: name, balance: 0 };
-                await sb.from('ugx_users').upsert({ username: name, balance: 0, data: currentUser });
+                // 2. Create new cloud user if not found
+                userState = { username: username, balance: 0 };
+                await syncCloud();
             }
+
+            // 3. Switch screens
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('dashboard-screen').classList.remove('hidden');
+            updateDisplay();
+        }
+
+        async function claimUGX() {
+            const btn = document.getElementById('mine-button');
+            btn.disabled = true;
+            btn.innerText = "SYNCING...";
+
+            userState.balance += 10000;
+            updateDisplay();
             
-            document.getElementById('auth').classList.add('hidden');
-            document.getElementById('game').classList.remove('hidden');
-            update();
+            await syncCloud(); // Save to database
+            
+            btn.disabled = false;
+            btn.innerText = "CLAIM 10,000";
         }
 
-        async function mine() {
-            currentUser.balance += 10000;
-            update();
-            await sb.from('ugx_users').update({ balance: currentUser.balance, data: currentUser }).eq('username', currentUser.username);
+        async function syncCloud() {
+            await _supabase.from('ugx_users').upsert({ 
+                username: userState.username, 
+                balance: userState.balance, 
+                data: userState 
+            });
         }
 
-        function update() {
-            document.getElementById('bal').innerText = currentUser.balance.toLocaleString() + " UGX";
-            document.getElementById('name').innerText = "Mining as: " + currentUser.username;
+        function updateDisplay() {
+            document.getElementById('balance-amount').innerText = userState.balance.toLocaleString();
+            document.getElementById('display-name').innerText = "@" + userState.username;
         }
     </script>
 </body>
