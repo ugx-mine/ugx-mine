@@ -1,186 +1,128 @@
-<script>
-document.addEventListener('DOMContentLoaded', async () => {
-  // === SUPABASE SETUP ===
-  const { createClient } = window.supabase;
-  const supabase = createClient(
-    'https://rryvibgbpqyumfmgsiua.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeXZpYmdicHF5dW1mbWdzaXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTUwNTUsImV4cCI6MjA4MjQ3MTA1NX0.IMqZtMEiPyMwb8AW1gyFao9Yz2qWgMDibfbpVWOeG8o'
-  );
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>UGX Mine</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-6">
+  <!-- AUTH CARD -->
+  <div id="authCard" class="max-w-md mx-auto mt-12 p-6 bg-gray-800 rounded-xl">
+    <h2 class="text-2xl font-bold mb-4">UGX Mining Platform</h2>
+    
+    <div class="mb-4">
+      <label class="block mb-2">Username</label>
+      <input type="text" id="signupUsername" class="w-full p-2 rounded bg-gray-700" placeholder="john">
+    </div>
+    <div class="mb-4">
+      <label class="block mb-2">Email</label>
+      <input type="email" id="signupEmail" class="w-full p-2 rounded bg-gray-700" placeholder="john@example.com">
+    </div>
+    <div class="mb-4">
+      <label class="block mb-2">Password</label>
+      <input type="password" id="signupPassword" class="w-full p-2 rounded bg-gray-700" placeholder="••••••">
+    </div>
+    <button id="signupBtn" class="w-full py-2 bg-green-600 rounded hover:bg-green-700">
+      Create Account
+    </button>
+    <p class="text-center mt-4 text-gray-400">Or</p>
+    <div class="mt-4">
+      <input type="text" id="loginUsername" class="w-full p-2 mb-2 rounded bg-gray-700" placeholder="Username">
+      <input type="password" id="loginPassword" class="w-full p-2 mb-2 rounded bg-gray-700" placeholder="Password">
+      <button id="loginBtn" class="w-full py-2 bg-emerald-600 rounded hover:bg-emerald-700">
+        Login
+      </button>
+    </div>
+  </div>
 
-  // === CONFIG ===
-  const ADMIN_USER = 'asutex2020';
-  const ADMIN_PASS = 'Asu12@ada24';
+  <!-- DASHBOARD (hidden by default) -->
+  <div id="dashboard" class="hidden max-w-2xl mx-auto mt-12 p-6 bg-gray-800 rounded-xl">
+    <h2 class="text-2xl font-bold">Welcome, <span id="welcomeUser"></span>!</h2>
+    <p class="mt-2">✅ You are logged in via Supabase.</p>
+    <button id="logoutBtn" class="mt-4 px-4 py-2 bg-red-600 rounded">Logout</button>
+  </div>
 
-  // === DOM ELEMENTS ===
-  const authCard = document.getElementById('authCard');
-  const authToggle = document.getElementById('authToggle');
-  const signupForm = document.getElementById('signupForm');
-  const loginForm = document.getElementById('loginForm');
-  const mainContent = document.getElementById('mainContent');
-  const adminPanelBtn = document.getElementById('adminPanelBtn');
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // === SUPABASE ===
+      const { createClient } = window.supabase;
+      const supabase = createClient(
+        'https://rryvibgbpqyumfmgsiua.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeXZpYmdicHF5dW1mbWdzaXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTUwNTUsImV4cCI6MjA4MjQ3MTA1NX0.IMqZtMEiPyMwb8AW1gyFao9Yz2qWgMDibfbpVWOeG8o'
+      );
 
-  let appState = {
-    isAuthenticated: false,
-    currentUser: null,
-    balance: 0,
-    miningReward: 10000,
-    miningCycleHours: 24,
-    nextClaimTime: 0,
-    pendingBoosterTxId: null,
-    pendingBooster: null,
-    transactions: [],
-    userWallet: "",
-    userEmail: "",
-    userId: ""
-  };
+      const authCard = document.getElementById('authCard');
+      const dashboard = document.getElementById('dashboard');
+      const welcomeUser = document.getElementById('welcomeUser');
 
-  // === SUPABASE FUNCTIONS ===
-  async function saveUserToDB(userData) {
-    const { error } = await supabase.from('users').upsert(userData, { onConflict: 'username' });
-    if (error) {
-      console.error('Save error:', error);
-      alert('Failed to save user. Check console.');
-    }
-  }
+      // === SIGN UP ===
+      document.getElementById('signupBtn').addEventListener('click', async () => {
+        const username = document.getElementById('signupUsername').value.trim();
+        const email = document.getElementById('signupEmail').value.trim();
+        const password = document.getElementById('signupPassword').value;
+        if (!username || !email || !password) return alert('All fields required');
 
-  async function getUserFromDB(username) {
-    const { data, error } = await supabase.from('users').select('*').eq('username', username).single();
-    if (error && error.code !== 'PGRST116') {
-      console.error('Fetch error:', error);
-    }
-    return data;
-  }
+        const { data: existing } = await supabase
+          .from('users')
+          .select()
+          .eq('username', username)
+          .single();
 
-  // === SIGN UP ===
-  signupForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const username = document.getElementById('signupUsername').value.trim();
-    const email = document.getElementById('signupEmail').value.trim();
-    const password = document.getElementById('signupPassword').value;
+        if (existing) return alert('Username exists');
 
-    if (!username || !email || !password) {
-      alert('All fields required');
-      return;
-    }
+        const { error } = await supabase.from('users').insert({
+          username,
+          password,
+          user_email: email,
+          balance: 0,
+          mining_reward: 10000,
+          mining_cycle_hours: 24,
+          transactions: []
+        });
 
-    const existing = await getUserFromDB(username);
-    if (existing) {
-      alert('Username already exists');
-      return;
-    }
+        if (error) {
+          console.error('Signup error:', error);
+          alert('Signup failed. Check console.');
+        } else {
+          alert('Account created! Logging in...');
+          login(username, password);
+        }
+      });
 
-    const newUser = {
-      username,
-      password,
-      user_email: email,
-      balance: 0,
-      mining_reward: 10000,
-      mining_cycle_hours: 24,
-      next_claim_time: null,
-      pending_booster_tx_id: null,
-      pending_booster: null,
-      transactions: [],
-      user_wallet: "",
-      user_id: `UGX-${Math.floor(100000 + Math.random() * 900000)}`
-    };
+      // === LOGIN ===
+      document.getElementById('loginBtn').addEventListener('click', () => {
+        const username = document.getElementById('loginUsername').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        login(username, password);
+      });
 
-    await saveUserToDB(newUser);
-    await login(username, password);
-  });
+      async function login(username, password) {
+        if (!username || !password) return alert('Enter username and password');
 
-  // === LOGIN ===
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const username = document.getElementById('loginUsername').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    await login(username, password);
-  });
+        const { data, error } = await supabase
+          .from('users')
+          .select()
+          .eq('username', username)
+          .eq('password', password)
+          .single();
 
-  async function login(username, password) {
-    // Admin
-    if (username === ADMIN_USER && password === ADMIN_PASS) {
-      appState = {
-        isAuthenticated: true,
-        currentUser: ADMIN_USER,
-        balance: 0,
-        miningReward: 10000,
-        miningCycleHours: 24,
-        nextClaimTime: 0,
-        pendingBoosterTxId: null,
-        pendingBooster: null,
-        transactions: [],
-        userWallet: "",
-        userEmail: "admin@ugxmine.com",
-        userId: "ADMIN"
-      };
-      afterLogin();
-      return;
-    }
+        if (error || !data) {
+          alert('Login failed: User not found or wrong password');
+        } else {
+          authCard.classList.add('hidden');
+          dashboard.classList.remove('hidden');
+          welcomeUser.textContent = username;
+        }
+      }
 
-    // Regular user
-    const user = await getUserFromDB(username);
-    if (!user) {
-      alert('User not found'); // ← This is what you're seeing
-      return;
-    }
-    if (user.password !== password) {
-      alert('Incorrect password');
-      return;
-    }
-
-    // Load user into state
-    appState = {
-      isAuthenticated: true,
-      currentUser: username,
-      balance: parseFloat(user.balance) || 0,
-      miningReward: parseFloat(user.mining_reward) || 10000,
-      miningCycleHours: parseFloat(user.mining_cycle_hours) || 24,
-      nextClaimTime: user.next_claim_time ? new Date(user.next_claim_time).getTime() : 0,
-      pendingBoosterTxId: user.pending_booster_tx_id || null,
-      pendingBooster: user.pending_booster ? parseFloat(user.pending_booster) : null,
-      transactions: Array.isArray(user.transactions) ? user.transactions : [],
-      userWallet: user.user_wallet || "",
-      userEmail: user.user_email || "",
-      userId: user.user_id || `UGX-${Math.floor(100000 + Math.random() * 900000)}`
-    };
-
-    afterLogin();
-  }
-
-  function afterLogin() {
-    authCard.classList.add('hidden');
-    mainContent.classList.remove('hidden');
-    localStorage.setItem('ugx_current_user', appState.currentUser); // for auto-login
-    authToggle.textContent = 'Logout';
-    authToggle.className = 'px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg';
-    adminPanelBtn.classList.toggle('hidden', appState.currentUser !== ADMIN_USER);
-    // You can add updateUI() here later
-    alert(`Welcome, ${appState.currentUser}!`);
-  }
-
-  // === LOGOUT ===
-  authToggle.addEventListener('click', () => {
-    if (appState.isAuthenticated) {
-      appState = { isAuthenticated: false, currentUser: null };
-      localStorage.removeItem('ugx_current_user');
-      mainContent.classList.add('hidden');
-      authCard.classList.remove('hidden');
-      authToggle.textContent = 'Sign Up / Login';
-      authToggle.className = 'px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg';
-    } else {
-      authCard.classList.remove('hidden');
-    }
-  });
-
-  // === INIT ===
-  const savedUser = localStorage.getItem('ugx_current_user');
-  if (savedUser) {
-    const user = await getUserFromDB(savedUser);
-    if (user) {
-      await login(savedUser, user.password);
-      return;
-    }
-  }
-  authCard.classList.remove('hidden');
-});
-</script>
+      // === LOGOUT ===
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        authCard.classList.remove('hidden');
+        dashboard.classList.add('hidden');
+      });
+    });
+  </script>
+</body>
+</html>
