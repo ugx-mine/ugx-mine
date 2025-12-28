@@ -3,115 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UGXMine - Cloud Edition</title>
+    <title>UGX Mining Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        .mining-animate { animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-    </style>
 </head>
 <body class="bg-black text-white font-sans">
 
     <nav class="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900">
         <h1 class="text-2xl font-bold text-yellow-500">UGXMine</h1>
-        <div id="user-info" class="text-sm text-gray-400">Not Logged In</div>
+        <div id="status" class="text-xs text-gray-500">Admin Approved Mode</div>
     </nav>
 
-    <div class="max-w-md mx-auto p-6">
-        
-        <div id="dashboard" class="hidden">
-            <div class="bg-gray-900 p-6 rounded-2xl border border-yellow-500/30 mb-6">
-                <p class="text-gray-400 text-sm">Current Balance</p>
-                <h2 id="balance-display" class="text-4xl font-bold text-yellow-500">0 UGX</h2>
-            </div>
-
-            <div class="grid grid-cols-1 gap-4 mb-6">
-                <button id="claim-btn" onclick="claimReward()" class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-4 rounded-xl text-xl transition-all">
-                    Claim 10,000 UGX
-                </button>
-            </div>
-            
-            <p class="text-center text-xs text-gray-500">Data is automatically synced to the cloud.</p>
+    <div class="max-w-md mx-auto p-4">
+        <div id="auth-section" class="bg-gray-900 p-6 rounded-xl border border-gray-800 my-10">
+            <input id="user-input" type="text" placeholder="Username" class="w-full p-3 bg-black border border-gray-700 rounded mb-4 outline-none">
+            <button onclick="login()" class="w-full bg-yellow-500 text-black font-bold py-3 rounded">Enter Mine</button>
         </div>
 
-        <div id="auth-form" class="bg-gray-900 p-8 rounded-2xl border border-gray-800">
-            <h2 class="text-xl font-bold mb-4">Login or Sign Up</h2>
-            <input id="username-input" type="text" placeholder="Username" class="w-full p-3 mb-4 bg-black border border-gray-700 rounded-lg outline-none focus:border-yellow-500">
-            <button onclick="handleAuth()" class="w-full bg-white text-black font-bold py-3 rounded-lg">Enter Dashboard</button>
-        </div>
+        <div id="main-dashboard" class="hidden">
+            <div class="bg-gray-900 p-6 rounded-2xl border border-yellow-500/20 mb-4 text-center">
+                <p class="text-gray-400 text-sm">Balance</p>
+                <h2 id="balance-text" class="text-4xl font-bold text-yellow-500">0 UGX</h2>
+                <p id="booster-text" class="text-green-500 text-xs mt-2">Booster: None</p>
+            </div>
 
+            <button id="claim-btn" onclick="mine()" class="w-full py-4 bg-yellow-500 text-black font-bold rounded-xl mb-4">CLAIM UGX</button>
+
+            <div class="bg-gray-900 p-4 rounded-xl border border-gray-800 mb-4">
+                <h3 class="text-sm font-bold mb-2">Mining Boosters</h3>
+                <button onclick="buyBooster('Mega', 50000)" class="w-full bg-gray-800 text-xs p-2 rounded mb-2 hover:bg-gray-700">Mega Booster (2x Rewards) - Cost: 50k UGX</button>
+            </div>
+
+            <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                <h3 class="text-sm font-bold mb-2">Withdrawals</h3>
+                <input id="wallet-input" type="text" placeholder="Wallet Address" class="w-full p-2 bg-black border border-gray-700 rounded text-xs mb-2">
+                <button onclick="requestWithdraw()" class="w-full bg-red-600 text-white font-bold py-2 rounded text-sm">Request Withdrawal</button>
+                <div id="withdrawal-status" class="text-[10px] mt-2 text-gray-500 text-center italic">No pending requests</div>
+            </div>
+        </div>
     </div>
 
     <script>
-        // 2. Database Connection
         const supabaseUrl = 'https://rryvibgbpqyumfmgsiua.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeXZpYmdicHF5dW1mbWdzaXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTUwNTUsImV4cCI6MjA4MjQ3MTA1NX0.IMqZtMEiPyMwb8AW1gyFao9Yz2qWgMDibfbpVWOeG8o';
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        let currentUser = null;
+        let user = null;
 
-        // 3. Auth Logic
-        async function handleAuth() {
-            const username = document.getElementById('username-input').value.trim();
-            if (!username) return alert("Enter a username");
+        async function login() {
+            const username = document.getElementById('user-input').value.trim();
+            if (!username) return;
 
-            // Check if user exists in Cloud
-            const { data, error } = await _supabase
-                .from('ugx_users')
-                .select('data')
-                .eq('username', username)
-                .single();
+            const { data } = await _supabase.from('ugx_users').select('*').eq('username', username).single();
 
             if (data) {
-                currentUser = data.data;
-                alert("Welcome back, " + username);
+                user = data.data; 
+                // Ensure new fields exist
+                user.active_booster = data.active_booster || 'none';
+                user.withdrawals = data.withdrawals || [];
             } else {
-                // Create new user in Cloud
-                currentUser = { username: username, balance: 0, lastClaim: null };
-                await saveToCloud();
-                alert("Account created for " + username);
+                user = { username, balance: 0, active_booster: 'none', withdrawals: [] };
+                await syncToCloud();
             }
-
             showDashboard();
         }
 
-        // 4. Save to Cloud
-        async function saveToCloud() {
-            if (!currentUser) return;
-            const { error } = await _supabase
-                .from('ugx_users')
-                .upsert({ 
-                    username: currentUser.username, 
-                    balance: currentUser.balance, 
-                    data: currentUser 
-                });
-            if (error) console.error("Sync Error:", error.message);
+        async function mine() {
+            let amount = 10000;
+            if (user.active_booster === 'Mega') amount = 20000;
+            
+            user.balance += amount;
+            updateUI();
+            await syncToCloud();
         }
 
-        // 5. Mining Logic
-        async function claimReward() {
-            const btn = document.getElementById('claim-btn');
-            btn.disabled = true;
-            btn.innerText = "Syncing...";
-
-            currentUser.balance += 10000;
+        async function buyBooster(type, cost) {
+            if (user.balance < cost) return alert("Not enough UGX");
+            user.balance -= cost;
+            user.active_booster = type;
             updateUI();
+            await syncToCloud();
+            alert(type + " Booster Activated!");
+        }
+
+        async function requestWithdraw() {
+            const wallet = document.getElementById('wallet-input').value;
+            if (user.balance < 50000) return alert("Minimum 50,000 UGX required");
+            if (!wallet) return alert("Enter wallet address");
+
+            const request = { amount: user.balance, wallet: wallet, status: 'PENDING', date: new Date().toISOString() };
+            user.withdrawals.push(request);
             
-            await saveToCloud();
-            
-            btn.disabled = false;
-            btn.innerText = "Claim 10,000 UGX";
+            const { error } = await _supabase.from('ugx_users').update({ 
+                withdrawals: user.withdrawals,
+                balance: 0 // Reset balance after request
+            }).eq('username', user.username);
+
+            user.balance = 0;
+            updateUI();
+            alert("Withdrawal requested! Waiting for Admin Approval.");
+        }
+
+        async function syncToCloud() {
+            await _supabase.from('ugx_users').upsert({ 
+                username: user.username, 
+                balance: user.balance, 
+                active_booster: user.active_booster,
+                withdrawals: user.withdrawals,
+                data: user 
+            });
         }
 
         function updateUI() {
-            document.getElementById('balance-display').innerText = currentUser.balance.toLocaleString() + " UGX";
-            document.getElementById('user-info').innerText = "Logged in as: " + currentUser.username;
+            document.getElementById('balance-text').innerText = user.balance.toLocaleString() + " UGX";
+            document.getElementById('booster-text').innerText = "Booster: " + user.active_booster;
+            const lastReq = user.withdrawals[user.withdrawals.length - 1];
+            if (lastReq) document.getElementById('withdrawal-status').innerText = "Last Request: " + lastReq.status;
         }
 
         function showDashboard() {
-            document.getElementById('auth-form').classList.add('hidden');
-            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('main-dashboard').classList.remove('hidden');
             updateUI();
         }
     </script>
