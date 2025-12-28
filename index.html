@@ -1,62 +1,119 @@
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UGXMine - Cloud Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .mining-animate { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body class="bg-black text-white font-sans">
 
-<script>
-    // 2. Database Connection - Configured with your credentials
-    const supabaseUrl = 'https://rryvibgbpqyumfmgsiua.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeXZpYmdicHF5dW1mbWdzaXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTUwNTUsImV4cCI6MjA4MjQ3MTA1NX0.IMqZtMEiPyMwb8AW1gyFao9Yz2qWgMDibfbpVWOeG8o';
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    <nav class="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900">
+        <h1 class="text-2xl font-bold text-yellow-500">UGXMine</h1>
+        <div id="user-info" class="text-sm text-gray-400">Not Logged In</div>
+    </nav>
 
-    // 3. Cloud Load Function (Replaces localStorage.getItem)
-    async function getUser(username) {
-        console.log(`Fetching ${username} from cloud...`);
-        const { data, error } = await _supabase
-            .from('ugx_users')
-            .select('data')
-            .eq('username', username)
-            .single();
-
-        if (error && error.code !== 'PGRST116') {
-            console.error("Cloud Load Error:", error.message);
-            return null;
-        }
-        return data ? data.data : null;
-    }
-
-    // 4. Cloud Save Function (Replaces localStorage.setItem)
-    async function saveUser(username, userData) {
-        console.log(`Syncing ${username} to cloud...`);
-        const { error } = await _supabase
-            .from('ugx_users')
-            .upsert({ 
-                username: username, 
-                balance: userData.balance, 
-                data: userData 
-            }, { onConflict: 'username' });
-
-        if (error) {
-            console.error("Cloud Sync Failed:", error.message);
-        } else {
-            console.log("Cloud Sync Successful!");
-        }
-    }
-
-    // 5. Updated Claim Reward Function
-    async function claimReward() {
-        if (!currentUser) {
-            alert("Please login first!");
-            return;
-        }
-
-        const reward = 10000;
-        currentUser.balance += reward;
-        currentUser.lastClaim = new Date().toISOString();
+    <div class="max-w-md mx-auto p-6">
         
-        // Update the screen immediately
-        updateDashboard();
-        
-        // Save to the Cloud Database
-        await saveUser(currentUser.username, currentUser);
-        
-        alert("Success! 10,000 UGX added to your cloud account.");
-    }
-</script>
+        <div id="dashboard" class="hidden">
+            <div class="bg-gray-900 p-6 rounded-2xl border border-yellow-500/30 mb-6">
+                <p class="text-gray-400 text-sm">Current Balance</p>
+                <h2 id="balance-display" class="text-4xl font-bold text-yellow-500">0 UGX</h2>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 mb-6">
+                <button id="claim-btn" onclick="claimReward()" class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-4 rounded-xl text-xl transition-all">
+                    Claim 10,000 UGX
+                </button>
+            </div>
+            
+            <p class="text-center text-xs text-gray-500">Data is automatically synced to the cloud.</p>
+        </div>
+
+        <div id="auth-form" class="bg-gray-900 p-8 rounded-2xl border border-gray-800">
+            <h2 class="text-xl font-bold mb-4">Login or Sign Up</h2>
+            <input id="username-input" type="text" placeholder="Username" class="w-full p-3 mb-4 bg-black border border-gray-700 rounded-lg outline-none focus:border-yellow-500">
+            <button onclick="handleAuth()" class="w-full bg-white text-black font-bold py-3 rounded-lg">Enter Dashboard</button>
+        </div>
+
+    </div>
+
+    <script>
+        // 2. Database Connection
+        const supabaseUrl = 'https://rryvibgbpqyumfmgsiua.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeXZpYmdicHF5dW1mbWdzaXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTUwNTUsImV4cCI6MjA4MjQ3MTA1NX0.IMqZtMEiPyMwb8AW1gyFao9Yz2qWgMDibfbpVWOeG8o';
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        let currentUser = null;
+
+        // 3. Auth Logic
+        async function handleAuth() {
+            const username = document.getElementById('username-input').value.trim();
+            if (!username) return alert("Enter a username");
+
+            // Check if user exists in Cloud
+            const { data, error } = await _supabase
+                .from('ugx_users')
+                .select('data')
+                .eq('username', username)
+                .single();
+
+            if (data) {
+                currentUser = data.data;
+                alert("Welcome back, " + username);
+            } else {
+                // Create new user in Cloud
+                currentUser = { username: username, balance: 0, lastClaim: null };
+                await saveToCloud();
+                alert("Account created for " + username);
+            }
+
+            showDashboard();
+        }
+
+        // 4. Save to Cloud
+        async function saveToCloud() {
+            if (!currentUser) return;
+            const { error } = await _supabase
+                .from('ugx_users')
+                .upsert({ 
+                    username: currentUser.username, 
+                    balance: currentUser.balance, 
+                    data: currentUser 
+                });
+            if (error) console.error("Sync Error:", error.message);
+        }
+
+        // 5. Mining Logic
+        async function claimReward() {
+            const btn = document.getElementById('claim-btn');
+            btn.disabled = true;
+            btn.innerText = "Syncing...";
+
+            currentUser.balance += 10000;
+            updateUI();
+            
+            await saveToCloud();
+            
+            btn.disabled = false;
+            btn.innerText = "Claim 10,000 UGX";
+        }
+
+        function updateUI() {
+            document.getElementById('balance-display').innerText = currentUser.balance.toLocaleString() + " UGX";
+            document.getElementById('user-info').innerText = "Logged in as: " + currentUser.username;
+        }
+
+        function showDashboard() {
+            document.getElementById('auth-form').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            updateUI();
+        }
+    </script>
+</body>
+</html>
