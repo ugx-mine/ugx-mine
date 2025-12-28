@@ -1,1487 +1,491 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UGX Mining Platform</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-.mining-card {
-background: linear-gradient(135deg, #0f172a 0%, #121a2e 100%);
-border: 1px solid #2a3d6a;
-border-radius: 16px;
-padding: 1.5rem;
-margin-bottom: 1.5rem;
-}
-.booster-card {
-background: linear-gradient(135deg, #1a2642 0%, #121a2e 100%);
-border: 1px solid #2a3d6a;
-border-radius: 16px;
-padding: 1.5rem;
-transition: all 0.3s ease;
-position: relative;
-overflow: hidden;
-}
-.booster-card::before {
-content: '';
-position: absolute;
-top: 0;
-left: 0;
-width: 100%;
-height: 4px;
-background: linear-gradient(90deg, #00c16a, #00a870);
-}
-.booster-card:hover {
-transform: translateY(-5px);
-box-shadow: 0 10px 25px rgba(0, 193, 106, 0.2);
-border-color: #00c16a;
-}
-.booster-duration {
-background: rgba(0, 193, 106, 0.15);
-color: #00c16a;
-border: 1px solid rgba(0, 193, 106, 0.3);
-padding: 0.1rem 0.5rem;
-border-radius: 4px;
-font-size: 0.8rem;
-font-weight: bold;
-}
-.countdown-display {
-font-family: monospace;
-font-size: 1.5rem;
-background: rgba(18, 26, 46, 0.7);
-padding: 0.5rem 1rem;
-border-radius: 0.5rem;
-min-width: 180px;
-text-align: center;
-}
-.status-pending {
-background-color: rgba(245, 158, 11, 0.15);
-color: #f59e0b;
-padding: 0.25rem 0.75rem;
-border-radius: 9999px;
-font-size: 0.75rem;
-}
-.no-transactions {
-text-align: center;
-padding: 2rem;
-color: #64748b;
-}
-.currency-display {
-font-family: 'Courier New', monospace;
-font-weight: 600;
-}
-.edit-profile-btn {
-background: transparent;
-border: 1px solid #00c16a;
-color: #00c16a;
-padding: 0.25rem 0.75rem;
-border-radius: 0.375rem;
-font-size: 0.875rem;
-display: flex;
-align-items: center;
-gap: 0.25rem;
-transition: all 0.2s;
-}
-.edit-profile-btn:hover {
-background: rgba(0, 193, 106, 0.1);
-}
-.action-buttons-section {
-display: flex;
-flex-wrap: wrap;
-gap: 1rem;
-margin-bottom: 2rem;
-}
-.action-button {
-flex: 1;
-min-width: 200px;
-}
-.auth-tab {
-padding: 0.5rem 1rem;
-cursor: pointer;
-border-radius: 0.5rem;
-}
-.auth-tab.active {
-background: rgba(0, 193, 106, 0.2);
-color: #00c16a;
-}
-@keyframes slideIn {
-from { transform: translateY(-20px); opacity: 0; }
-to { transform: translateY(0); opacity: 1; }
-}
-#withdrawSuccessBanner {
-animation: slideIn 0.3s ease-out;
-}
-@media (max-width: 768px) {
-.action-buttons-section {
-flex-direction: column;
-}
-.grid.grid-cols-1.md\:grid-cols-3 {
-grid-template-columns: 1fr !important;
-}
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UGX Mining Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .mining-card {
+            background: linear-gradient(135deg, #0f172a 0%, #121a2e 100%);
+            border: 1px solid #2a3d6a;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .booster-card {
+            background: linear-gradient(135deg, #1a2642 0%, #121a2e 100%);
+            border: 1px solid #2a3d6a;
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .booster-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #00c16a, #00a870);
+        }
+        .booster-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 193, 106, 0.2);
+            border-color: #00c16a;
+        }
+        .booster-duration {
+            background: rgba(0, 193, 106, 0.15);
+            color: #00c16a;
+            border: 1px solid rgba(0, 193, 106, 0.3);
+            padding: 0.1rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .countdown-display {
+            font-family: monospace;
+            font-size: 1.5rem;
+            background: rgba(18, 26, 46, 0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            min-width: 180px;
+            text-align: center;
+        }
+        .status-pending {
+            background-color: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+        }
+        .no-transactions {
+            text-align: center;
+            padding: 2rem;
+            color: #64748b;
+        }
+        .currency-display {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+        .edit-profile-btn {
+            background: transparent;
+            border: 1px solid #00c16a;
+            color: #00c16a;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: all 0.2s;
+        }
+        .edit-profile-btn:hover {
+            background: rgba(0, 193, 106, 0.1);
+        }
+        .action-buttons-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .action-button {
+            flex: 1;
+            min-width: 200px;
+        }
+        .auth-tab {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 0.5rem;
+        }
+        .auth-tab.active {
+            background: rgba(0, 193, 106, 0.2);
+            color: #00c16a;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        #withdrawSuccessBanner {
+            animation: slideIn 0.3s ease-out;
+        }
+        @media (max-width: 768px) {
+            .action-buttons-section {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
-<div class="container mx-auto px-4 py-6">
-<!-- Header -->
-<header class="flex justify-between items-center mb-8">
-<div class="flex items-center space-x-3">
-<div class="bg-green-500 p-2 rounded-lg">
-<i class="fas fa-coins text-xl"></i>
-</div>
-<h1 class="text-2xl font-bold">UGX<span class="text-white">Mine</span></h1>
-</div>
-<div class="flex gap-2">
-<button id="adminPanelBtn" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm hidden">
-Admin Panel
-</button>
-<button id="authToggle" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg">
-Sign Up / Login
-</button>
-</div>
-</header>
+    <div class="container mx-auto px-4 py-6">
+        <header class="flex justify-between items-center mb-8">
+            <div class="flex items-center space-x-3">
+                <div class="bg-green-500 p-2 rounded-lg">
+                    <i class="fas fa-coins text-xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold">UGX<span class="text-white">Mine</span></h1>
+            </div>
+            <div class="flex gap-2">
+                <button id="adminPanelBtn" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm hidden">
+                    Admin Panel
+                </button>
+                <button id="authToggle" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg">
+                    Sign Up / Login
+                </button>
+            </div>
+        </header>
 
-<!-- Auth Card -->
-<div id="authCard" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center hidden">
-<div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
-<!-- Tab Switcher -->
-<div class="flex mb-4 bg-gray-700 rounded-lg p-1">
-<div id="tabSignup" class="auth-tab active">Sign Up</div>
-<div id="tabLogin" class="auth-tab">Login</div>
-</div>
-<!-- Sign Up Form -->
-<form id="signupForm" class="hidden">
-<div class="mb-4">
-<label class="block text-gray-300 mb-2">Username</label>
-<input type="text" id="signupUsername" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-</div>
-<div class="mb-4">
-<label class="block text-gray-300 mb-2">Email</label>
-<input type="email" id="signupEmail" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-</div>
-<div class="mb-4">
-<label class="block text-gray-300 mb-2">Password</label>
-<input type="password" id="signupPassword" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-</div>
-<button type="submit" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg">
-Create Account
-</button>
-</form>
-<!-- Login Form -->
-<form id="loginForm">
-<div class="mb-4">
-<label class="block text-gray-300 mb-2">Username</label>
-<input type="text" id="loginUsername" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-</div>
-<div class="mb-4">
-<label class="block text-gray-300 mb-2">Password</label>
-<input type="password" id="loginPassword" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-</div>
-<button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 rounded-lg">
-Login
-</button>
-</form>
-<button id="closeAuth" class="w-full mt-4 bg-gray-700 hover:bg-gray-600 py-2 rounded-lg">
-Cancel
-</button>
-</div>
-</div>
+        <div id="authCard" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center hidden">
+            <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
+                <div class="flex mb-4 bg-gray-700 rounded-lg p-1">
+                    <div id="tabSignup" class="auth-tab active flex-1 text-center">Sign Up</div>
+                    <div id="tabLogin" class="auth-tab flex-1 text-center">Login</div>
+                </div>
+                <form id="signupForm" class="space-y-4">
+                    <div>
+                        <label class="block text-gray-300 mb-2">Username</label>
+                        <input type="text" id="signupUsername" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-300 mb-2">Email</label>
+                        <input type="email" id="signupEmail" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-300 mb-2">Password</label>
+                        <input type="password" id="signupPassword" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg">Create Account</button>
+                </form>
+                <form id="loginForm" class="hidden space-y-4">
+                    <div>
+                        <label class="block text-gray-300 mb-2">Username</label>
+                        <input type="text" id="loginUsername" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-300 mb-2">Password</label>
+                        <input type="password" id="loginPassword" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 rounded-lg">Login</button>
+                </form>
+                <button id="closeAuth" class="w-full mt-4 text-gray-400 hover:text-white text-sm">Cancel</button>
+            </div>
+        </div>
 
-<!-- Main Content -->
-<main id="mainContent" class="hidden">
-<!-- User Profile Card -->
-<div class="mining-card mb-6">
-<div class="flex flex-wrap items-center justify-between gap-4">
-<div class="flex items-center space-x-4">
-<div class="w-12 h-12 rounded-full bg-emerald-900/30 flex items-center justify-center">
-<i class="fas fa-user text-emerald-400"></i>
-</div>
-<div>
-<div class="font-bold text-lg" id="profileUserName">JohnDoe</div>
-<div class="text-gray-400 text-sm" id="profileUserEmail">johndoe@example.com</div>
-<div class="text-gray-500 text-xs mt-1" id="profileUserId">User ID: UGX-789456</div>
-</div>
-</div>
-<button id="editProfileBtn" class="edit-profile-btn">
-<i class="fas fa-edit"></i> Wallet
-</button>
-</div>
-</div>
+        <main id="mainContent" class="hidden">
+            <div class="mining-card">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 rounded-full bg-emerald-900/30 flex items-center justify-center">
+                            <i class="fas fa-user text-emerald-400"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-lg" id="profileUserName">---</div>
+                            <div class="text-gray-400 text-sm" id="profileUserEmail">---</div>
+                            <div class="text-gray-500 text-xs mt-1" id="profileUserId">User ID: ---</div>
+                        </div>
+                    </div>
+                    <button id="editProfileBtn" class="edit-profile-btn">
+                        <i class="fas fa-wallet"></i> Wallet
+                    </button>
+                </div>
+            </div>
 
-<!-- Withdrawal Success Banner -->
-<div id="withdrawSuccessBanner" class="mining-card bg-emerald-900/20 border-emerald-700 hidden mb-4">
-<div class="flex items-center">
-<i class="fas fa-check-circle text-emerald-400 mr-2"></i>
-<span>✅ Withdrawal approved! Funds will be sent to your wallet.</span>
-</div>
-</div>
+            <div class="mining-card">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <p class="text-gray-400 text-sm">Current Balance</p>
+                        <p class="text-3xl font-bold currency-display" id="balanceUGX">0 UGX</p>
+                        <p class="text-gray-500 text-sm" id="balanceUSDT">(~0.00 USDT)</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">Next Claim</p>
+                        <p class="text-xl font-bold text-emerald-400" id="nextClaimAmount">10,000 UGX</p>
+                        <p id="claimCountdown" class="text-gray-500 text-xs">Ready!</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">Mining Cycle</p>
+                        <p class="text-xl font-bold" id="miningCycle">24 hours</p>
+                        <p class="text-gray-500 text-xs" id="miningReward">10,000 UGX / cycle</p>
+                    </div>
+                </div>
+            </div>
 
-<!-- Mining Summary Card -->
-<div class="mining-card mb-6">
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-<!-- Balance - ENHANCED -->
-<div>
-<p class="text-gray-400 text-sm">Current Balance</p>
-<p class="text-3xl font-bold currency-display" id="balanceUGX">0 UGX</p>
-<p class="text-gray-500 text-sm mt-1" id="balanceUSDT">(~0.00 USDT)</p>
-</div>
-<!-- Next Claim -->
-<div>
-<p class="text-gray-400 text-sm">Next Claim</p>
-<p class="text-xl font-bold text-emerald-400" id="nextClaimAmount">10,000 UGX</p>
-<p class="text-gray-500 text-xs mt-1">
-<span id="claimCountdown">Ready!</span>
-</p>
-</div>
-<!-- Mining Cycle -->
-<div>
-<p class="text-gray-400 text-sm">Mining Cycle</p>
-<p class="text-xl font-bold" id="miningCycle">24 hours</p>
-<p class="text-gray-500 text-xs" id="miningReward">10,000 UGX per cycle</p>
-</div>
-</div>
-</div>
+            <div class="action-buttons-section">
+                <div class="action-button mining-card text-center">
+                    <h2 class="text-lg font-bold mb-2">Mining Control</h2>
+                    <div class="countdown-display mx-auto my-4" id="miningCountdown">Ready!</div>
+                    <button id="miningBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 py-3 rounded-lg font-bold">
+                        <i class="fas fa-coins mr-2"></i> Claim Rewards
+                    </button>
+                </div>
+                <div class="action-button mining-card text-center">
+                    <h2 class="text-lg font-bold mb-2">Withdraw Funds</h2>
+                    <p class="text-gray-400 text-sm mb-4">20% Processing Fee Required</p>
+                    <button id="withdrawBtn" class="w-full bg-amber-600 hover:bg-amber-700 py-3 rounded-lg font-bold mt-8">
+                        <i class="fas fa-wallet mr-2"></i> Request Withdrawal
+                    </button>
+                </div>
+            </div>
 
-<!-- Action Buttons -->
-<div class="action-buttons-section">
-<div class="action-button">
-<div class="mining-card">
-<h2 class="text-lg font-bold mb-2">Mining Control</h2>
-<p class="text-gray-400 text-sm mb-4" id="miningDescription">Claim your first 10,000 UGX reward</p>
-<div class="countdown-display" id="miningCountdown">Ready!</div>
-<button id="miningBtn" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 py-2 rounded-lg">
-<i class="fas fa-coins mr-2"></i> Claim Rewards
-</button>
-</div>
-</div>
-<div class="action-button">
-<div class="mining-card">
-<h2 class="text-lg font-bold mb-2">Withdraw Funds</h2>
-<p class="text-gray-400 text-sm mb-4">20% processing fee required</p>
-<button id="withdrawBtn" class="w-full bg-amber-600 hover:bg-amber-700 py-2 rounded-lg">
-<i class="fas fa-wallet mr-2"></i> Request Withdrawal
-</button>
-</div>
-</div>
-</div>
+            <h2 class="text-xl font-bold mb-4">Mining Boosters</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="booster-card">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-bold text-lg text-green-400">Speed</h3>
+                        <span class="booster-duration">8 HOURS</span>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4">Earn every 8 hours</p>
+                    <button id="buyBooster1" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded text-sm font-bold">Activate</button>
+                </div>
+                <div class="booster-card">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-bold text-lg text-blue-400">Power</h3>
+                        <span class="booster-duration">6 HOURS</span>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4">Earn every 6 hours</p>
+                    <button id="buyBooster2" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded text-sm font-bold">Activate</button>
+                </div>
+                <div class="booster-card">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-bold text-lg text-purple-400">Quantum</h3>
+                        <span class="booster-duration">4 HOURS</span>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4">Earn every 4 hours</p>
+                    <button id="buyBooster3" class="w-full bg-purple-600 hover:bg-purple-700 py-2 rounded text-sm font-bold">Activate</button>
+                </div>
+            </div>
 
-<!-- Boosters Section -->
-<div class="mb-8">
-<h2 class="text-xl font-bold mb-4">Mining Boosters</h2>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-<!-- Booster 1 - 8 Hours -->
-<div class="booster-card">
-<div class="flex justify-between items-start mb-3">
-<h3 class="font-bold text-lg text-green-400">Speed Booster</h3>
-<span class="booster-duration">8 HOURS</span>
-</div>
-<p class="text-gray-400 text-sm mb-4">Earn 10,000 UGX every 8 hours</p>
-<div class="flex justify-between items-center">
-<div>
-<p class="text-gray-300 text-sm">Cost: 2x Balance</p>
-<p class="font-bold currency-display mt-1" id="booster1CostUGX">0 UGX</p>
-<p class="text-gray-500 text-xs" id="booster1CostUSDT">(~0.00 USDT)</p>
-</div>
-<button id="buyBooster1" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm">
-Activate
-</button>
-</div>
-</div>
-<!-- Booster 2 - 6 Hours -->
-<div class="booster-card">
-<div class="flex justify-between items-start mb-3">
-<h3 class="font-bold text-lg text-blue-400">Power Booster</h3>
-<span class="booster-duration">6 HOURS</span>
-</div>
-<p class="text-gray-400 text-sm mb-4">Earn 10,000 UGX every 6 hours</p>
-<div class="flex justify-between items-center">
-<div>
-<p class="text-gray-300 text-sm">Cost: 4x Balance</p>
-<p class="font-bold currency-display mt-1" id="booster2CostUGX">0 UGX</p>
-<p class="text-gray-500 text-xs" id="booster2CostUSDT">(~0.00 USDT)</p>
-</div>
-<button id="buyBooster2" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm">
-Activate
-</button>
-</div>
-</div>
-<!-- Booster 3 - 4 Hours -->
-<div class="booster-card">
-<div class="flex justify-between items-start mb-3">
-<h3 class="font-bold text-lg text-purple-400">Quantum Booster</h3>
-<span class="booster-duration">4 HOURS</span>
-</div>
-<p class="text-gray-400 text-sm mb-4">Earn 10,000 UGX every 4 hours</p>
-<div class="flex justify-between items-center">
-<div>
-<p class="text-gray-300 text-sm">Cost: 8x Balance</p>
-<p class="font-bold currency-display mt-1" id="booster3CostUGX">0 UGX</p>
-<p class="text-gray-500 text-xs" id="booster3CostUSDT">(~0.00 USDT)</p>
-</div>
-<button id="buyBooster3" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm">
-Activate
-</button>
-</div>
-</div>
-</div>
-</div>
+            <div class="mining-card">
+                <h2 class="text-xl font-bold mb-4">Recent Transactions</h2>
+                <div id="transactionList" class="space-y-2">
+                    <div class="no-transactions">No transactions yet.</div>
+                </div>
+            </div>
+        </main>
 
-<!-- Transaction History -->
-<div class="mining-card">
-<h2 class="text-xl font-bold mb-4">Transaction History</h2>
-<div id="transactionList">
-<div class="no-transactions">No transactions yet</div>
-</div>
-</div>
-</main>
+        <div id="adminPanel" class="hidden space-y-6">
+            <button id="backToMain" class="px-4 py-2 bg-gray-700 rounded-lg">← Back to Dashboard</button>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="mining-card">
+                    <p class="text-gray-400">Total Users</p>
+                    <p id="adminTotalUsers" class="text-2xl font-bold">0</p>
+                </div>
+                <div class="mining-card">
+                    <p class="text-gray-400">Total Balance</p>
+                    <p id="adminTotalBalance" class="text-2xl font-bold">0 UGX</p>
+                </div>
+            </div>
+            <div class="mining-card overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-700">
+                            <th class="p-2">User</th>
+                            <th class="p-2">Type</th>
+                            <th class="p-2">Amount</th>
+                            <th class="p-2">Status</th>
+                            <th class="p-2">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTxTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-<!-- Enhanced Admin Panel -->
-<div id="adminPanel" class="hidden">
-<button id="backToMain" class="mb-4 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center gap-1">
-<i class="fas fa-arrow-left"></i> Back to Dashboard
-</button>
-<h2 class="text-2xl font-bold mb-6 text-emerald-400">Admin Dashboard</h2>
-<!-- Stats Summary -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-<div class="mining-card bg-gradient-to-r from-blue-900/50 to-blue-800/30 border-blue-700">
-<p class="text-gray-400">Total Users</p>
-<p class="text-2xl font-bold" id="adminTotalUsers">0</p>
-</div>
-<div class="mining-card bg-gradient-to-r from-emerald-900/50 to-emerald-800/30 border-emerald-700">
-<p class="text-gray-400">Total Balance</p>
-<p class="text-2xl font-bold" id="adminTotalBalance">0 UGX</p>
-</div>
-<div class="mining-card bg-gradient-to-r from-amber-900/50 to-amber-800/30 border-amber-700">
-<p class="text-gray-400">Pending Requests</p>
-<p class="text-2xl font-bold" id="adminPendingRequests">0</p>
-</div>
-<div class="mining-card bg-gradient-to-r from-purple-900/50 to-purple-800/30 border-purple-700">
-<p class="text-gray-400">Active Boosters</p>
-<p class="text-2xl font-bold" id="adminActiveBoosters">0</p>
-</div>
-</div>
-<!-- Charts Row -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-<!-- Balance Distribution -->
-<div class="mining-card">
-<h3 class="font-bold mb-4">User Balance Distribution</h3>
-<canvas id="balanceChart" height="200"></canvas>
-</div>
-<!-- Transaction Types -->
-<div class="mining-card">
-<h3 class="font-bold mb-4">Transaction Types</h3>
-<canvas id="txTypeChart" height="200"></canvas>
-</div>
-</div>
-<!-- Advanced Transaction Table -->
-<div class="mining-card">
-<div class="flex flex-wrap justify-between items-center mb-4">
-<h3 class="font-bold">All Transactions</h3>
-<div class="flex gap-2 mt-2 md:mt-0">
-<input type="text" id="adminSearch" placeholder="Search user or TXID..." class="bg-gray-700 rounded-lg px-3 py-1 text-sm">
-<select id="adminFilter" class="bg-gray-700 rounded-lg px-3 py-1 text-sm">
-<option value="all">All Types</option>
-<option value="Booster Payment">Booster Payments</option>
-<option value="Withdrawal Request">Withdrawals</option>
-</select>
-</div>
-</div>
-<div class="overflow-x-auto">
-<table class="w-full text-sm">
-<thead>
-<tr class="border-b border-gray-700">
-<th class="text-left py-2">User</th>
-<th class="text-left py-2">Wallet</th>
-<th class="text-left py-2">Type</th>
-<th class="text-left py-2">Amount</th>
-<th class="text-left py-2">Status</th>
-<th class="text-left py-2">Date</th>
-<th class="text-left py-2">Actions</th>
-</tr>
-</thead>
-<tbody id="adminTxTableBody">
-<tr>
-<td colspan="7" class="text-center py-4 text-gray-500">Loading transactions...</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<!-- User List -->
-<div class="mining-card mt-6">
-<h3 class="font-bold mb-4">User List</h3>
-<div class="overflow-x-auto">
-<table class="w-full text-sm">
-<thead>
-<tr class="border-b border-gray-700">
-<th class="text-left py-2">Username</th>
-<th class="text-left py-2">Email</th>
-<th class="text-left py-2">Balance</th>
-<th class="text-left py-2">Wallet</th>
-<th class="text-left py-2">Cycle</th>
-</tr>
-</thead>
-<tbody id="adminUserTableBody">
-<tr>
-<td colspan="5" class="text-center py-4 text-gray-500">Loading users...</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</div>
+    <div id="editProfileModal" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-gray-800 p-6 rounded-xl w-full max-w-sm">
+            <h2 class="text-xl font-bold mb-4">Set Wallet</h2>
+            <input type="text" id="userWalletInput" class="w-full bg-gray-700 p-2 rounded mb-4" placeholder="T... (TRC20 Address)">
+            <div class="flex gap-2">
+                <button id="saveProfile" class="flex-1 bg-green-600 py-2 rounded">Save</button>
+                <button id="closeEditProfile" class="flex-1 bg-gray-700 py-2 rounded">Cancel</button>
+            </div>
+        </div>
+    </div>
 
-<!-- Modals -->
-<div id="withdrawModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4 hidden">
-<div class="bg-gray-800 rounded-2xl p-6 w-full max-w-md">
-<div class="flex justify-between items-center mb-6">
-<h2 class="text-2xl font-bold">Withdraw Funds</h2>
-<button id="closeWithdraw" class="text-gray-400">
-<i class="fas fa-times"></i>
-</button>
-</div>
-<div class="mb-5">
-<p class="text-gray-300 mb-2">You will receive your full balance:</p>
-<p class="text-xl font-bold currency-display" id="withdrawAmountUGX">0 UGX</p>
-<p class="text-gray-400 text-sm mb-4" id="withdrawAmountUSDT">(~0.00 USDT)</p>
-<p class="text-gray-300 mb-2">Processing fee (20% — paid separately):</p>
-<p class="text-lg text-amber-400 font-bold" id="withdrawFeeUGX">0 UGX</p>
-<p class="text-gray-500 text-sm mb-4" id="withdrawFeeUSDT">(~0.00 USDT)</p>
-<div id="userWalletSection" class="mb-4 p-3 bg-gray-700/50 rounded-lg hidden">
-<p class="text-gray-300 text-sm">Withdrawal destination:</p>
-<p class="font-mono text-sm break-all" id="displayUserWallet">T...</p>
-<p class="text-gray-500 text-xs mt-1">Funds will be sent here after approval</p>
-</div>
-<p class="mt-2 mb-3">Send the fee to admin wallet:</p>
-<div class="bg-gray-700 p-3 rounded-xl break-all flex items-center justify-between">
-<p class="font-mono text-sm" id="adminWallet">TX3CWq6CPLpJdPeSsEDdY5vjGyYF5f1Csg</p>
-<button id="copyWallet" class="bg-amber-600 hover:bg-amber-700 text-xs px-2 py-1 rounded">
-Copy
-</button>
-</div>
-<p class="text-gray-500 text-xs mt-2">USDT (TRC20) or UGX tokens accepted</p>
-</div>
-<div>
-<label class="block text-gray-300 mb-2">Transaction ID (for fee payment)</label>
-<input type="text" id="withdrawTxId" class="w-full bg-gray-700 rounded-lg px-4 py-2" placeholder="Enter transaction ID">
-<p class="text-gray-500 text-xs mt-1">Admin will approve your withdrawal after fee confirmation</p>
-</div>
-<div class="flex gap-3 mt-6">
-<button id="confirmWithdraw" class="flex-1 bg-green-600 hover:bg-green-700 py-2 rounded-lg">Submit Request</button>
-<button id="cancelWithdraw" class="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded-lg">Cancel</button>
-</div>
-</div>
-</div>
+    <script>
+        // === CONFIG ===
+        const SUPABASE_URL = 'https://rryvibgbpqyumfmgsiua.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeXZpYmdicHF5dW1mbWdzaXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTUwNTUsImV4cCI6MjA4MjQ3MTA1NX0.IMqZtMEiPyMwb8AW1gyFao9Yz2qWgMDibfbpVWOeG8o';
+        const ADMIN_USER = 'asutex2020';
+        const ADMIN_PASS = 'Asu12@ada24';
 
-<div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4 hidden">
-<div class="bg-gray-800 rounded-2xl p-6 w-full max-w-md">
-<div class="flex justify-between items-center mb-6">
-<h2 class="text-2xl font-bold" id="paymentTitle">Booster Payment</h2>
-<button id="closePayment" class="text-gray-400">
-<i class="fas fa-times"></i>
-</button>
-</div>
-<div class="mb-4 p-3 bg-gray-700 rounded-lg">
-<p class="text-gray-300 text-sm">Currently mining:</p>
-<p class="font-bold" id="currentMiningInfo">24 hours → 10,000 UGX/cycle</p>
-</div>
-<div class="mb-4 p-3 bg-emerald-900/30 border border-emerald-700 rounded-lg">
-<p class="text-gray-300 text-sm">After activation:</p>
-<p class="font-bold text-emerald-400" id="newMiningInfo">8 hours → 10,000 UGX/cycle</p>
-</div>
-<div class="mb-5">
-<p class="mb-3">Send payment to admin wallet:</p>
-<div class="bg-gray-700 p-3 rounded-xl break-all flex items-center justify-between">
-<p class="font-mono text-sm" id="paymentWalletAddress">TX3CWq6CPLpJdPeSsEDdY5vjGyYF5f1Csg</p>
-<button id="copyBoosterWallet" class="bg-emerald-600 hover:bg-emerald-700 text-xs px-2 py-1 rounded">
-Copy
-</button>
-</div>
-<p class="text-gray-500 text-xs mt-2">USDT (TRC20) or UGX tokens accepted</p>
-</div>
-<div>
-<label class="block text-gray-300 mb-2">Transaction ID</label>
-<input type="text" id="transactionId" class="w-full bg-gray-700 rounded-lg px-4 py-2" placeholder="Enter transaction ID">
-<p class="text-gray-500 text-xs mt-1">Admin will approve your booster after payment confirmation</p>
-</div>
-<div class="flex gap-3 mt-6">
-<button id="confirmPayment" class="flex-1 bg-green-600 hover:bg-green-700 py-2 rounded-lg">Submit Payment</button>
-<button id="cancelPayment" class="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded-lg">Cancel</button>
-</div>
-</div>
-</div>
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-<div id="editProfileModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4 hidden">
-<div class="bg-gray-800 rounded-2xl p-6 w-full max-w-md">
-<div class="flex justify-between items-center mb-6">
-<h2 class="text-2xl font-bold">Edit Profile</h2>
-<button id="closeEditProfile" class="text-gray-400">
-<i class="fas fa-times"></i>
-</button>
-</div>
-<div class="mb-4">
-<label class="block text-gray-300 mb-2">Withdrawal Wallet Address (USDT TRC20 or UGX)</label>
-<input type="text" id="userWalletInput" class="w-full bg-gray-700 rounded-lg px-4 py-2" placeholder="Enter wallet address">
-<p class="text-gray-500 text-xs mt-1">Funds will be sent to this address after withdrawal approval</p>
-</div>
-<div class="flex gap-3">
-<button id="saveProfile" class="flex-1 bg-green-600 hover:bg-green-700 py-2 rounded-lg">Save</button>
-<button id="cancelEditProfile" class="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded-lg">Cancel</button>
-</div>
-</div>
-</div>
+        let appState = {
+            isAuthenticated: false,
+            currentUser: null,
+            balance: 0,
+            miningReward: 10000,
+            miningCycleHours: 24,
+            nextClaimTime: 0,
+            transactions: [],
+            userWallet: ""
+        };
 
-<!-- Receipt Modal -->
-<div id="receiptModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4 hidden">
-<div class="bg-gray-800 rounded-2xl p-6 w-full max-w-md">
-<div class="flex justify-between items-center mb-6">
-<h2 class="text-2xl font-bold">Transaction Receipt</h2>
-<button id="closeReceipt" class="text-gray-400">
-<i class="fas fa-times"></i>
-</button>
-</div>
-<div id="receiptContent" class="bg-gray-900 p-4 rounded-lg font-mono text-sm whitespace-pre-wrap break-all">
-Loading receipt...
-</div>
-<div class="flex gap-3 mt-6">
-<button id="copyReceipt" class="flex-1 bg-emerald-600 hover:bg-emerald-700 py-2 rounded-lg">
-<i class="fas fa-copy mr-2"></i> Copy
-</button>
-<button id="printReceipt" class="flex-1 bg-blue-600 hover:bg-blue-700 py-2 rounded-lg">
-<i class="fas fa-print mr-2"></i> Print
-</button>
-</div>
-</div>
-</div>
+        // DOM Elements
+        const authCard = document.getElementById('authCard');
+        const mainContent = document.getElementById('mainContent');
+        const adminPanel = document.getElementById('adminPanel');
 
-<script>
-// === SUPABASE CONFIG ===
-const SUPABASE_URL = 'https://rryvibgbpqyumfmgsiua.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeXZpYmdicHF5dW1mbWdzaXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTUwNTUsImV4cCI6MjA4MjQ3MTA1NX0.IMqZtMEiPyMwb8AW1gyFao9Yz2qWgMDibfbpVWOeG8o';
+        // Logic
+        async function login(username, password) {
+            if (username === ADMIN_USER && password === ADMIN_PASS) {
+                appState.currentUser = ADMIN_USER;
+                appState.isAuthenticated = true;
+                showMain();
+                loadAdminPanel();
+                return;
+            }
 
-// === ADMIN CREDENTIALS ===
-const ADMIN_USER = 'asutex2020';
-const ADMIN_PASS = 'Asu12@ada24';
+            const { data, error } = await _supabase.from('users').select('*').eq('username', username).eq('password', password).maybeSingle();
+            if (error || !data) return alert("Invalid credentials");
 
-// === SUPABASE CLIENT ===
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            appState = {
+                isAuthenticated: true,
+                currentUser: data.username,
+                balance: Number(data.balance),
+                miningReward: Number(data.mining_reward),
+                miningCycleHours: Number(data.mining_cycle_hours),
+                nextClaimTime: data.next_claim_time ? new Date(data.next_claim_time).getTime() : 0,
+                transactions: data.transactions || [],
+                userWallet: data.user_wallet || "",
+                userId: data.user_id,
+                userEmail: data.user_email
+            };
 
-// === APP STATE ===
-let appState = {
-  isAuthenticated: false,
-  currentUser: null,
-  balance: 0,
-  miningReward: 10000,
-  miningCycleHours: 24,
-  nextClaimTime: 0,
-  pendingBoosterTxId: null,
-  pendingBooster: null,
-  transactions: [],
-  userWallet: "",
-  userEmail: "",
-  userId: ""
-};
-
-// === DOM ELEMENTS ===
-const authCard = document.getElementById('authCard');
-const authToggle = document.getElementById('authToggle');
-const adminPanelBtn = document.getElementById('adminPanelBtn');
-const closeAuth = document.getElementById('closeAuth');
-const signupForm = document.getElementById('signupForm');
-const loginForm = document.getElementById('loginForm');
-const tabSignup = document.getElementById('tabSignup');
-const tabLogin = document.getElementById('tabLogin');
-const mainContent = document.getElementById('mainContent');
-const adminPanel = document.getElementById('adminPanel');
-const backToMain = document.getElementById('backToMain');
-
-// Mining UI elements
-const profileUserId = document.getElementById('profileUserId');
-const profileUserName = document.getElementById('profileUserName');
-const profileUserEmail = document.getElementById('profileUserEmail');
-const editProfileBtn = document.getElementById('editProfileBtn');
-const miningBtn = document.getElementById('miningBtn');
-const miningDescription = document.getElementById('miningDescription');
-const miningCountdown = document.getElementById('miningCountdown');
-const withdrawBtn = document.getElementById('withdrawBtn');
-const balanceUGX = document.getElementById('balanceUGX');
-const balanceUSDT = document.getElementById('balanceUSDT');
-const nextClaimAmount = document.getElementById('nextClaimAmount');
-const claimCountdown = document.getElementById('claimCountdown');
-const miningCycle = document.getElementById('miningCycle');
-const miningRewardEl = document.getElementById('miningReward');
-const transactionList = document.getElementById('transactionList');
-const withdrawSuccessBanner = document.getElementById('withdrawSuccessBanner');
-
-// Modals
-const withdrawModal = document.getElementById('withdrawModal');
-const closeWithdraw = document.getElementById('closeWithdraw');
-const copyWallet = document.getElementById('copyWallet');
-const withdrawTxId = document.getElementById('withdrawTxId');
-const confirmWithdraw = document.getElementById('confirmWithdraw');
-const cancelWithdraw = document.getElementById('cancelWithdraw');
-const withdrawAmountUGX = document.getElementById('withdrawAmountUGX');
-const withdrawAmountUSDT = document.getElementById('withdrawAmountUSDT');
-const withdrawFeeUGX = document.getElementById('withdrawFeeUGX');
-const withdrawFeeUSDT = document.getElementById('withdrawFeeUSDT');
-const userWalletSection = document.getElementById('userWalletSection');
-const displayUserWallet = document.getElementById('displayUserWallet');
-const paymentModal = document.getElementById('paymentModal');
-const paymentTitle = document.getElementById('paymentTitle');
-const closePayment = document.getElementById('closePayment');
-const paymentWalletAddress = document.getElementById('paymentWalletAddress');
-const transactionId = document.getElementById('transactionId');
-const confirmPayment = document.getElementById('confirmPayment');
-const cancelPayment = document.getElementById('cancelPayment');
-const buyBooster1 = document.getElementById('buyBooster1');
-const buyBooster2 = document.getElementById('buyBooster2');
-const buyBooster3 = document.getElementById('buyBooster3');
-const booster1CostUGX = document.getElementById('booster1CostUGX');
-const booster1CostUSDT = document.getElementById('booster1CostUSDT');
-const booster2CostUGX = document.getElementById('booster2CostUGX');
-const booster2CostUSDT = document.getElementById('booster2CostUSDT');
-const booster3CostUGX = document.getElementById('booster3CostUGX');
-const booster3CostUSDT = document.getElementById('booster3CostUSDT');
-const currentMiningInfo = document.getElementById('currentMiningInfo');
-const newMiningInfo = document.getElementById('newMiningInfo');
-const copyBoosterWallet = document.getElementById('copyBoosterWallet');
-const editProfileModal = document.getElementById('editProfileModal');
-const closeEditProfile = document.getElementById('closeEditProfile');
-const userWalletInput = document.getElementById('userWalletInput');
-const saveProfile = document.getElementById('saveProfile');
-const cancelEditProfile = document.getElementById('cancelEditProfile');
-
-// Admin elements
-const adminTotalUsers = document.getElementById('adminTotalUsers');
-const adminTotalBalance = document.getElementById('adminTotalBalance');
-const adminPendingRequests = document.getElementById('adminPendingRequests');
-const adminActiveBoosters = document.getElementById('adminActiveBoosters');
-const adminSearch = document.getElementById('adminSearch');
-const adminFilter = document.getElementById('adminFilter');
-const adminTxTableBody = document.getElementById('adminTxTableBody');
-const adminUserTableBody = document.getElementById('adminUserTableBody');
-const receiptModal = document.getElementById('receiptModal');
-const closeReceipt = document.getElementById('closeReceipt');
-const copyReceipt = document.getElementById('copyReceipt');
-const printReceipt = document.getElementById('printReceipt');
-const receiptContent = document.getElementById('receiptContent');
-
-let balanceChart = null;
-let txTypeChart = null;
-let countdownInterval = null;
-
-// === AUTH TABS ===
-tabSignup.addEventListener('click', () => {
-  tabSignup.classList.add('active');
-  tabLogin.classList.remove('active');
-  signupForm.classList.remove('hidden');
-  loginForm.classList.add('hidden');
-});
-tabLogin.addEventListener('click', () => {
-  tabLogin.classList.add('active');
-  tabSignup.classList.remove('active');
-  loginForm.classList.remove('hidden');
-  signupForm.classList.add('hidden');
-});
-
-// === SIGN UP ===
-signupForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const username = document.getElementById('signupUsername').value.trim();
-  const email = document.getElementById('signupEmail').value.trim();
-  const password = document.getElementById('signupPassword').value;
-  if (!username || !email || !password) {
-    alert('All fields required');
-    return;
-  }
-
-  // Check if username exists
-  const { data: existing } = await supabase
-    .from('users')
-    .select('username')
-    .eq('username', username)
-    .single();
-
-  if (existing) {
-    alert('Username already exists');
-    return;
-  }
-
-  // Default new user values
-  const newUser = {
-    username,
-    user_email: email,
-    password,
-    balance: 0,
-    mining_reward: 10000,
-    mining_cycle_hours: 24,
-    next_claim_time: null,
-    pending_booster_tx_id: null,
-    pending_booster: null,
-    transactions: [],
-    user_wallet: "",
-    user_id: `UGX-${Math.floor(100000 + Math.random() * 900000)}`
-  };
-
-  const { error } = await supabase.from('users').insert(newUser);
-  if (error) {
-    console.error('Signup error:', error);
-    alert('Signup failed. Check console.');
-    return;
-  }
-
-  alert('Account created! Logging in...');
-  login(username, password);
-});
-
-// === LOGIN ===
-loginForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const username = document.getElementById('loginUsername').value.trim();
-  const password = document.getElementById('loginPassword').value;
-  login(username, password);
-});
-
-async function login(username, password) {
-  if (username === ADMIN_USER && password === ADMIN_PASS) {
-    appState = {
-      isAuthenticated: true,
-      currentUser: ADMIN_USER,
-      balance: 0,
-      miningReward: 10000,
-      miningCycleHours: 24,
-      nextClaimTime: 0,
-      pendingBoosterTxId: null,
-      pendingBooster: null,
-      transactions: [],
-      userWallet: "",
-      userEmail: "admin@ugxmine.com",
-      userId: "ADMIN"
-    };
-    afterLogin();
-    return true;
-  }
-
-  const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('username', username)
-    .eq('password', password)
-    .single();
-
-  if (error || !data) {
-    alert('Login failed: User not found or wrong password');
-    return false;
-  }
-
-  // Convert Supabase timestamptz to ms if needed
-  let nextClaimMs = data.next_claim_time ? new Date(data.next_claim_time).getTime() : 0;
-  if (typeof data.next_claim_time === 'number') nextClaimMs = data.next_claim_time;
-
-  appState = {
-    isAuthenticated: true,
-    currentUser: username,
-    balance: Number(data.balance) || 0,
-    miningReward: Number(data.mining_reward) || 10000,
-    miningCycleHours: Number(data.mining_cycle_hours) || 24,
-    nextClaimTime: nextClaimMs,
-    pendingBoosterTxId: data.pending_booster_tx_id || null,
-    pendingBooster: data.pending_booster ? Number(data.pending_booster) : null,
-    transactions: Array.isArray(data.transactions) ? data.transactions : [],
-    userWallet: data.user_wallet || "",
-    userEmail: data.user_email || "",
-    userId: data.user_id || `UGX-${Math.floor(100000 + Math.random() * 900000)}`
-  };
-
-  // ✅ SHOW WITHDRAWAL BANNER IF RECENTLY APPROVED
-  if (data.last_withdrawal_approved) {
-    const lastApproval = typeof data.last_withdrawal_approved === 'string'
-      ? new Date(data.last_withdrawal_approved).getTime()
-      : data.last_withdrawal_approved;
-    if (Date.now() - lastApproval < 60000) {
-      setTimeout(() => {
-        if (withdrawSuccessBanner) {
-          withdrawSuccessBanner.classList.remove('hidden');
-          setTimeout(() => withdrawSuccessBanner.classList.add('hidden'), 5000);
+            localStorage.setItem('ugx_user', username);
+            localStorage.setItem('ugx_pass', password);
+            showMain();
         }
-      }, 500);
-      // Clear flag
-      await supabase
-        .from('users')
-        .update({ last_withdrawal_approved: null })
-        .eq('username', username);
-    }
-  }
 
-  afterLogin();
-  return true;
-}
+        function showMain() {
+            authCard.classList.add('hidden');
+            mainContent.classList.toggle('hidden', appState.currentUser === ADMIN_USER);
+            adminPanel.classList.toggle('hidden', appState.currentUser !== ADMIN_USER);
+            document.getElementById('authToggle').textContent = "Logout";
+            document.getElementById('adminPanelBtn').classList.toggle('hidden', appState.currentUser !== ADMIN_USER);
+            updateUI();
+            if (appState.nextClaimTime > Date.now()) startCountdown();
+        }
 
-function afterLogin() {
-  authCard.classList.add('hidden');
-  mainContent.classList.remove('hidden');
-  updateAuthButton();
-  adminPanelBtn.classList.toggle('hidden', appState.currentUser !== ADMIN_USER);
-  updateUI();
-  if (appState.nextClaimTime > 0 && Date.now() < appState.nextClaimTime) {
-    startCountdown();
-  }
-}
+        function updateUI() {
+            if (appState.currentUser === ADMIN_USER) return;
+            document.getElementById('profileUserName').textContent = appState.currentUser;
+            document.getElementById('profileUserEmail').textContent = appState.userEmail;
+            document.getElementById('profileUserId').textContent = `User ID: ${appState.userId}`;
+            document.getElementById('balanceUGX').textContent = `${appState.balance.toLocaleString()} UGX`;
+            document.getElementById('balanceUSDT').textContent = `(~${(appState.balance / 3700).toFixed(2)} USDT)`;
+            
+            const list = document.getElementById('transactionList');
+            if (appState.transactions.length > 0) {
+                list.innerHTML = appState.transactions.map(tx => `
+                    <div class="flex justify-between border-b border-gray-800 py-2 text-sm">
+                        <span>${tx.type}</span>
+                        <span class="${tx.status === 'pending' ? 'text-amber-500' : 'text-green-500'}">${tx.status}</span>
+                    </div>
+                `).join('');
+            }
+        }
 
-function updateAuthButton() {
-  if (appState.isAuthenticated) {
-    authToggle.textContent = 'Logout';
-    authToggle.className = 'px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg';
-  } else {
-    authToggle.textContent = 'Sign Up / Login';
-    authToggle.className = 'px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg';
-  }
-}
+        async function claimReward() {
+            if (Date.now() < appState.nextClaimTime) return;
+            appState.balance += appState.miningReward;
+            appState.nextClaimTime = Date.now() + (appState.miningCycleHours * 3600000);
+            
+            await _supabase.from('users').update({
+                balance: appState.balance,
+                next_claim_time: new Date(appState.nextClaimTime).toISOString()
+            }).eq('username', appState.currentUser);
+            
+            updateUI();
+            startCountdown();
+            alert("Reward Claimed!");
+        }
 
-// === SAVE STATE TO SUPABASE ===
-async function saveState() {
-  if (appState.currentUser === ADMIN_USER) return;
+        let timer;
+        function startCountdown() {
+            if (timer) clearInterval(timer);
+            timer = setInterval(() => {
+                const diff = appState.nextClaimTime - Date.now();
+                if (diff <= 0) {
+                    clearInterval(timer);
+                    document.getElementById('miningCountdown').textContent = "Ready!";
+                    return;
+                }
+                const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+                const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+                const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                document.getElementById('miningCountdown').textContent = `${h}:${m}:${s}`;
+            }, 1000);
+        }
 
-  const nextClaimTimeISO = appState.nextClaimTime > 0
-    ? new Date(appState.nextClaimTime).toISOString()
-    : null;
+        // Auth Listeners
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            login(document.getElementById('loginUsername').value, document.getElementById('loginPassword').value);
+        });
 
-  const { error } = await supabase
-    .from('users')
-    .update({
-      balance: appState.balance,
-      mining_cycle_hours: appState.miningCycleHours,
-      next_claim_time: nextClaimTimeISO,
-      pending_booster_tx_id: appState.pendingBoosterTxId,
-      pending_booster: appState.pendingBooster,
-      transactions: appState.transactions,
-      user_wallet: appState.userWallet,
-      user_id: appState.userId
-    })
-    .eq('username', appState.currentUser);
+        document.getElementById('tabLogin').addEventListener('click', () => {
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('signupForm').classList.add('hidden');
+            document.getElementById('tabLogin').classList.add('active');
+            document.getElementById('tabSignup').classList.remove('active');
+        });
 
-  if (error) console.error('Save error:', error);
-}
+        document.getElementById('authToggle').addEventListener('click', () => {
+            localStorage.clear();
+            location.reload();
+        });
 
-// === INIT ===
-async function initApp() {
-  updateAuthButton();
-  const savedUser = localStorage.getItem('ugx_current_user');
-  if (savedUser) {
-    // Attempt auto-login (needs password — so skip unless you store session tokens)
-    // For now, just show login screen
-  }
-  authCard.classList.remove('hidden');
-}
+        document.getElementById('miningBtn').addEventListener('click', claimReward);
 
-// === UI UPDATE ===
-function updateUI() {
-  if (appState.isAuthenticated) {
-    profileUserId.textContent = `User ID: ${appState.userId}`;
-    profileUserName.textContent = appState.currentUser;
-    profileUserEmail.textContent = appState.userEmail;
-    userWalletInput.value = appState.userWallet || '';
-  }
-  balanceUGX.textContent = `${formatUGX(appState.balance)} UGX`;
-  balanceUSDT.textContent = `(~${toUSDT(appState.balance)} USDT)`;
-  nextClaimAmount.textContent = `${formatUGX(appState.miningReward)} UGX`;
-  miningCycle.textContent = `${appState.miningCycleHours} hours`;
-  miningRewardEl.textContent = `${formatUGX(appState.miningReward)} UGX per cycle`;
+        document.getElementById('editProfileBtn').addEventListener('click', () => document.getElementById('editProfileModal').classList.remove('hidden'));
+        document.getElementById('closeEditProfile').addEventListener('click', () => document.getElementById('editProfileModal').classList.add('hidden'));
+        document.getElementById('saveProfile').addEventListener('click', async () => {
+            const val = document.getElementById('userWalletInput').value;
+            await _supabase.from('users').update({ user_wallet: val }).eq('username', appState.currentUser);
+            appState.userWallet = val;
+            document.getElementById('editProfileModal').classList.add('hidden');
+            alert("Wallet Saved");
+        });
 
-  // Update booster costs
-  const booster1Cost = appState.balance * 2;
-  const booster2Cost = appState.balance * 4;
-  const booster3Cost = appState.balance * 8;
-  booster1CostUGX.textContent = `${formatUGX(booster1Cost)} UGX`;
-  booster1CostUSDT.textContent = `(~${toUSDT(booster1Cost)} USDT)`;
-  booster2CostUGX.textContent = `${formatUGX(booster2Cost)} UGX`;
-  booster2CostUSDT.textContent = `(~${toUSDT(booster2Cost)} USDT)`;
-  booster3CostUGX.textContent = `${formatUGX(booster3Cost)} UGX`;
-  booster3CostUSDT.textContent = `(~${toUSDT(booster3Cost)} USDT)`;
+        async function loadAdminPanel() {
+            const { data: users } = await _supabase.from('users').select('*');
+            document.getElementById('adminTotalUsers').textContent = users.length;
+            const total = users.reduce((acc, u) => acc + Number(u.balance), 0);
+            document.getElementById('adminTotalBalance').textContent = `${total.toLocaleString()} UGX`;
+            
+            const tbody = document.getElementById('adminTxTableBody');
+            tbody.innerHTML = '';
+            users.forEach(u => {
+                if(u.transactions) u.transactions.forEach(tx => {
+                    tbody.innerHTML += `
+                        <tr class="border-b border-gray-800">
+                            <td class="p-2">${u.username}</td>
+                            <td class="p-2">${tx.type}</td>
+                            <td class="p-2">${tx.amount}</td>
+                            <td class="p-2">${tx.status}</td>
+                            <td class="p-2"><button class="bg-green-600 px-2 rounded">Approve</button></td>
+                        </tr>
+                    `;
+                });
+            });
+        }
 
-  // Update mining button
-  const now = Date.now();
-  if (appState.nextClaimTime === 0 || now >= appState.nextClaimTime) {
-    miningCountdown.textContent = 'Ready!';
-    claimCountdown.textContent = 'Ready!';
-    miningBtn.innerHTML = '<i class="fas fa-coins mr-2"></i> Claim Rewards';
-    miningDescription.textContent = `Claim your ${formatUGX(appState.miningReward)} UGX reward`;
-  } else {
-    const distance = appState.nextClaimTime - now;
-    const h = Math.floor(distance / (1000 * 60 * 60));
-    const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    const s = Math.floor((distance % (1000 * 60)) / 1000);
-    const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    miningCountdown.textContent = timeStr;
-    claimCountdown.textContent = timeStr;
-    miningBtn.innerHTML = '<i class="fas fa-clock mr-2"></i> Mining...';
-    miningDescription.textContent = `Next: +${formatUGX(appState.miningReward)} UGX`;
-  }
-
-  // Update transactions
-  if (appState.transactions.length === 0) {
-    transactionList.innerHTML = '<div class="no-transactions">No transactions yet</div>';
-  } else {
-    let html = '';
-    const sortedTransactions = [...appState.transactions].sort((a, b) => b.timestamp - a.timestamp);
-    sortedTransactions.forEach(t => {
-      html += `
-      <div class="flex justify-between py-3 border-b border-gray-700">
-        <div>
-          <div class="font-bold">${t.type}</div>
-          <div class="text-gray-400 text-sm">${t.description}</div>
-        </div>
-        <div class="text-right flex items-center gap-2">
-          <div class="text-right">
-            <div class="font-bold">${formatUGX(t.amount)} UGX</div>
-            <div class="status-pending">${t.status}</div>
-          </div>
-          <button class="view-receipt-btn text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded"
-            data-txid="${t.id}">
-            View Receipt
-          </button>
-        </div>
-      </div>
-      `;
-    });
-    transactionList.innerHTML = html;
-    document.querySelectorAll('.view-receipt-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const txId = e.target.dataset.txid;
-        const tx = appState.transactions.find(t => t.id === txId);
-        showReceipt(tx);
-      });
-    });
-  }
-}
-
-function formatUGX(amount) {
-  return new Intl.NumberFormat('en-UG', {
-    style: 'currency',
-    currency: 'UGX',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(amount).replace('UGX', '').trim();
-}
-
-function toUSDT(ugx) {
-  return (ugx / 3700).toFixed(2);
-}
-
-function startCountdown() {
-  if (countdownInterval) clearInterval(countdownInterval);
-  countdownInterval = setInterval(() => {
-    const now = Date.now();
-    const distance = appState.nextClaimTime - now;
-    if (distance <= 0) {
-      clearInterval(countdownInterval);
-      miningCountdown.textContent = 'Ready!';
-      claimCountdown.textContent = 'Ready!';
-      miningBtn.innerHTML = '<i class="fas fa-coins mr-2"></i> Claim Rewards';
-      miningDescription.textContent = `Claim your ${formatUGX(appState.miningReward)} UGX reward`;
-      return;
-    }
-    const h = Math.floor(distance / (1000 * 60 * 60));
-    const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    const s = Math.floor((distance % (1000 * 60)) / 1000);
-    const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    miningCountdown.textContent = timeStr;
-    claimCountdown.textContent = timeStr;
-  }, 1000);
-}
-
-// ✅ ONLY APPLY BOOSTER IF APPROVED
-async function claimReward() {
-  appState.balance += appState.miningReward;
-  if (appState.pendingBoosterTxId) {
-    const tx = appState.transactions.find(t => t.id === appState.pendingBoosterTxId);
-    if (tx && tx.status === 'approved') {
-      appState.miningCycleHours = appState.pendingBooster;
-      appState.pendingBooster = null;
-      appState.pendingBoosterTxId = null;
-    }
-  }
-  const cycleMs = appState.miningCycleHours * 60 * 60 * 1000;
-  appState.nextClaimTime = Date.now() + cycleMs;
-  await saveState();
-  updateUI();
-  startCountdown();
-  alert(`Claimed ${formatUGX(appState.miningReward)} UGX!`);
-}
-
-// === MODAL HANDLERS ===
-authToggle.addEventListener('click', () => {
-  if (appState.isAuthenticated) {
-    appState.isAuthenticated = false;
-    appState.currentUser = null;
-    localStorage.removeItem('ugx_current_user');
-    mainContent.classList.add('hidden');
-    adminPanel.classList.add('hidden');
-    authCard.classList.add('hidden');
-    updateAuthButton();
-  } else {
-    authCard.classList.remove('hidden');
-  }
-});
-closeAuth.addEventListener('click', () => authCard.classList.add('hidden'));
-
-miningBtn.addEventListener('click', () => {
-  const now = Date.now();
-  if (appState.nextClaimTime === 0 || now >= appState.nextClaimTime) {
-    claimReward();
-  }
-});
-
-withdrawBtn.addEventListener('click', () => {
-  if (!appState.userWallet) {
-    alert('Please set your withdrawal wallet address in Edit Profile first!');
-    return;
-  }
-  const fee = Math.floor(appState.balance * 0.2);
-  withdrawAmountUGX.textContent = `${formatUGX(appState.balance)} UGX`;
-  withdrawAmountUSDT.textContent = `(~${toUSDT(appState.balance)} USDT)`;
-  withdrawFeeUGX.textContent = `${formatUGX(fee)} UGX`;
-  withdrawFeeUSDT.textContent = `(~${toUSDT(fee)} USDT)`;
-  userWalletSection.classList.remove('hidden');
-  displayUserWallet.textContent = appState.userWallet;
-  withdrawTxId.value = '';
-  withdrawModal.classList.remove('hidden');
-});
-closeWithdraw.addEventListener('click', () => withdrawModal.classList.add('hidden'));
-cancelWithdraw.addEventListener('click', () => withdrawModal.classList.add('hidden'));
-confirmWithdraw.addEventListener('click', async () => {
-  const txId = withdrawTxId.value.trim();
-  if (!txId) {
-    alert('Please enter a transaction ID for the fee payment.');
-    return;
-  }
-  const fee = Math.floor(appState.balance * 0.2);
-  const newTx = {
-    id: 'TXN-' + Date.now(),
-    type: 'Withdrawal Request',
-    description: `Fee payment TxID: ${txId}. Full balance: ${formatUGX(appState.balance)} UGX`,
-    amount: appState.balance,
-    fee: fee,
-    status: 'pending',
-    timestamp: Date.now(),
-    wallet: appState.userWallet
-  };
-  appState.transactions.push(newTx);
-  await saveState();
-  updateUI();
-  withdrawModal.classList.add('hidden');
-  alert('Withdrawal request submitted for admin approval!');
-});
-
-buyBooster1.addEventListener('click', () => showPaymentModal(1, 8));
-buyBooster2.addEventListener('click', () => showPaymentModal(2, 6));
-buyBooster3.addEventListener('click', () => showPaymentModal(3, 4));
-
-function showPaymentModal(boosterType, duration) {
-  let boosterName;
-  switch(boosterType) {
-    case 1: boosterName = "Speed Booster"; break;
-    case 2: boosterName = "Power Booster"; break;
-    case 3: boosterName = "Quantum Booster"; break;
-  }
-  paymentTitle.textContent = `${boosterName} Payment`;
-  currentMiningInfo.textContent = `${appState.miningCycleHours} hours → ${formatUGX(appState.miningReward)} UGX/cycle`;
-  newMiningInfo.textContent = `${duration} hours → ${formatUGX(appState.miningReward)} UGX/cycle`;
-  transactionId.value = '';
-  paymentModal.dataset.boosterType = boosterType;
-  paymentModal.dataset.duration = duration;
-  paymentModal.classList.remove('hidden');
-}
-closePayment.addEventListener('click', () => paymentModal.classList.add('hidden'));
-cancelPayment.addEventListener('click', () => paymentModal.classList.add('hidden'));
-confirmPayment.addEventListener('click', async () => {
-  const txId = transactionId.value.trim();
-  if (!txId) {
-    alert('Please enter a transaction ID');
-    return;
-  }
-  const boosterType = parseInt(paymentModal.dataset.boosterType);
-  const duration = parseInt(paymentModal.dataset.duration);
-  let cost;
-  switch(boosterType) {
-    case 1: cost = appState.balance * 2; break;
-    case 2: cost = appState.balance * 4; break;
-    case 3: cost = appState.balance * 8; break;
-  }
-  const newTxId = 'TXN-' + Date.now();
-  const newTx = {
-    id: newTxId,
-    type: 'Booster Payment',
-    description: `Payment for booster (TxID: ${txId})`,
-    amount: cost,
-    status: 'pending',
-    timestamp: Date.now(),
-    duration: duration
-  };
-  appState.transactions.push(newTx);
-  appState.pendingBoosterTxId = newTxId;
-  appState.pendingBooster = duration;
-  await saveState();
-  updateUI();
-  paymentModal.classList.add('hidden');
-  alert('Payment submitted for admin approval!');
-});
-
-// === COPY FUNCTIONS ===
-copyWallet.addEventListener('click', () => {
-  navigator.clipboard.writeText('TX3CWq6CPLpJdPeSsEDdY5vjGyYF5f1Csg').then(() => {
-    const original = copyWallet.textContent;
-    copyWallet.textContent = 'Copied!';
-    setTimeout(() => copyWallet.textContent = original, 1500);
-  });
-});
-copyBoosterWallet.addEventListener('click', () => {
-  navigator.clipboard.writeText('TX3CWq6CPLpJdPeSsEDdY5vjGyYF5f1Csg').then(() => {
-    const original = copyBoosterWallet.textContent;
-    copyBoosterWallet.textContent = 'Copied!';
-    setTimeout(() => copyBoosterWallet.textContent = original, 1500);
-  });
-});
-
-// === EDIT PROFILE ===
-editProfileBtn.addEventListener('click', () => {
-  userWalletInput.value = appState.userWallet || '';
-  editProfileModal.classList.remove('hidden');
-});
-closeEditProfile.addEventListener('click', () => editProfileModal.classList.add('hidden'));
-cancelEditProfile.addEventListener('click', () => editProfileModal.classList.add('hidden'));
-saveProfile.addEventListener('click', async () => {
-  const wallet = userWalletInput.value.trim();
-  if (wallet && !wallet.startsWith('T')) {
-    alert('Please enter a valid TRC20 (USDT) or UGX wallet address starting with "T"');
-    return;
-  }
-  appState.userWallet = wallet;
-  await saveState();
-  updateUI();
-  editProfileModal.classList.add('hidden');
-  alert('Profile updated successfully!');
-});
-
-// === RECEIPT FUNCTIONS ===
-function showReceipt(tx) {
-  let receiptText = `===============================
-UGX MINING PLATFORM
-Transaction Receipt
-===============================
-Transaction ID: ${tx.id}
-Type: ${tx.type}
-Status: ${tx.status}
-Amount: ${formatUGX(tx.amount)} UGX
-Date: ${new Date(tx.timestamp).toLocaleString()}
-`;
-  if (tx.type === 'Withdrawal Request') {
-    receiptText += `Wallet: ${appState.userWallet || 'Not set'}
-`;
-    receiptText += `Note: Funds will be sent to this wallet.
-`;
-  } else if (tx.type === 'Booster Payment') {
-    receiptText += `Cycle: ${tx.duration} hours
-`;
-  }
-  receiptText += `
-Thank you for using UGX Mine!`;
-  receiptContent.textContent = receiptText;
-  receiptModal.classList.remove('hidden');
-}
-copyReceipt.addEventListener('click', () => {
-  const text = receiptContent.textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    const original = copyReceipt.innerHTML;
-    copyReceipt.innerHTML = '<i class="fas fa-check mr-2"></i> Copied!';
-    setTimeout(() => { copyReceipt.innerHTML = original; }, 2000);
-  });
-});
-printReceipt.addEventListener('click', () => {
-  const printContent = receiptContent.textContent;
-  const printWindow = window.open('', '', 'height=400,width=600');
-  printWindow.document.write('<html><head><title>Receipt</title>');
-  printWindow.document.write('<style>body{font-family:monospace;padding:20px;}</style></head><body>');
-  printWindow.document.write('<pre>' + printContent + '</pre>');
-  printWindow.document.write('</body></html>');
-  printWindow.document.close();
-  printWindow.print();
-});
-closeReceipt.addEventListener('click', () => {
-  receiptModal.classList.add('hidden');
-});
-receiptModal.addEventListener('click', (e) => {
-  if (e.target === receiptModal) {
-    receiptModal.classList.add('hidden');
-  }
-});
-
-// === ✅ ENHANCED ADMIN PANEL LOGIC ===
-adminPanelBtn.addEventListener('click', () => {
-  mainContent.classList.add('hidden');
-  adminPanel.classList.remove('hidden');
-  loadAdminPanel();
-});
-backToMain.addEventListener('click', () => {
-  adminPanel.classList.add('hidden');
-  mainContent.classList.remove('hidden');
-});
-
-async function loadAdminPanel() {
-  const { data: users, error } = await supabase.from('users').select('*');
-  if (error) { console.error(error); return; }
-
-  let allTransactions = [];
-  users.forEach(u => {
-    const txs = Array.isArray(u.transactions) ? u.transactions : [];
-    txs.forEach(tx => allTransactions.push({ ...tx, username: u.username }));
-  });
-
-  const pendingTx = allTransactions.filter(tx => tx.status === 'pending');
-
-  // Update stats
-  adminTotalUsers.textContent = users.length;
-  const totalBalance = users.reduce((sum, u) => sum + (Number(u.balance) || 0), 0);
-  adminTotalBalance.textContent = `${formatUGX(totalBalance)} UGX`;
-  adminPendingRequests.textContent = pendingTx.length;
-  const activeBoosters = users.filter(u =>
-    u.pending_booster_tx_id && 
-    (Array.isArray(u.transactions) ? u.transactions.find(t => t.id === u.pending_booster_tx_id) : null)?.status === 'approved'
-  ).length;
-  adminActiveBoosters.textContent = activeBoosters;
-
-  renderTransactionTable(allTransactions);
-  renderUserTable(users);
-  renderBalanceChart(users);
-  renderTxTypeChart(allTransactions);
-}
-
-function renderTransactionTable(transactions) {
-  const searchTerm = adminSearch.value.toLowerCase();
-  const filterType = adminFilter.value;
-  let filtered = transactions.filter(tx => {
-    const matchesSearch =
-      tx.username?.toLowerCase().includes(searchTerm) ||
-      (tx.id && tx.id.toLowerCase().includes(searchTerm));
-    const matchesType = filterType === 'all' || tx.type === filterType;
-    return matchesSearch && matchesType;
-  });
-
-  if (filtered.length === 0) {
-    adminTxTableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">No transactions found</td></tr>';
-    return;
-  }
-
-  let html = '';
-  filtered.sort((a, b) => b.timestamp - a.timestamp);
-  filtered.forEach(tx => {
-    const user = getUserFromList(tx.username);
-    const wallet = user?.user_wallet || 'Not set';
-    const date = new Date(tx.timestamp).toLocaleString();
-    const statusClass =
-      tx.status === 'approved' ? 'text-green-400' :
-      tx.status === 'rejected' ? 'text-red-400' : 'text-yellow-400';
-    html += `
-    <tr class="border-b border-gray-800 hover:bg-gray-800/50">
-      <td class="py-2 font-mono">${tx.username}</td>
-      <td class="py-2 font-mono text-xs">${wallet}</td>
-      <td class="py-2">${tx.type}</td>
-      <td class="py-2">${formatUGX(tx.amount)} UGX</td>
-      <td class="py-2"><span class="${statusClass}">${tx.status}</span></td>
-      <td class="py-2 text-xs">${date}</td>
-      <td class="py-2">
-    `;
-    if (tx.status === 'pending') {
-      html += `
-        <button class="bg-green-600 hover:bg-green-700 text-xs px-2 py-1 rounded mr-1 approve-btn"
-          data-username="${tx.username}" data-txid="${tx.id}">Approve</button>
-        <button class="bg-red-600 hover:bg-red-700 text-xs px-2 py-1 rounded reject-btn"
-          data-username="${tx.username}" data-txid="${tx.id}">Reject</button>
-      `;
-    } else {
-      html += `<span class="text-gray-500">—</span>`;
-    }
-    html += `</td></tr>`;
-  });
-  adminTxTableBody.innerHTML = html;
-
-  document.querySelectorAll('.approve-btn').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const username = e.target.dataset.username;
-      const txId = e.target.dataset.txid;
-      await approveRequest(username, txId);
-    });
-  });
-  document.querySelectorAll('.reject-btn').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const username = e.target.dataset.username;
-      const txId = e.target.dataset.txid;
-      await rejectRequest(username, txId);
-    });
-  });
-}
-
-function renderUserTable(users) {
-  if (users.length === 0) {
-    adminUserTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-500">No users</td></tr>';
-    return;
-  }
-  let html = '';
-  users.forEach(user => {
-    const cycle = user.mining_cycle_hours || 24;
-    html += `
-    <tr class="border-b border-gray-800 hover:bg-gray-800/50">
-      <td class="py-2 font-mono">${user.username}</td>
-      <td class="py-2">${user.user_email || '—'}</td>
-      <td class="py-2">${formatUGX(Number(user.balance) || 0)} UGX</td>
-      <td class="py-2 font-mono text-xs">${user.user_wallet || 'Not set'}</td>
-      <td class="py-2">${cycle}h</td>
-    </tr>
-    `;
-  });
-  adminUserTableBody.innerHTML = html;
-}
-
-function renderBalanceChart(users) {
-  const ctx = document.getElementById('balanceChart').getContext('2d');
-  if (balanceChart) balanceChart.destroy();
-  const topUsers = users
-    .sort((a, b) => (Number(b.balance) || 0) - (Number(a.balance) || 0))
-    .slice(0, 10);
-  balanceChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: topUsers.map(u => u.username),
-      datasets: [{
-        label: 'Balance (UGX)',
-        data: topUsers.map(u => Number(u.balance) || 0),
-        backgroundColor: 'rgba(0, 193, 106, 0.7)',
-        borderColor: 'rgba(0, 193, 106, 1)',
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { beginAtZero: true, ticks: { color: '#94a3b8', callback: (value) => formatUGX(value) } },
-        x: { ticks: { color: '#94a3b8' } }
-      }
-    }
-  });
-}
-
-function renderTxTypeChart(transactions) {
-  const ctx = document.getElementById('txTypeChart').getContext('2d');
-  if (txTypeChart) txTypeChart.destroy();
-  const typeCounts = transactions.reduce((acc, tx) => {
-    acc[tx.type] = (acc[tx.type] || 0) + 1;
-    return acc;
-  }, {});
-  const labels = Object.keys(typeCounts);
-  const data = Object.values(typeCounts);
-  txTypeChart = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: labels,
-      datasets: [{
-        data: data,
-        backgroundColor: ['rgba(0, 193, 106, 0.8)','rgba(245, 158, 11, 0.8)','rgba(96, 165, 250, 0.8)'],
-        borderWidth: 2,
-        borderColor: '#0f172a'
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { labels: { color: '#e2e8f0' } }
-      }
-    }
-  });
-}
-
-function getUserFromList(username) {
-  // Fetched from Supabase in loadAdminPanel
-  // We assume it's in the `users` array
-  return null; // Not needed if using direct Supabase fetch per action
-}
-
-adminSearch.addEventListener('input', () => loadAdminPanel());
-adminFilter.addEventListener('change', () => loadAdminPanel());
-
-// === APPROVAL LOGIC ===
-async function approveRequest(username, txId) {
-  const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('username', username)
-    .single();
-  if (error || !data) return;
-
-  const txIndex = data.transactions.findIndex(t => t.id === txId);
-  if (txIndex === -1) return;
-
-  const tx = data.transactions[txIndex];
-  data.transactions[txIndex].status = 'approved';
-
-  let updateFields = { transactions: data.transactions };
-
-  if (tx.type === 'Withdrawal Request') {
-    updateFields = {
-      ...updateFields,
-      balance: 0,
-      mining_cycle_hours: 24,
-      pending_booster: null,
-      pending_booster_tx_id: null,
-      next_claim_time: new Date(Date.now() + (24 * 60 * 60 * 1000)).toISOString(),
-      last_withdrawal_approved: new Date().toISOString()
-    };
-    alert(`Withdrawal approved for ${username}. Balance reset and boosters cleared.`);
-  } else if (tx.type === 'Booster Payment') {
-    alert(`Booster approved for ${username}.`);
-  }
-
-  await supabase
-    .from('users')
-    .update(updateFields)
-    .eq('username', username);
-
-  if (appState.currentUser === username) {
-    login(username, data.password);
-  }
-  loadAdminPanel();
-}
-
-async function rejectRequest(username, txId) {
-  const { data, error } = await supabase
-    .from('users')
-    .select('transactions, password')
-    .eq('username', username)
-    .single();
-  if (error || !data) return;
-
-  const txIndex = data.transactions.findIndex(t => t.id === txId);
-  if (txIndex === -1) return;
-
-  data.transactions[txIndex].status = 'rejected';
-
-  await supabase
-    .from('users')
-    .update({ transactions: data.transactions })
-    .eq('username', username);
-
-  if (appState.currentUser === username) {
-    login(username, data.password);
-  }
-  alert(`Rejected request for ${username}`);
-  loadAdminPanel();
-}
-
-// === INIT APP ===
-document.addEventListener('DOMContentLoaded', initApp);
-</script>
+        // Init
+        window.onload = () => {
+            const u = localStorage.getItem('ugx_user');
+            const p = localStorage.getItem('ugx_pass');
+            if (u && p) login(u, p);
+            else authCard.classList.remove('hidden');
+        };
+    </script>
 </body>
 </html>
