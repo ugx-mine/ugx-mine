@@ -17,7 +17,7 @@
         }
         .booster-card { 
             background-color: #000000; 
-            border: 1px solid #2a3d6a; 
+            border: 1px solid #000000; 
             border-radius: 16px; 
             padding: 1.5rem; 
             transition: all 0.3s ease; 
@@ -46,8 +46,8 @@
             font-family: 'Courier New', monospace;
             font-size: 1.8rem;
             background: rgba(0, 30, 20, 0.6);
-            color: #00ff9d;
-            border: 1px solid #00c16a;
+            color: #ff6b35;
+            border: 1px solid #ff0000;
             padding: 0.5rem 1rem;
             border-radius: 12px;
             min-width: 160px;
@@ -70,7 +70,7 @@
             </div>
             <div class="flex gap-2">
                 <button id="adminPanelBtn" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm hidden">Admin Panel</button>
-                <button id="authToggle" class="px-4 py-2 bg-green-600 hover:bg-red-700 rounded-lg">Logout</button>
+                <button id="authToggle" class="px-4 py-2 bg-red-600 hover:bg-green-700 rounded-lg">Logout</button>
             </div>
         </header>
 
@@ -110,7 +110,7 @@
             <!-- 2. Modern Mining Card -->
             <div class="flex justify-center mb-6">
               <div class="mining-card w-full max-w-2xl text-center">
-                <p class="text-gray-400 text-sm">Your Balance</p>
+                <p class="font-bold text-amber-400">Your Balance</p>
                 <p id="balanceUGX" class="text-4xl md:text-5xl font-bold text-white my-2">0 UGX</p>
                 <p id="balanceUSDT" class="text-gray-500 text-sm mb-4">~0.00 USDT</p>
 
@@ -132,7 +132,7 @@
                 </div>
 
                 <button id="miningBtn" class="mt-2 w-full max-w-xs mx-auto bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 py-3 rounded-lg font-bold text-white shadow-lg hover:shadow-xl transition">
-                  Claim Reward
+                  Claim
                 </button>
               </div>
             </div>
