@@ -9,14 +9,14 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .mining-card { 
-            background: linear-gradient(135deg, #0f172a 0%, #121a2e 100%); 
+            background-color: #1e293b; 
             border: 1px solid #2a3d6a; 
             border-radius: 16px; 
             padding: 1.5rem; 
             margin-bottom: 1.5rem; 
         }
         .booster-card { 
-            background: linear-gradient(135deg, #1a2642 0%, #121a2e 100%); 
+            background-color: #000000; 
             border: 1px solid #2a3d6a; 
             border-radius: 16px; 
             padding: 1.5rem; 
@@ -70,7 +70,7 @@
             </div>
             <div class="flex gap-2">
                 <button id="adminPanelBtn" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm hidden">Admin Panel</button>
-                <button id="authToggle" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg">Logout</button>
+                <button id="authToggle" class="px-4 py-2 bg-green-600 hover:bg-red-700 rounded-lg">Logout</button>
             </div>
         </header>
 
@@ -141,7 +141,7 @@
             <div class="mining-card mb-6">
               <h3 class="font-bold mb-2">Withdraw Funds</h3>
               <button id="openWithdrawModalBtn" class="w-full bg-amber-600 hover:bg-amber-700 py-3 rounded-lg font-bold">
-                Request Withdrawal (Min: 50k UGX) • 20% USDT Processing Fee
+                Withdraw
               </button>
               <p class="text-xs text-gray-500 mt-2">You’ll pay 20% of your balance in USDT to process withdrawal</p>
             </div>
@@ -150,27 +150,27 @@
             <h3 class="text-lg font-bold mb-4">Boosters</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div class="booster-card relative overflow-hidden">
-                <h4 class="font-bold text-lg">Eagle Miner</h4>
-                <p class="text-gray-400 text-sm mt-1">12h cycle</p>
+                <h4 class="font-bold text-lg">EAGER MINER</h4>
+                <p class="text-3xl md:text-4xl font-bold text-blue-600 my-2">12h cycle</p>
                 <p class="font-bold text-green-400 mt-1">10,000 UGX / claim</p>
                 <p class="text-gray-500 text-xs mt-1">Earn twice as fast</p>
-                <button onclick="showBoosterModal(12, 10000, calculateBoosterPrice(2))" class="w-full mt-2 bg-blue-600 py-1 rounded text-sm">Buy for <span id="price12h">—</span></button>
+                <button onclick="showBoosterModal(12, 10000, calculateBoosterPrice(2))" class="w-full mt-2 bg-blue-600 py-3 rounded-lg font-bold">Buy for <span id="price12h">—</span></button>
               </div>
 
               <div class="booster-card relative overflow-hidden">
-                <h4 class="font-bold text-lg">Falcon Miner</h4>
-                <p class="text-gray-400 text-sm mt-1">6h cycle</p>
+                <h4 class="font-bold text-lg">FALCON MINER</h4>
+                <p class="text-3xl md:text-4xl font-bold text-purple-600 my-2">6h cycle</p>
                 <p class="font-bold text-green-400 mt-1">10,000 UGX / claim</p>
                 <p class="text-gray-500 text-xs mt-1">Earn 4× faster</p>
-                <button onclick="showBoosterModal(6, 10000, calculateBoosterPrice(4))" class="w-full mt-2 bg-purple-600 py-1 rounded text-sm">Buy for <span id="price6h">—</span></button>
+                <button onclick="showBoosterModal(6, 10000, calculateBoosterPrice(4))" class="w-full mt-2 bg-purple-600 py-3 rounded-lg font-bold">Buy for <span id="price6h">—</span></button>
               </div>
 
               <div class="booster-card relative overflow-hidden">
-                <h4 class="font-bold text-lg">Phoenix Miner</h4>
-                <p class="text-gray-400 text-sm mt-1">2h cycle</p>
+                <h4 class="font-bold text-lg">PHOENIX MINER</h4>
+                <p class="text-3xl md:text-4xl font-bold text-amber-600 my-2">2h cycle</p>
                 <p class="font-bold text-green-400 mt-1">10,000 UGX / claim</p>
                 <p class="text-gray-500 text-xs mt-1">Earn 8× faster</p>
-                <button onclick="showBoosterModal(2, 10000, calculateBoosterPrice(8))" class="w-full mt-2 bg-emerald-600 py-1 rounded text-sm">Buy for <span id="price2h">—</span></button>
+                <button onclick="showBoosterModal(2, 10000, calculateBoosterPrice(8))" class="w-full mt-2 bg-amber-600 py-3 rounded-lg font-bold">Buy for <span id="price2h">—</span></button>
               </div>
             </div>
 
@@ -291,7 +291,7 @@
 
         <!-- Terms Footer -->
         <div class="text-center text-xs text-gray-500 mt-8 pb-4">
-          <p>UGX Mine is a simulation for testing purposes only. Not real currency. 
+          <p>UGX Mine is for mining purposes. Ugx and crypto currency used only.
             <a href="#" class="text-gray-400 hover:underline">Terms of Use</a>
           </p>
         </div>
