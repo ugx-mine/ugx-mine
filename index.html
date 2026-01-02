@@ -146,8 +146,8 @@
               <button id="openWithdrawModalBtn" class="w-full bg-amber-600 hover:bg-amber-700 py-3 rounded-lg font-bold">
                 Withdraw <span id="withdrawDayLabel">(—)</span>
               </button>
-              <p id="withdrawCountdown" class="text-xs text-gray-500 mt-1 hidden"></p>
-              <p class="text-xs text-gray-500 mt-1">You’ll pay 20% of your balance in USDT to process withdrawal</p>
+              <p id="withdrawCountdown" class="text-xs text-gray-500 mt-1"></p>
+              <p class="text-xs text-gray-500 mt-1">20% USDT fee • Once per week on your day</p>
             </div>
 
             <!-- 4. Boosters -->
@@ -156,7 +156,7 @@
               <div class="booster-card relative overflow-hidden">
                 <h4 class="font-bold text-lg">EAGER MINER</h4>
                 <p class="text-3xl md:text-4xl font-bold text-blue-600 my-2">2h cycle</p>
-                <p class="font-bold text-green-400 mt-1">Balance ÷ 4 / claim</p>
+                <p class="font-bold text-green-400 mt-1" id="eagleReward">+0 UGX / claim</p>
                 <p class="text-gray-500 text-xs mt-1">Earn 3× your balance in 24h</p>
                 <button onclick="showBoosterModal(2, (user?.balance || 0) / 4, (user?.balance || 0) * 2)" class="w-full mt-2 bg-blue-600 py-3 rounded-lg font-bold">Buy for <span id="priceEagle">—</span></button>
               </div>
@@ -164,7 +164,7 @@
               <div class="booster-card relative overflow-hidden">
                 <h4 class="font-bold text-lg">FALCON MINER</h4>
                 <p class="text-3xl md:text-4xl font-bold text-purple-600 my-2">2h cycle</p>
-                <p class="font-bold text-green-400 mt-1">Balance ÷ 2 / claim</p>
+                <p class="font-bold text-green-400 mt-1" id="falconReward">+0 UGX / claim</p>
                 <p class="text-gray-500 text-xs mt-1">Earn 6× your balance in 24h</p>
                 <button onclick="showBoosterModal(2, (user?.balance || 0) / 2, (user?.balance || 0) * 4)" class="w-full mt-2 bg-purple-600 py-3 rounded-lg font-bold">Buy for <span id="priceFalcon">—</span></button>
               </div>
@@ -172,7 +172,7 @@
               <div class="booster-card relative overflow-hidden">
                 <h4 class="font-bold text-lg">PHOENIX MINER</h4>
                 <p class="text-3xl md:text-4xl font-bold text-amber-600 my-2">2h cycle</p>
-                <p class="font-bold text-green-400 mt-1">Full Balance / claim</p>
+                <p class="font-bold text-green-400 mt-1" id="phoenixReward">+0 UGX / claim</p>
                 <p class="text-gray-500 text-xs mt-1">Earn 12× your balance in 24h</p>
                 <button onclick="showBoosterModal(2, (user?.balance || 0), (user?.balance || 0) * 8)" class="w-full mt-2 bg-amber-600 py-3 rounded-lg font-bold">Buy for <span id="pricePhoenix">—</span></button>
               </div>
@@ -439,7 +439,7 @@
             // Check referral count if referrer exists
             let bonus = 0;
             if (referrer) {
-                const { data: refUser } = await _supabase.from('users').select('referral_count').eq('username', referrer).single();
+                const {  refUser } = await _supabase.from('users').select('referral_count').eq('username', referrer).single();
                 if (refUser && (refUser.referral_count || 0) < 2) {
                     bonus = 5000;
                     // Increment referrer's count
@@ -500,6 +500,7 @@
             setInterval(generateFakeActivity, 15000);
         }
 
+        // --- UPDATED updateUI FUNCTION ---
         function updateUI() {
             const balance = user.balance || 0;
             const reward = user.mining_reward || 5000;
@@ -509,7 +510,12 @@
             document.getElementById('miningCycleDisplay').textContent = (user.mining_cycle_hours || 24) + "h";
             document.getElementById('nextClaimAmount').textContent = "+" + reward.toLocaleString() + " UGX";
 
-            // Update booster prices dynamically
+            // 🔹 Update booster reward amounts (per 2h claim)
+            document.getElementById('eagleReward').textContent = `+${Math.floor(balance / 4).toLocaleString()} UGX / claim`;
+            document.getElementById('falconReward').textContent = `+${Math.floor(balance / 2).toLocaleString()} UGX / claim`;
+            document.getElementById('phoenixReward').textContent = `+${Math.floor(balance).toLocaleString()} UGX / claim`;
+
+            // 🔹 Update booster prices
             const priceEagle = (balance * 2);
             const priceFalcon = (balance * 4);
             const pricePhoenix = (balance * 8);
@@ -517,31 +523,41 @@
             document.getElementById('priceFalcon').textContent = `${priceFalcon.toLocaleString()} UGX (~${(priceFalcon / 3700).toFixed(2)} USDT)`;
             document.getElementById('pricePhoenix').textContent = `${pricePhoenix.toLocaleString()} UGX (~${(pricePhoenix / 3700).toFixed(2)} USDT)`;
 
-            // Update Withdraw UI
+            // 🔹 Update Withdraw UI - ALWAYS show meaningful message
             const wInfo = getWithdrawInfo();
             document.getElementById('withdrawDayLabel').textContent = `(${wInfo.dayName})`;
             const countdownEl = document.getElementById('withdrawCountdown');
-            if (wInfo.daysLeft !== null && wInfo.daysLeft > 0) {
-              countdownEl.textContent = `${wInfo.daysLeft} ${wInfo.daysLeft === 1 ? 'day' : 'days'} until next window`;
-              countdownEl.classList.remove('hidden');
+            
+            if (wInfo.isToday) {
+                countdownEl.textContent = "✅ Today! Withdraw now.";
+                countdownEl.className = "text-xs text-green-400 mt-1"; // green = ready
+                countdownEl.classList.remove('hidden');
+            } else if (wInfo.daysLeft !== null) {
+                const dayName = wInfo.dayName;
+                countdownEl.textContent = `${wInfo.daysLeft} ${wInfo.daysLeft === 1 ? 'day' : 'days'} until ${dayName}`;
+                countdownEl.className = "text-xs text-gray-500 mt-1"; // gray = pending
+                countdownEl.classList.remove('hidden');
             } else {
-              countdownEl.classList.add('hidden');
+                // Not assigned yet — will be assigned on first click
+                countdownEl.textContent = "Withdraw available after first eligibility";
+                countdownEl.className = "text-xs text-gray-500 mt-1";
+                countdownEl.classList.remove('hidden');
             }
 
-            // Update Booster Expiry Timer
+            // 🔹 Update Booster Expiry Timer
             const expiryEl = document.getElementById('boosterExpiry');
             if (user.booster_expires_at) {
-              const diff = new Date(user.booster_expires_at) - Date.now();
-              if (diff > 0) {
-                const h = Math.floor(diff / 3600000);
-                const m = Math.floor((diff % 3600000) / 60000);
-                expiryEl.textContent = `Booster expires in: ${h}h ${m}m`;
-                expiryEl.classList.remove('hidden');
-              } else {
-                expiryEl.classList.add('hidden');
-              }
+                const diff = new Date(user.booster_expires_at) - Date.now();
+                if (diff > 0) {
+                    const h = Math.floor(diff / 3600000);
+                    const m = Math.floor((diff % 3600000) / 60000);
+                    expiryEl.textContent = `Booster expires in: ${h}h ${m}m`;
+                    expiryEl.classList.remove('hidden');
+                } else {
+                    expiryEl.classList.add('hidden');
+                }
             } else {
-              expiryEl.classList.add('hidden');
+                expiryEl.classList.add('hidden');
             }
         }
 
@@ -709,7 +725,7 @@
                     })
                     .eq('username', user.username);
 
-                const { data: updated } = await _supabase
+                const {  updated } = await _supabase
                     .from('users')
                     .select('*')
                     .eq('username', user.username)
