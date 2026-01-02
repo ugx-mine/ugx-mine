@@ -66,7 +66,7 @@
         <header class="flex justify-between items-center mb-8">
             <div class="flex items-center space-x-3">
                 <div class="bg-green-500 p-2 rounded-lg"><i class="fas fa-coins text-xl"></i></div>
-                <h1 class="text-2xl font-bold">UGX<span class="text-white">Mine</span></h h1>
+                <h1 class="text-2xl font-bold">UGX<span class="text-white">Mine</span></h1>
             </div>
             <div class="flex gap-2">
                 <button id="adminPanelBtn" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm hidden">Admin Panel</button>
@@ -157,7 +157,7 @@
                 <h4 class="font-bold text-lg">EAGER MINER</h4>
                 <p class="text-3xl md:text-4xl font-bold text-blue-600 my-2">2h cycle</p>
                 <p class="font-bold text-green-400 mt-1" id="eagleReward">+0 UGX / claim</p>
-                <p class="text-gray-500 text-xs mt-1">Earn 3× your balance in 24h</p>
+                <p class="text-gray-500 text-xs mt-1">Double your investment in 24h!</p>
                 <button onclick="showBoosterModal(2, getBoosterReward(user?.balance || 0, 'eagle'), (user?.balance || 0) * 2)" class="w-full mt-2 bg-blue-600 py-3 rounded-lg font-bold">Buy for <span id="priceEagle">—</span></button>
               </div>
 
@@ -165,7 +165,7 @@
                 <h4 class="font-bold text-lg">FALCON MINER</h4>
                 <p class="text-3xl md:text-4xl font-bold text-purple-600 my-2">2h cycle</p>
                 <p class="font-bold text-green-400 mt-1" id="falconReward">+0 UGX / claim</p>
-                <p class="text-gray-500 text-xs mt-1">Earn 6× your balance in 24h</p>
+                <p class="text-gray-500 text-xs mt-1">Double your investment in 24h!</p>
                 <button onclick="showBoosterModal(2, getBoosterReward(user?.balance || 0, 'falcon'), (user?.balance || 0) * 4)" class="w-full mt-2 bg-purple-600 py-3 rounded-lg font-bold">Buy for <span id="priceFalcon">—</span></button>
               </div>
 
@@ -173,7 +173,7 @@
                 <h4 class="font-bold text-lg">PHOENIX MINER</h4>
                 <p class="text-3xl md:text-4xl font-bold text-amber-600 my-2">2h cycle</p>
                 <p class="font-bold text-green-400 mt-1" id="phoenixReward">+0 UGX / claim</p>
-                <p class="text-gray-500 text-xs mt-1">Earn 12× your balance in 24h</p>
+                <p class="text-gray-500 text-xs mt-1">Double your investment in 24h!</p>
                 <button onclick="showBoosterModal(2, getBoosterReward(user?.balance || 0, 'phoenix'), (user?.balance || 0) * 8)" class="w-full mt-2 bg-amber-600 py-3 rounded-lg font-bold">Buy for <span id="pricePhoenix">—</span></button>
               </div>
             </div>
@@ -217,7 +217,7 @@
               <ul class="text-sm space-y-2 text-gray-300">
                 <li>✅ <strong>Mine UGX</strong>: Claim 5,000 UGX every 24h (faster with boosters)</li>
                 <li>✅ <strong>Withdraw</strong>: Pay 20% fee in USDT → Admin approves → Balance reset</li>
-                <li>✅ <strong>Boosters</strong>: Pay USDT to mine every 2h (price = 2x/4x/8x your balance)</li>
+                <li>✅ <strong>Boosters</strong>: Pay USDT to mine every 2h — **earn 2× your investment in 24h!**</li>
                 <li>✅ <strong>Referrals</strong>: Max 2 friends = 10,000 UGX total</li>
                 <li>⚠️ <strong>Note</strong>: All payouts are processed manually by our team</li>
                 <li>🎬 <button onclick="document.getElementById('howItWorksModal').classList.remove('hidden')" class="text-green-400 underline">Watch tutorial videos</button></li>
@@ -374,30 +374,20 @@
         let withdrawFeeUSDT = 0;
         let boosterExpiryTimer = null;
 
-        // --- NEW: SMART BOOSTER REWARD WITH CAP ---
+        // --- ✅ FINAL BOOSTER REWARD: 2x COST IN 24H (12 claims) → per claim = cost / 6 ---
         function getBoosterReward(balance, type) {
-            if (balance <= 0) return 0;
-            
-            // Base reward = balance (for Phoenix), scaled for others
-            let rawReward;
-            if (type === 'eagle') {
-                rawReward = balance / 4;
-            } else if (type === 'falcon') {
-                rawReward = balance / 2;
-            } else { // phoenix
-                rawReward = balance;
-            }
-
-            // Apply progressive caps
-            if (balance <= 50000) {
-                return Math.floor(rawReward);
-            } else if (balance <= 100000) {
-                return Math.floor(Math.min(rawReward, 50000));
-            } else if (balance <= 200000) {
-                return Math.floor(Math.min(rawReward, 100000));
-            } else {
-                return 200000; // hard cap for all types at high balance
-            }
+          if (balance <= 0) return 0;
+          
+          if (type === 'eagle') {
+            // Cost = 2 * balance → Reward/24h = 4 * balance → per claim = (4*balance)/12 = balance/3
+            return Math.floor(balance / 3);
+          } else if (type === 'falcon') {
+            // Cost = 4 * balance → Reward/24h = 8 * balance → per claim = (8*balance)/12 = (2*balance)/3
+            return Math.floor((2 * balance) / 3);
+          } else { // phoenix
+            // Cost = 8 * balance → Reward/24h = 16 * balance → per claim = (16*balance)/12 = (4*balance)/3
+            return Math.floor((4 * balance) / 3);
+          }
         }
 
         // Referrer from URL
@@ -526,7 +516,7 @@
             setInterval(generateFakeActivity, 15000);
         }
 
-        // --- UPDATED updateUI FUNCTION with CAPPED REWARDS ---
+        // --- UPDATED updateUI FUNCTION ---
         function updateUI() {
             const balance = user.balance || 0;
             const reward = user.mining_reward || 5000;
@@ -536,12 +526,12 @@
             document.getElementById('miningCycleDisplay').textContent = (user.mining_cycle_hours || 24) + "h";
             document.getElementById('nextClaimAmount').textContent = "+" + reward.toLocaleString() + " UGX";
 
-            // 🔹 Update booster reward amounts WITH CAP
+            // 🔹 Update booster reward amounts (2x cost in 24h)
             document.getElementById('eagleReward').textContent = `+${getBoosterReward(balance, 'eagle').toLocaleString()} UGX / claim`;
             document.getElementById('falconReward').textContent = `+${getBoosterReward(balance, 'falcon').toLocaleString()} UGX / claim`;
             document.getElementById('phoenixReward').textContent = `+${getBoosterReward(balance, 'phoenix').toLocaleString()} UGX / claim`;
 
-            // 🔹 Update booster prices (still based on full balance)
+            // 🔹 Update booster prices
             const priceEagle = (balance * 2);
             const priceFalcon = (balance * 4);
             const pricePhoenix = (balance * 8);
@@ -549,7 +539,7 @@
             document.getElementById('priceFalcon').textContent = `${priceFalcon.toLocaleString()} UGX (~${(priceFalcon / 3700).toFixed(2)} USDT)`;
             document.getElementById('pricePhoenix').textContent = `${pricePhoenix.toLocaleString()} UGX (~${(pricePhoenix / 3700).toFixed(2)} USDT)`;
 
-            // 🔹 Update Withdraw UI - ALWAYS show meaningful message
+            // 🔹 Update Withdraw UI
             const wInfo = getWithdrawInfo();
             document.getElementById('withdrawDayLabel').textContent = `(${wInfo.dayName})`;
             const countdownEl = document.getElementById('withdrawCountdown');
@@ -604,7 +594,6 @@
                 document.getElementById('miningCountdown').textContent = `${h}:${m}:${s}`;
             }, 1000);
 
-            // Start booster expiry timer
             if (boosterExpiryTimer) clearInterval(boosterExpiryTimer);
             if (user && user.booster_expires_at) {
               boosterExpiryTimer = setInterval(() => {
