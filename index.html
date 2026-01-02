@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UGX Mining Platform</title>
-    <script src="https://cdn.tailwindcss.com  "></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css  ">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2  "></script>
+    <script src="https://cdn.tailwindcss.com    "></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css    ">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2    "></script>
     <style>
         .mining-card { 
             background-color: #1e293b; 
@@ -216,6 +216,7 @@
                 <li>✅ <strong>Withdraw</strong>: Pay 20% fee in USDT → Admin approves → Balance reset</li>
                 <li>✅ <strong>Boosters</strong>: Pay USDT to mine more frequently (price = 2x/4x/8x your balance)</li>
                 <li>⚠️ <strong>Note</strong>: All payouts are processed manually by our team</li>
+                <li>🎬 <button onclick="document.getElementById('howItWorksModal').classList.remove('hidden')" class="text-green-400 underline">Watch tutorial videos</button></li>
               </ul>
             </div>
         </main>
@@ -290,9 +291,64 @@
           </div>
         </div>
 
+        <!-- HOW IT WORKS MODAL -->
+        <div id="howItWorksModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
+          <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-bold">How It Works</h3>
+              <button onclick="document.getElementById('howItWorksModal').classList.add('hidden')" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+
+            <!-- Main Overview Video -->
+            <div class="mb-5">
+              <p class="text-xs text-gray-400 mb-2">📽️ Full Overview</p>
+              <div class="aspect-video bg-black rounded-lg overflow-hidden">
+                <iframe
+                  src="https://www.youtube.com/embed/B3b2YKLzmqY"
+                  title="UGXMine Tutorial"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen
+                  class="w-full h-full">
+                </iframe>
+              </div>
+            </div>
+
+            <!-- Step-by-Step Videos (Placeholders) -->
+            <div class="space-y-3">
+              <div>
+                <p class="text-xs text-gray-400">1. Set Your TRC20 Wallet</p>
+                <button onclick="openTutorialVideo('https://youtube.com/shorts/YOUR_WALLET_VIDEO')" class="w-full text-left bg-gray-900 hover:bg-gray-850 p-2.5 rounded text-sm text-blue-400">
+                  <i class="fas fa-play-circle mr-2"></i>Watch Video
+                </button>
+              </div>
+
+              <div>
+                <p class="text-xs text-gray-400">2. Buy a Booster</p>
+                <button onclick="openTutorialVideo('https://youtube.com/shorts/YOUR_BOOSTER_VIDEO')" class="w-full text-left bg-gray-900 hover:bg-gray-850 p-2.5 rounded text-sm text-purple-400">
+                  <i class="fas fa-play-circle mr-2"></i>Watch Video
+                </button>
+              </div>
+
+              <div>
+                <p class="text-xs text-gray-400">3. Withdraw Funds</p>
+                <button onclick="openTutorialVideo('https://youtube.com/shorts/YOUR_WITHDRAW_VIDEO')" class="w-full text-left bg-gray-900 hover:bg-gray-850 p-2.5 rounded text-sm text-amber-400">
+                  <i class="fas fa-play-circle mr-2"></i>Watch Video
+                </button>
+              </div>
+            </div>
+
+            <p class="text-xs text-gray-500 mt-4 text-center">
+              New videos coming soon!
+            </p>
+          </div>
+        </div>
+
         <!-- Need help? -->
         <div class="text-center mt-2">
-            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=auraaimoney@gmail.com" target="_blank" class="text-xs text-gray-500 hover:text-gray-300">Need help?</a>
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=auraaimoney@gmail.com  " target="_blank" class="text-xs text-gray-500 hover:text-gray-300">Need help?</a>
         </div>
 
         <!-- Terms Footer -->
@@ -305,7 +361,7 @@
 
     <script>
         // ✅ REPLACE WITH YOUR ACTUAL SUPABASE CREDENTIALS
-        const SUPABASE_URL = 'https://rryvibgbpqyumfmgsiua.supabase.co  ';
+        const SUPABASE_URL = 'https://rryvibgbpqyumfmgsiua.supabase.co    ';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeXZpYmdicHF5dW1mbWdzaXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTUwNTUsImV4cCI6MjA4MjQ3MTA1NX0.IMqZtMEiPyMwb8AW1gyFao9Yz2qWgMDibfbpVWOeG8o';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -800,6 +856,17 @@
                     <span class="text-xs text-gray-400">Wallet: ${u.user_wallet || '—'}</span>
                 </div>`
             ).join('');
+        }
+
+        // --- HOW IT WORKS HELPER FUNCTION ---
+        function openTutorialVideo(url) {
+            if (url.includes('youtube.com/shorts/')) {
+                const videoId = url.split('/').pop().split('?')[0];
+                const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                window.open(embedUrl, '_blank');
+            } else {
+                window.open(url, '_blank');
+            }
         }
 
         if (Notification.permission !== "granted" && Notification.permission !== "denied") {
