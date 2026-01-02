@@ -126,13 +126,15 @@
                   </div>
                 </div>
 
-                <div class="flex justify-center items-center mb-4">
+                <div class="flex justify-center items-center mb-2">
                   <div id="miningCountdown" class="countdown-display text-2xl px-4 py-2 min-w-[160px]">
                     Ready!
                   </div>
                 </div>
+                <!-- Booster Expiry Timer -->
+                <p id="boosterExpiry" class="text-xs text-gray-400 mt-1 hidden"></p>
 
-                <button id="miningBtn" class="mt-2 w-full max-w-xs mx-auto bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 py-3 rounded-lg font-bold text-white shadow-lg hover:shadow-xl transition">
+                <button id="miningBtn" class="mt-3 w-full max-w-xs mx-auto bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 py-3 rounded-lg font-bold text-white shadow-lg hover:shadow-xl transition">
                   Claim
                 </button>
               </div>
@@ -142,9 +144,10 @@
             <div class="mining-card mb-6">
               <h3 class="font-bold mb-2">Withdraw Funds</h3>
               <button id="openWithdrawModalBtn" class="w-full bg-amber-600 hover:bg-amber-700 py-3 rounded-lg font-bold">
-                Withdraw
+                Withdraw <span id="withdrawDayLabel">(—)</span>
               </button>
-              <p class="text-xs text-gray-500 mt-2">You’ll pay 20% of your balance in USDT to process withdrawal</p>
+              <p id="withdrawCountdown" class="text-xs text-gray-500 mt-1 hidden"></p>
+              <p class="text-xs text-gray-500 mt-1">You’ll pay 20% of your balance in USDT to process withdrawal</p>
             </div>
 
             <!-- 4. Boosters -->
@@ -153,25 +156,25 @@
               <div class="booster-card relative overflow-hidden">
                 <h4 class="font-bold text-lg">EAGER MINER</h4>
                 <p class="text-3xl md:text-4xl font-bold text-blue-600 my-2">12h cycle</p>
-                <p class="font-bold text-green-400 mt-1">10,000 UGX / claim</p>
-                <p class="text-gray-500 text-xs mt-1">Earn twice as fast</p>
-                <button onclick="showBoosterModal(12, 10000, calculateBoosterPrice(2))" class="w-full mt-2 bg-blue-600 py-3 rounded-lg font-bold">Buy for <span id="price12h">—</span></button>
+                <p class="font-bold text-green-400 mt-1">20,000 UGX / claim</p>
+                <p class="text-gray-500 text-xs mt-1">Earn 2× faster for 24h</p>
+                <button onclick="showBoosterModal(12, 20000, calculateBoosterPrice(2))" class="w-full mt-2 bg-blue-600 py-3 rounded-lg font-bold">Buy for <span id="price12h">—</span></button>
               </div>
 
               <div class="booster-card relative overflow-hidden">
                 <h4 class="font-bold text-lg">FALCON MINER</h4>
                 <p class="text-3xl md:text-4xl font-bold text-purple-600 my-2">6h cycle</p>
-                <p class="font-bold text-green-400 mt-1">10,000 UGX / claim</p>
-                <p class="text-gray-500 text-xs mt-1">Earn 4× faster</p>
-                <button onclick="showBoosterModal(6, 10000, calculateBoosterPrice(4))" class="w-full mt-2 bg-purple-600 py-3 rounded-lg font-bold">Buy for <span id="price6h">—</span></button>
+                <p class="font-bold text-green-400 mt-1">40,000 UGX / claim</p>
+                <p class="text-gray-500 text-xs mt-1">Earn 4× faster for 24h</p>
+                <button onclick="showBoosterModal(6, 40000, calculateBoosterPrice(4))" class="w-full mt-2 bg-purple-600 py-3 rounded-lg font-bold">Buy for <span id="price6h">—</span></button>
               </div>
 
               <div class="booster-card relative overflow-hidden">
                 <h4 class="font-bold text-lg">PHOENIX MINER</h4>
                 <p class="text-3xl md:text-4xl font-bold text-amber-600 my-2">2h cycle</p>
-                <p class="font-bold text-green-400 mt-1">10,000 UGX / claim</p>
-                <p class="text-gray-500 text-xs mt-1">Earn 8× faster</p>
-                <button onclick="showBoosterModal(2, 10000, calculateBoosterPrice(8))" class="w-full mt-2 bg-amber-600 py-3 rounded-lg font-bold">Buy for <span id="price2h">—</span></button>
+                <p class="font-bold text-green-400 mt-1">80,000 UGX / claim</p>
+                <p class="text-gray-500 text-xs mt-1">Earn 8× faster for 24h</p>
+                <button onclick="showBoosterModal(2, 80000, calculateBoosterPrice(8))" class="w-full mt-2 bg-amber-600 py-3 rounded-lg font-bold">Buy for <span id="price2h">—</span></button>
               </div>
             </div>
 
@@ -368,10 +371,48 @@
         let user = null;
         let timer;
         let withdrawFeeUSDT = 0;
+        let boosterExpiryTimer = null;
 
         // Referrer from URL
         const urlParams = new URLSearchParams(window.location.search);
         const referrer = urlParams.get('ref');
+
+        // --- BOOSTER EXPIRY CHECK ---
+        async function checkBoosterExpiry() {
+          if (!user || !user.booster_expires_at) return;
+
+          const now = new Date();
+          const expires = new Date(user.booster_expires_at);
+          if (now > expires) {
+            // Revert to base mining
+            await _supabase.from('users').update({
+              mining_cycle_hours: 24,
+              mining_reward: 10000,
+              booster_expires_at: null
+            }).eq('username', user.username);
+            user.mining_cycle_hours = 24;
+            user.mining_reward = 10000;
+            user.booster_expires_at = null;
+            updateUI();
+            startTimer();
+            alert("Your booster has expired. Back to standard mining.");
+          }
+        }
+
+        // --- WITHDRAW DAY HELPER ---
+        function getWithdrawInfo() {
+          const today = new Date().getDay();
+          const userDay = user.withdraw_day;
+          if (userDay == null || userDay === undefined) {
+            return { dayName: '—', daysLeft: null, isToday: false };
+          }
+          const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+          const dayName = days[userDay];
+          let daysLeft = userDay - today;
+          if (daysLeft <= 0) daysLeft += 7;
+          if (daysLeft === 7) daysLeft = 0;
+          return { dayName, daysLeft, isToday: daysLeft === 0 };
+        }
 
         // --- AUTH ---
         document.getElementById('tabSignup').onclick = () => {
@@ -406,7 +447,9 @@
                 next_claim_time: new Date().toISOString(),
                 user_id: 'UGX' + Math.floor(Math.random()*1000000),
                 referrer: referrer,
-                user_wallet: null
+                user_wallet: null,
+                withdraw_day: null,
+                booster_expires_at: null
             }]);
             if (error) alert(error.message); 
             else {
@@ -441,6 +484,7 @@
 
             updateUI();
             startTimer();
+            checkBoosterExpiry(); // check on load
             checkApprovedBoosters();
             checkApprovedWithdrawals();
             fetchAllTransactions();
@@ -458,6 +502,33 @@
             document.getElementById('nextClaimAmount').textContent = "+" + reward.toLocaleString() + " UGX";
 
             updateBoosterPrices();
+
+            // Update Withdraw UI
+            const wInfo = getWithdrawInfo();
+            document.getElementById('withdrawDayLabel').textContent = `(${wInfo.dayName})`;
+            const countdownEl = document.getElementById('withdrawCountdown');
+            if (wInfo.daysLeft !== null && wInfo.daysLeft > 0) {
+              countdownEl.textContent = `${wInfo.daysLeft} ${wInfo.daysLeft === 1 ? 'day' : 'days'} until next window`;
+              countdownEl.classList.remove('hidden');
+            } else {
+              countdownEl.classList.add('hidden');
+            }
+
+            // Update Booster Expiry Timer
+            const expiryEl = document.getElementById('boosterExpiry');
+            if (user.booster_expires_at) {
+              const diff = new Date(user.booster_expires_at) - Date.now();
+              if (diff > 0) {
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                expiryEl.textContent = `Booster expires in: ${h}h ${m}m`;
+                expiryEl.classList.remove('hidden');
+              } else {
+                expiryEl.classList.add('hidden');
+              }
+            } else {
+              expiryEl.classList.add('hidden');
+            }
         }
 
         function updateBoosterPrices() {
@@ -494,12 +565,29 @@
                 const s = Math.floor((diff%60000)/1000).toString().padStart(2,'0');
                 document.getElementById('miningCountdown').textContent = `${h}:${m}:${s}`;
             }, 1000);
+
+            // Start booster expiry timer
+            if (boosterExpiryTimer) clearInterval(boosterExpiryTimer);
+            if (user && user.booster_expires_at) {
+              boosterExpiryTimer = setInterval(() => {
+                const diff = new Date(user.booster_expires_at) - Date.now();
+                if (diff <= 0) {
+                  clearInterval(boosterExpiryTimer);
+                  boosterExpiryTimer = null;
+                  checkBoosterExpiry();
+                }
+                updateUI(); // refresh expiry display
+              }, 60000); // update every minute
+            }
         }
 
         document.getElementById('miningBtn').onclick = async () => {
             const btn = document.getElementById('miningBtn');
             if (btn.classList.contains('loading-btn')) return;
             
+            // Check booster expiry before claim
+            await checkBoosterExpiry();
+
             if (new Date(user.next_claim_time).getTime() > Date.now()) return alert("Still mining!");
             
             btn.classList.add('loading-btn');
@@ -576,7 +664,8 @@
                     usdt_amount: selectedBoosterPriceUSDT,
                     txid: txId,
                     status: 'pending',
-                    requested_at: new Date().toISOString()
+                    requested_at: new Date().toISOString(),
+                    duration_hours: 24  // always 24h
                 });
 
                 if (error) {
@@ -604,15 +693,17 @@
 
             if (data && data.length > 0) {
                 const latest = data[0];
+                const expiresAt = new Date(Date.now() + 24 * 3600000).toISOString(); // 24 hours from now
                 await _supabase
                     .from('users')
                     .update({
                         mining_cycle_hours: latest.booster_hours,
-                        mining_reward: latest.reward
+                        mining_reward: latest.reward,
+                        booster_expires_at: expiresAt
                     })
                     .eq('username', user.username);
 
-                const {  updated } = await _supabase
+                const { data: updated } = await _supabase
                     .from('users')
                     .select('*')
                     .eq('username', user.username)
@@ -630,19 +721,33 @@
         }
 
         // --- WITHDRAWALS ---
-        document.getElementById('openWithdrawModalBtn').onclick = () => {
-            if ((user.balance || 0) < 50000) return alert("Min 50,000 UGX required");
-            if (!user.user_wallet) return alert("Set wallet first!");
+        document.getElementById('openWithdrawModalBtn').onclick = async () => {
+          if ((user.balance || 0) < 50000) return alert("Min 50,000 UGX required");
+          if (!user.user_wallet) return alert("Set wallet first!");
 
-            const total = user.balance || 0;
-            withdrawFeeUSDT = (total * 0.20) / 3700;
+          const today = new Date().getDay();
+          if (user.withdraw_day === null || user.withdraw_day === undefined) {
+            // First time: assign today as permanent day
+            await _supabase.from('users').update({ withdraw_day: today }).eq('username', user.username);
+            user.withdraw_day = today;
+            const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+            alert(`✅ Your weekly withdrawal day is set to ${days[today]}.`);
+          }
 
-            document.getElementById('withdrawTotal').textContent = total.toLocaleString() + " UGX";
-            document.getElementById('withdrawFee').textContent = withdrawFeeUSDT.toFixed(2) + " USDT";
-            document.getElementById('userWalletDisplay').textContent = user.user_wallet;
+          // Check if today is their day
+          if (user.withdraw_day !== today) {
+            const wInfo = getWithdrawInfo();
+            return alert(`Withdrawals are only allowed on ${wInfo.dayName}. ${wInfo.daysLeft} ${wInfo.daysLeft === 1 ? 'day' : 'days'} left.`);
+          }
 
-            document.getElementById('withdrawTxId').value = '';
-            document.getElementById('withdrawModal').classList.remove('hidden');
+          // Proceed to modal
+          const total = user.balance || 0;
+          withdrawFeeUSDT = (total * 0.20) / 3700;
+          document.getElementById('withdrawTotal').textContent = total.toLocaleString() + " UGX";
+          document.getElementById('withdrawFee').textContent = withdrawFeeUSDT.toFixed(2) + " USDT";
+          document.getElementById('userWalletDisplay').textContent = user.user_wallet;
+          document.getElementById('withdrawTxId').value = '';
+          document.getElementById('withdrawModal').classList.remove('hidden');
         };
 
         async function submitWithdrawRequest() {
@@ -695,13 +800,15 @@
                     .update({
                         balance: 0,
                         mining_cycle_hours: 24,
-                        mining_reward: 10000
+                        mining_reward: 10000,
+                        booster_expires_at: null // reset booster on withdrawal
                     })
                     .eq('username', user.username);
 
                 user.balance = 0;
                 user.mining_cycle_hours = 24;
                 user.mining_reward = 10000;
+                user.booster_expires_at = null;
 
                 updateUI();
                 startTimer();
@@ -853,7 +960,7 @@
             document.getElementById('adminUserList').innerHTML = data.map(u => 
                 `<div class="p-2 bg-gray-800 rounded">
                     ${u.username} - ${u.balance} UGX<br>
-                    <span class="text-xs text-gray-400">Wallet: ${u.user_wallet || '—'}</span>
+                    <span class="text-xs text-gray-400">Wallet: ${u.user_wallet || '—'}, Withdraw Day: ${u.withdraw_day !== null ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][u.withdraw_day] : '—'}</span>
                 </div>`
             ).join('');
         }
