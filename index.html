@@ -66,7 +66,7 @@
         <header class="flex justify-between items-center mb-8">
             <div class="flex items-center space-x-3">
                 <div class="bg-green-500 p-2 rounded-lg"><i class="fas fa-coins text-xl"></i></div>
-                <h1 class="text-2xl font-bold">UGX<span class="text-white">Mine</span></h1>
+                <h1 class="text-2xl font-bold">UGX<span class="text-white">Mine</span></h h1>
             </div>
             <div class="flex gap-2">
                 <button id="adminPanelBtn" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm hidden">Admin Panel</button>
@@ -158,7 +158,7 @@
                 <p class="text-3xl md:text-4xl font-bold text-blue-600 my-2">2h cycle</p>
                 <p class="font-bold text-green-400 mt-1" id="eagleReward">+0 UGX / claim</p>
                 <p class="text-gray-500 text-xs mt-1">Earn 3× your balance in 24h</p>
-                <button onclick="showBoosterModal(2, (user?.balance || 0) / 4, (user?.balance || 0) * 2)" class="w-full mt-2 bg-blue-600 py-3 rounded-lg font-bold">Buy for <span id="priceEagle">—</span></button>
+                <button onclick="showBoosterModal(2, getBoosterReward(user?.balance || 0, 'eagle'), (user?.balance || 0) * 2)" class="w-full mt-2 bg-blue-600 py-3 rounded-lg font-bold">Buy for <span id="priceEagle">—</span></button>
               </div>
 
               <div class="booster-card relative overflow-hidden">
@@ -166,7 +166,7 @@
                 <p class="text-3xl md:text-4xl font-bold text-purple-600 my-2">2h cycle</p>
                 <p class="font-bold text-green-400 mt-1" id="falconReward">+0 UGX / claim</p>
                 <p class="text-gray-500 text-xs mt-1">Earn 6× your balance in 24h</p>
-                <button onclick="showBoosterModal(2, (user?.balance || 0) / 2, (user?.balance || 0) * 4)" class="w-full mt-2 bg-purple-600 py-3 rounded-lg font-bold">Buy for <span id="priceFalcon">—</span></button>
+                <button onclick="showBoosterModal(2, getBoosterReward(user?.balance || 0, 'falcon'), (user?.balance || 0) * 4)" class="w-full mt-2 bg-purple-600 py-3 rounded-lg font-bold">Buy for <span id="priceFalcon">—</span></button>
               </div>
 
               <div class="booster-card relative overflow-hidden">
@@ -174,7 +174,7 @@
                 <p class="text-3xl md:text-4xl font-bold text-amber-600 my-2">2h cycle</p>
                 <p class="font-bold text-green-400 mt-1" id="phoenixReward">+0 UGX / claim</p>
                 <p class="text-gray-500 text-xs mt-1">Earn 12× your balance in 24h</p>
-                <button onclick="showBoosterModal(2, (user?.balance || 0), (user?.balance || 0) * 8)" class="w-full mt-2 bg-amber-600 py-3 rounded-lg font-bold">Buy for <span id="pricePhoenix">—</span></button>
+                <button onclick="showBoosterModal(2, getBoosterReward(user?.balance || 0, 'phoenix'), (user?.balance || 0) * 8)" class="w-full mt-2 bg-amber-600 py-3 rounded-lg font-bold">Buy for <span id="pricePhoenix">—</span></button>
               </div>
             </div>
 
@@ -374,6 +374,32 @@
         let withdrawFeeUSDT = 0;
         let boosterExpiryTimer = null;
 
+        // --- NEW: SMART BOOSTER REWARD WITH CAP ---
+        function getBoosterReward(balance, type) {
+            if (balance <= 0) return 0;
+            
+            // Base reward = balance (for Phoenix), scaled for others
+            let rawReward;
+            if (type === 'eagle') {
+                rawReward = balance / 4;
+            } else if (type === 'falcon') {
+                rawReward = balance / 2;
+            } else { // phoenix
+                rawReward = balance;
+            }
+
+            // Apply progressive caps
+            if (balance <= 50000) {
+                return Math.floor(rawReward);
+            } else if (balance <= 100000) {
+                return Math.floor(Math.min(rawReward, 50000));
+            } else if (balance <= 200000) {
+                return Math.floor(Math.min(rawReward, 100000));
+            } else {
+                return 200000; // hard cap for all types at high balance
+            }
+        }
+
         // Referrer from URL
         const urlParams = new URLSearchParams(window.location.search);
         const referrer = urlParams.get('ref');
@@ -500,7 +526,7 @@
             setInterval(generateFakeActivity, 15000);
         }
 
-        // --- UPDATED updateUI FUNCTION ---
+        // --- UPDATED updateUI FUNCTION with CAPPED REWARDS ---
         function updateUI() {
             const balance = user.balance || 0;
             const reward = user.mining_reward || 5000;
@@ -510,12 +536,12 @@
             document.getElementById('miningCycleDisplay').textContent = (user.mining_cycle_hours || 24) + "h";
             document.getElementById('nextClaimAmount').textContent = "+" + reward.toLocaleString() + " UGX";
 
-            // 🔹 Update booster reward amounts (per 2h claim)
-            document.getElementById('eagleReward').textContent = `+${Math.floor(balance / 4).toLocaleString()} UGX / claim`;
-            document.getElementById('falconReward').textContent = `+${Math.floor(balance / 2).toLocaleString()} UGX / claim`;
-            document.getElementById('phoenixReward').textContent = `+${Math.floor(balance).toLocaleString()} UGX / claim`;
+            // 🔹 Update booster reward amounts WITH CAP
+            document.getElementById('eagleReward').textContent = `+${getBoosterReward(balance, 'eagle').toLocaleString()} UGX / claim`;
+            document.getElementById('falconReward').textContent = `+${getBoosterReward(balance, 'falcon').toLocaleString()} UGX / claim`;
+            document.getElementById('phoenixReward').textContent = `+${getBoosterReward(balance, 'phoenix').toLocaleString()} UGX / claim`;
 
-            // 🔹 Update booster prices
+            // 🔹 Update booster prices (still based on full balance)
             const priceEagle = (balance * 2);
             const priceFalcon = (balance * 4);
             const pricePhoenix = (balance * 8);
@@ -530,15 +556,14 @@
             
             if (wInfo.isToday) {
                 countdownEl.textContent = "✅ Today! Withdraw now.";
-                countdownEl.className = "text-xs text-green-400 mt-1"; // green = ready
+                countdownEl.className = "text-xs text-green-400 mt-1";
                 countdownEl.classList.remove('hidden');
             } else if (wInfo.daysLeft !== null) {
                 const dayName = wInfo.dayName;
                 countdownEl.textContent = `${wInfo.daysLeft} ${wInfo.daysLeft === 1 ? 'day' : 'days'} until ${dayName}`;
-                countdownEl.className = "text-xs text-gray-500 mt-1"; // gray = pending
+                countdownEl.className = "text-xs text-gray-500 mt-1";
                 countdownEl.classList.remove('hidden');
             } else {
-                // Not assigned yet — will be assigned on first click
                 countdownEl.textContent = "Withdraw available after first eligibility";
                 countdownEl.className = "text-xs text-gray-500 mt-1";
                 countdownEl.classList.remove('hidden');
@@ -589,8 +614,8 @@
                   boosterExpiryTimer = null;
                   checkBoosterExpiry();
                 }
-                updateUI(); // refresh expiry display
-              }, 60000); // update every minute
+                updateUI();
+              }, 60000);
             }
         }
 
@@ -598,7 +623,6 @@
             const btn = document.getElementById('miningBtn');
             if (btn.classList.contains('loading-btn')) return;
             
-            // Check booster expiry before claim
             await checkBoosterExpiry();
 
             if (new Date(user.next_claim_time).getTime() > Date.now()) return alert("Still mining!");
@@ -637,12 +661,11 @@
             const currentReward = user.mining_reward || 5000;
             const currentHours = user.mining_cycle_hours || 24;
 
-            // Set modal title
-            if (reward === (user.balance / 4)) {
+            if (reward === getBoosterReward(user.balance, 'eagle')) {
                 document.getElementById('boosterModalTitle').textContent = 'Eagle Miner';
-            } else if (reward === (user.balance / 2)) {
+            } else if (reward === getBoosterReward(user.balance, 'falcon')) {
                 document.getElementById('boosterModalTitle').textContent = 'Falcon Miner';
-            } else if (reward === user.balance) {
+            } else {
                 document.getElementById('boosterModalTitle').textContent = 'Phoenix Miner';
             }
 
@@ -715,7 +738,7 @@
 
             if (data && data.length > 0) {
                 const latest = data[0];
-                const expiresAt = new Date(Date.now() + 24 * 3600000).toISOString(); // 24 hours
+                const expiresAt = new Date(Date.now() + 24 * 3600000).toISOString();
                 await _supabase
                     .from('users')
                     .update({
@@ -819,7 +842,7 @@
                         balance: 0,
                         mining_cycle_hours: 24,
                         mining_reward: 5000,
-                        booster_expires_at: null // reset booster
+                        booster_expires_at: null
                     })
                     .eq('username', user.username);
 
