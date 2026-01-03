@@ -9,15 +9,15 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2    "></script>
     <style>
         .mining-card { 
-            background-color: #1e293b; 
-            border: 1px solid #2a3d6a; 
+            background-color: #00000028; 
+            border: 1px solid #409c9e; 
             border-radius: 16px; 
             padding: 1.5rem; 
             margin-bottom: 1.5rem; 
         }
         .booster-card { 
-            background-color: #000000; 
-            border: 1px solid #000000; 
+            background-color: #041f3b; 
+            border: 1px solid #a4a9aae7; 
             border-radius: 16px; 
             padding: 1.5rem; 
             transition: all 0.3s ease; 
@@ -31,7 +31,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            background: #48bede33;
             transform: rotate(30deg);
             pointer-events: none;
         }
@@ -52,7 +52,7 @@
             border-radius: 12px;
             min-width: 160px;
             text-align: center;
-            box-shadow: 0 0 10px rgba(0, 193, 106, 0.2);
+            box-shadow: 0 0 10px rgba(227, 96, 20, 0.911);
             letter-spacing: 2px;
         }
         .loading-btn {
@@ -154,26 +154,26 @@
             <h3 class="text-lg font-bold mb-4">Boosters</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div class="booster-card relative overflow-hidden">
-                <h4 class="font-bold text-lg">EAGER MINER</h4>
+                <h4 class="font-bold text-lg">Eager_Miner</h4>
                 <p class="text-3xl md:text-4xl font-bold text-blue-600 my-2">2h cycle</p>
                 <p class="font-bold text-green-400 mt-1" id="eagleReward">+0 UGX / claim</p>
-                <p class="text-gray-500 text-xs mt-1">Double your investment in 24h!</p>
+                <p class="text-gold-500 text-xs mt-1">Double your investment in 24h!</p>
                 <button onclick="showBoosterModal(2, getBoosterReward(user?.balance || 0, 'eagle'), (user?.balance || 0) * 2)" class="w-full mt-2 bg-blue-600 py-3 rounded-lg font-bold">Buy for <span id="priceEagle">—</span></button>
               </div>
 
               <div class="booster-card relative overflow-hidden">
-                <h4 class="font-bold text-lg">FALCON MINER</h4>
+                <h4 class="font-bold text-lg">Falcon_Miner</h4>
                 <p class="text-3xl md:text-4xl font-bold text-purple-600 my-2">2h cycle</p>
                 <p class="font-bold text-green-400 mt-1" id="falconReward">+0 UGX / claim</p>
-                <p class="text-gray-500 text-xs mt-1">Double your investment in 24h!</p>
+                <p class="text-gold-500 text-xs mt-1">Double your investment in 24h!</p>
                 <button onclick="showBoosterModal(2, getBoosterReward(user?.balance || 0, 'falcon'), (user?.balance || 0) * 4)" class="w-full mt-2 bg-purple-600 py-3 rounded-lg font-bold">Buy for <span id="priceFalcon">—</span></button>
               </div>
 
               <div class="booster-card relative overflow-hidden">
-                <h4 class="font-bold text-lg">PHOENIX MINER</h4>
+                <h4 class="font-bold text-lg">Phoenix_Miner</h4>
                 <p class="text-3xl md:text-4xl font-bold text-amber-600 my-2">2h cycle</p>
                 <p class="font-bold text-green-400 mt-1" id="phoenixReward">+0 UGX / claim</p>
-                <p class="text-gray-500 text-xs mt-1">Double your investment in 24h!</p>
+                <p class="text-gold-500 text-xs mt-1">Double your investment in 24h!</p>
                 <button onclick="showBoosterModal(2, getBoosterReward(user?.balance || 0, 'phoenix'), (user?.balance || 0) * 8)" class="w-full mt-2 bg-amber-600 py-3 rounded-lg font-bold">Buy for <span id="pricePhoenix">—</span></button>
               </div>
             </div>
