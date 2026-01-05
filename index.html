@@ -76,15 +76,36 @@ button {
   -moz-appearance: none;
   appearance: none;
 }
-/* Ensure modal is visible on iOS */
-#authCard {
-  z-index: 50;
-}
 </style>
 </head>
-<body class="bg-gray-900 text-gray-100 font-sans">
-  <!-- 👇 Wrapper with dynamic viewport height for iOS -->
-  <div style="min-height: 100dvh;" class="container mx-auto px-4 py-6">
+<!-- 📱 iOS FIX: Add min-h-[100dvh] to body -->
+<body class="bg-gray-900 text-gray-100 font-sans min-h-[100dvh]">
+
+  <!-- 📱 iOS FIX: AUTH MODAL MOVED OUTSIDE CONTAINER (critical!) -->
+  <div id="authCard" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center hidden">
+    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
+      <div class="flex mb-4 bg-gray-700 rounded-lg p-1">
+        <div id="tabSignup" class="auth-tab active flex-1 text-center">Sign Up</div>
+        <div id="tabLogin" class="auth-tab flex-1 text-center">Login</div>
+      </div>
+      <form id="signupForm" class="space-y-4">
+        <input type="text" id="signupUsername" placeholder="Username" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+        <input type="email" id="signupEmail" placeholder="Email" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+        <input type="password" id="signupPassword" placeholder="Password" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+        <button type="submit" class="w-full bg-green-600 py-2 rounded-lg">Create Account</button>
+      </form>
+      <form id="loginForm" class="hidden space-y-4">
+        <input type="text" id="loginUsername" placeholder="Username" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+        <input type="password" id="loginPassword" placeholder="Password" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+        <a href="mailto:auraaimoney@gmail.com" class="text-xs text-gray-400 hover:text-gray-300 block text-center">Forgot password? Contact admin</a>
+        <button type="submit" class="w-full bg-emerald-600 py-2 rounded-lg">Login</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 📱 iOS FIX: App content wrapped in 100dvh container -->
+  <div class="min-h-[100dvh] container mx-auto px-4 py-6">
+
     <header class="flex justify-between items-center mb-8">
       <div class="flex items-center space-x-3">
         <div class="bg-green-500 p-2 rounded-lg"><i class="fas fa-coins text-xl"></i></div>
@@ -96,30 +117,9 @@ button {
       </div>
     </header>
 
-    <!-- Auth Modal -->
-    <div id="authCard" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center hidden">
-      <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
-        <div class="flex mb-4 bg-gray-700 rounded-lg p-1">
-          <div id="tabSignup" class="auth-tab active flex-1 text-center">Sign Up</div>
-          <div id="tabLogin" class="auth-tab flex-1 text-center">Login</div>
-        </div>
-        <form id="signupForm" class="space-y-4">
-          <input type="text" id="signupUsername" placeholder="Username" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-          <input type="email" id="signupEmail" placeholder="Email" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-          <input type="password" id="signupPassword" placeholder="Password" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-          <button type="submit" class="w-full bg-green-600 py-2 rounded-lg">Create Account</button>
-        </form>
-        <form id="loginForm" class="hidden space-y-4">
-          <input type="text" id="loginUsername" placeholder="Username" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-          <input type="password" id="loginPassword" placeholder="Password" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-          <a href="mailto:auraaimoney@gmail.com" class="text-xs text-gray-400 hover:text-gray-300 block text-center">Forgot password? Contact admin</a>
-          <button type="submit" class="w-full bg-emerald-600 py-2 rounded-lg">Login</button>
-        </form>
-      </div>
-    </div>
-
     <!-- Main Dashboard -->
     <main id="mainContent" class="hidden">
+      <!-- (rest of your existing HTML remains exactly the same) -->
       <!-- Profile Header -->
       <div class="mining-card flex justify-between items-center">
         <div>
@@ -239,8 +239,7 @@ button {
       </div>
     </main>
 
-    <!-- Modals (Wallet, Booster, Withdraw, How It Works) – unchanged but cleaned -->
-    <!-- Wallet Modal -->
+    <!-- All other modals (wallet, booster, withdraw, how-it-works) stay inside container -->
     <div id="walletModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden">
       <div class="bg-gray-800 p-6 rounded-xl w-80">
         <h3 class="mb-4">Enter Arbitrum Wallet</h3>
@@ -250,7 +249,6 @@ button {
       </div>
     </div>
 
-    <!-- Booster Modal -->
     <div id="boosterModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
       <div class="bg-gray-800 p-6 rounded-xl w-96">
         <h3 class="text-lg font-bold mb-3" id="boosterModalTitle">Activate Booster</h3>
@@ -271,7 +269,6 @@ button {
       </div>
     </div>
 
-    <!-- Withdraw Modal -->
     <div id="withdrawModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
       <div class="bg-gray-800 p-6 rounded-xl w-96">
         <h3 class="text-lg font-bold mb-3">Withdraw Funds</h3>
@@ -296,7 +293,6 @@ button {
       </div>
     </div>
 
-    <!-- HOW IT WORKS MODAL -->
     <div id="howItWorksModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
       <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-4">
@@ -306,7 +302,6 @@ button {
           </button>
         </div>
 
-        <!-- Video 1: Set Wallet -->
         <div class="mb-5">
           <p class="text-xs text-gray-400 mb-2">1. Set Your Arbitrum Wallet</p>
           <div class="aspect-video bg-black rounded-lg overflow-hidden">
@@ -322,7 +317,6 @@ button {
           </div>
         </div>
 
-        <!-- Video 2: Buy Boosters -->
         <div class="mb-5">
           <p class="text-xs text-gray-400 mb-2">2. Buy a Booster</p>
           <div class="aspect-video bg-black rounded-lg overflow-hidden">
@@ -338,7 +332,6 @@ button {
           </div>
         </div>
 
-        <!-- Video 3: Withdraw -->
         <div class="mb-5">
           <p class="text-xs text-gray-400 mb-2">3. Withdraw Funds</p>
           <div class="aspect-video bg-black rounded-lg overflow-hidden">
@@ -357,12 +350,10 @@ button {
       </div>
     </div>
 
-    <!-- Need help? -->
     <div class="text-center mt-2">
       <a href="mailto:auraaimoney@gmail.com" target="_blank" class="text-xs text-gray-500 hover:text-gray-300">Need help?</a>
     </div>
 
-    <!-- Terms Footer -->
     <div class="text-center text-xs text-gray-500 mt-8 pb-4">
       <p>UGX Mine is for mining purposes. Ugx and crypto currency used only.
         <a href="#" class="text-gray-400 hover:underline">Terms of Use</a>
@@ -424,7 +415,6 @@ button {
       return { dayName, daysLeft, isToday: daysLeft === 0 };
     }
 
-    // Auth tabs
     document.getElementById('tabSignup').onclick = () => {
       document.getElementById('signupForm').classList.remove('hidden');
       document.getElementById('loginForm').classList.add('hidden');
@@ -687,7 +677,7 @@ button {
       if (data && data.length > 0) {
         const latest = data[0];
         const now = Date.now();
-        const nextClaimTime = new Date(now + (latest.booster_hours * 3600000)).toISOString(); // 🔥 2-hour reset
+        const nextClaimTime = new Date(now + (latest.booster_hours * 3600000)).toISOString();
         const expiresAt = new Date(now + 24 * 3600000).toISOString();
 
         await _supabase
@@ -696,12 +686,11 @@ button {
             mining_cycle_hours: latest.booster_hours,
             mining_reward: latest.reward,
             booster_expires_at: expiresAt,
-            next_claim_time: nextClaimTime // 🔥 Critical for 2h countdown
+            next_claim_time: nextClaimTime
           })
           .eq('username', user.username);
 
-        // Refresh user object
-        const { data: updated } = await _supabase
+        const {  updated } = await _supabase
           .from('users')
           .select('*')
           .eq('username', user.username)
@@ -927,23 +916,24 @@ button {
       Notification.requestPermission();
     }
 
-    // ✅ iOS-SAFE STARTUP
+    // 📱 iOS-SAFE INIT (delayed + outside container)
     function initApp() {
       if (window.location.hash === '#admin999') {
         loadAdmin();
         return;
       }
-      // Ensure auth modal appears on iOS
-      const authCard = document.getElementById('authCard');
-      if (authCard) {
-        authCard.classList.remove('hidden');
-      }
+      setTimeout(() => {
+        const authCard = document.getElementById('authCard');
+        if (authCard) {
+          authCard.classList.remove('hidden');
+        }
+      }, 200);
     }
 
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initApp);
     } else {
-      setTimeout(initApp, 100); // Delay for iOS rendering
+      initApp();
     }
   </script>
 </body>
