@@ -2,929 +2,949 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<!-- ✅ FIXED VIEWPORT FOR IOS -->
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>UGX Mining Platform</title>
-<!-- ✅ CLEANED CDN URLS -->
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<!-- ✅ PINNED SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.0"></script>
 <style>
 .mining-card {
-background-color: #00000028;
-border: 1px solid #409c9e;
-border-radius: 16px;
-padding: 1.5rem;
-margin-bottom: 1.5rem;
+  background-color: #00000028;
+  border: 1px solid #409c9e;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 .booster-card {
-background-color: #041f3b;
-border: 1px solid #a4a9aae7;
-border-radius: 16px;
-padding: 1.5rem;
-transition: all 0.3s ease;
-position: relative;
-overflow: hidden;
+  background-color: #041f3b;
+  border: 1px solid #a4a9aae7;
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 .booster-card::before {
-content: '';
-position: absolute;
-top: -50%;
-left: -50%;
-width: 200%;
-height: 200%;
-background: #48bede33;
-transform: rotate(30deg);
-pointer-events: none;
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: #48bede33;
+  transform: rotate(30deg);
+  pointer-events: none;
 }
 .booster-card:hover {
-transform: translateY(-5px);
-border-color: #00c16a;
-box-shadow: 0 10px 25px rgba(0, 193, 106, 0.2);
+  transform: translateY(-5px);
+  border-color: #00c16a;
+  box-shadow: 0 10px 25px rgba(0, 193, 106, 0.2);
 }
-.auth-tab { padding: 0.5rem 1rem; cursor: pointer; border-radius: 0.5rem; }
-.auth-tab.active { background: rgba(0, 193, 106, 0.2); color: #00c16a; }
+.auth-tab {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 0.5rem;
+}
+.auth-tab.active {
+  background: rgba(0, 193, 106, 0.2);
+  color: #00c16a;
+}
 .countdown-display {
-font-family: 'Courier New', monospace;
-font-size: 1.8rem;
-background: rgba(0, 30, 20, 0.6);
-color: #ff6b35;
-border: 1px solid #ff0000;
-padding: 0.5rem 1rem;
-border-radius: 12px;
-min-width: 160px;
-text-align: center;
-box-shadow: 0 0 10px rgba(227, 96, 20, 0.911);
-letter-spacing: 2px;
+  font-family: 'Courier New', monospace;
+  font-size: 1.8rem;
+  background: rgba(0, 30, 20, 0.6);
+  color: #ff6b35;
+  border: 1px solid #ff0000;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  min-width: 160px;
+  text-align: center;
+  box-shadow: 0 0 10px rgba(227, 96, 20, 0.911);
+  letter-spacing: 2px;
 }
 .loading-btn {
-opacity: 0.75;
-cursor: not-allowed;
+  opacity: 0.75;
+  cursor: not-allowed;
 }
-/* ✅ IOS TAP FIX */
-body { 
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+body {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 button {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+/* Ensure modal is visible on iOS */
+#authCard {
+  z-index: 50;
 }
 </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
-<div class="container mx-auto px-4 py-6">
-<header class="flex justify-between items-center mb-8">
-<div class="flex items-center space-x-3">
-<div class="bg-green-500 p-2 rounded-lg"><i class="fas fa-coins text-xl"></i></div>
-<h1 class="text-2xl font-bold">UGX<span class="text-white">Mine</span></h1>
-</div>
-<div class="flex gap-2">
-<button id="adminPanelBtn" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm hidden">Admin Panel</button>
-<button id="authToggle" class="px-4 py-2 bg-red-600 hover:bg-green-700 rounded-lg">Logout</button>
-</div>
-</header>
-<!-- Auth Modal -->
-<div id="authCard" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center hidden">
-<div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
-<div class="flex mb-4 bg-gray-700 rounded-lg p-1">
-<div id="tabSignup" class="auth-tab active flex-1 text-center">Sign Up</div>
-<div id="tabLogin" class="auth-tab flex-1 text-center">Login</div>
-</div>
-<form id="signupForm" class="space-y-4">
-<input type="text" id="signupUsername" placeholder="Username" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-<input type="email" id="signupEmail" placeholder="Email" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-<input type="password" id="signupPassword" placeholder="Password" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-<button type="submit" class="w-full bg-green-600 py-2 rounded-lg">Create Account</button>
-</form>
-<form id="loginForm" class="hidden space-y-4">
-<input type="text" id="loginUsername" placeholder="Username" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-<input type="password" id="loginPassword" placeholder="Password" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-<a href="mailto:auraaimoney@gmail.com" class="text-xs text-gray-400 hover:text-gray-300 block text-center">Forgot password? Contact admin</a>
-<button type="submit" class="w-full bg-emerald-600 py-2 rounded-lg">Login</button>
-</form>
-</div>
-</div>
-<!-- Main Dashboard -->
-<main id="mainContent" class="hidden">
-<!-- 1. Profile Header -->
-<div class="mining-card flex justify-between items-center">
-<div>
-<h2 id="profileUserName" class="text-xl font-bold">---</h2>
-<p id="profileUserEmail" class="text-gray-400 text-sm">---</p>
-<p id="profileUserId" class="text-gray-500 text-xs">ID: ---</p>
-</div>
-<button id="editProfileBtn" class="border border-green-500 text-green-500 px-4 py-1 rounded-lg text-sm">Set Wallet</button>
-</div>
-<!-- 2. Modern Mining Card -->
-<div class="flex justify-center mb-6">
-<div class="mining-card w-full max-w-2xl text-center">
-<p class="font-bold text-amber-400">Your Balance</p>
-<p id="balanceUGX" class="text-4xl md:text-5xl font-bold text-white my-2">0 UGX</p>
-<p id="balanceUSDT" class="text-gray-500 text-sm mb-4">~0.00 USDT</p>
-<div class="flex flex-wrap justify-center gap-4 mb-4">
-<div>
-<p class="text-gray-400 text-sm">Next Claim</p>
-<p id="nextClaimAmount" class="font-bold text-green-400">+5,000 UGX</p>
-</div>
-<div>
-<p class="text-gray-400 text-sm">Mining Cycle</p>
-<p id="miningCycleDisplay" class="font-bold">24h</p>
-</div>
-</div>
-<div class="flex justify-center items-center mb-2">
-<div id="miningCountdown" class="countdown-display text-2xl px-4 py-2 min-w-[160px]">
-Ready!
-</div>
-</div>
-<!-- Booster Expiry Timer -->
-<p id="boosterExpiry" class="text-xs text-gray-400 mt-1 hidden"></p>
-<button id="miningBtn" class="mt-3 w-full max-w-xs mx-auto bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 py-3 rounded-lg font-bold text-white shadow-lg hover:shadow-xl transition">
-Claim
-</button>
-</div>
-</div>
-<!-- 3. Withdraw (BEFORE boosters) -->
-<div class="mining-card mb-6">
-<h3 class="font-bold mb-2">Withdraw Funds</h3>
-<button id="openWithdrawModalBtn" class="w-full bg-amber-600 hover:bg-amber-700 py-3 rounded-lg font-bold">
-Withdraw <span id="withdrawDayLabel">(—)</span>
-</button>
-<p id="withdrawCountdown" class="text-xs text-gray-500 mt-1"></p>
-<p class="text-xs text-gray-500 mt-1">20% USDT fee • Arbitrum Network • Once per week</p>
-</div>
-<!-- 4. Boosters -->
-<h3 class="text-lg font-bold mb-4">Boosters</h3>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-<div class="booster-card relative overflow-hidden">
-<h4 class="font-bold text-lg">Eager_Miner</h4>
-<p class="text-3xl md:text-4xl font-bold text-blue-600 my-2">2h cycle</p>
-<p class="font-bold text-green-400 mt-1" id="eagleReward">+0 UGX / claim</p>
-<p class="text-gold-500 text-xs mt-1">Double your investment in 24h!</p>
-<button onclick="showBoosterModal(2, getBoosterReward(user?.balance || 0, 'eagle'), (user?.balance || 0) * 2)" class="w-full mt-2 bg-blue-600 py-3 rounded-lg font-bold">Buy for <span id="priceEagle">—</span></button>
-</div>
-<div class="booster-card relative overflow-hidden">
-<h4 class="font-bold text-lg">Falcon_Miner</h4>
-<p class="text-3xl md:text-4xl font-bold text-purple-600 my-2">2h cycle</p>
-<p class="font-bold text-green-400 mt-1" id="falconReward">+0 UGX / claim</p>
-<p class="text-gold-500 text-xs mt-1">Double your investment in 24h!</p>
-<button onclick="showBoosterModal(2, getBoosterReward(user?.balance || 0, 'falcon'), (user?.balance || 0) * 4)" class="w-full mt-2 bg-purple-600 py-3 rounded-lg font-bold">Buy for <span id="priceFalcon">—</span></button>
-</div>
-<div class="booster-card relative overflow-hidden">
-<h4 class="font-bold text-lg">Phoenix_Miner</h4>
-<p class="text-3xl md:text-4xl font-bold text-amber-600 my-2">2h cycle</p>
-<p class="font-bold text-green-400 mt-1" id="phoenixReward">+0 UGX / claim</p>
-<p class="text-gold-500 text-xs mt-1">Double your investment in 24h!</p>
-<button onclick="showBoosterModal(2, getBoosterReward(user?.balance || 0, 'phoenix'), (user?.balance || 0) * 8)" class="w-full mt-2 bg-amber-600 py-3 rounded-lg font-bold">Buy for <span id="pricePhoenix">—</span></button>
-</div>
-</div>
-<!-- 5. Transaction History -->
-<div class="mining-card mt-6">
-<h3 class="font-bold">Transaction History</h3>
-<div id="transactionHistoryList" class="mt-3 text-sm space-y-2 max-h-60 overflow-y-auto">
-<p class="text-gray-500">Loading transactions...</p>
-</div>
-</div>
-<!-- 6. Invite Friends -->
-<div class="mining-card mt-6">
-<h3 class="font-bold">Invite Friends</h3>
-<p class="text-sm text-gray-400 mb-2">Get 5,000 UGX per friend (max 2 friends)!</p>
-<div class="flex items-center bg-gray-700 p-2 rounded">
-<input type="text" id="refLink" class="bg-transparent flex-1 text-xs" readonly>
-<button onclick="copyRefLink()" class="text-green-500 ml-2 text-sm">Copy</button>
-</div>
-</div>
-<!-- 7. Live Activity (FOMO) -->
-<div class="mining-card mt-6">
-<h3 class="font-bold mb-3">Live Activity</h3>
-<div class="space-y-3">
-<div>
-<p class="text-xs text-gray-400">Recent Withdrawals</p>
-<div id="fakeWithdraws" class="text-sm"></div>
-</div>
-<div>
-<p class="text-xs text-gray-400">Booster Activations</p>
-<div id="fakeBoosters" class="text-sm"></div>
-</div>
-</div>
-</div>
-<!-- 8. How It Works (FAQ - LAST) -->
-<div class="mining-card mt-6">
-<h3 class="font-bold mb-3">How It Works</h3>
-<ul class="text-sm space-y-2 text-gray-300">
-<li>✅ <strong>Mine UGX</strong>: Claim 5,000 UGX every 24h (faster with boosters)</li>
-<li>✅ <strong>Withdraw</strong>: Pay 20% fee in USDT via <strong>Arbitrum Network</strong> → Admin approves → Balance reset</li>
-<li>✅ <strong>Boosters</strong>: Pay USDT to mine every 2h — **earn 2× your investment in 24h!**</li>
-<li>✅ <strong>Referrals</strong>: Max 2 friends = 10,000 UGX total</li>
-<li>⚠️ <strong>Note</strong>: All payouts are processed manually by our team</li>
-<li>🎬 <button onclick="document.getElementById('howItWorksModal').classList.remove('hidden')" class="text-green-400 underline">Watch tutorial videos</button></li>
-</ul>
-</div>
-</main>
-<!-- Admin Panel -->
-<div id="adminPanel" class="hidden">
-<h2 class="text-2xl font-bold mb-4">Admin Dashboard</h2>
-<div id="adminUserList" class="space-y-2"></div>
-</div>
-<!-- Wallet Modal -->
-<div id="walletModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden">
-<div class="bg-gray-800 p-6 rounded-xl w-80">
-<h3 class="mb-4">Enter Arbitrum Wallet</h3>
-<input type="text" id="walletInput" class="w-full bg-gray-700 p-2 rounded mb-4" placeholder="0x...">
-<button id="saveWalletBtn" class="w-full bg-green-600 py-2 rounded">Save</button>
-<button onclick="document.getElementById('walletModal').classList.add('hidden')" class="w-full mt-2 text-gray-400">Cancel</button>
-</div>
-</div>
-<!-- Booster Modal -->
-<div id="boosterModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
-<div class="bg-gray-800 p-6 rounded-xl w-96">
-<h3 class="text-lg font-bold mb-3" id="boosterModalTitle">Activate Booster</h3>
-<p id="boosterModalCurrent" class="text-gray-400 text-sm mb-1">Currently: ...</p>
-<p id="boosterModalNew" class="text-green-400 font-bold mb-4">After: ...</p>
-<p class="text-sm mb-2">Send <span id="boosterModalPrice"></span> using <strong>Arbitrum Network</strong>:</p>
-<div class="flex items-center bg-gray-700 p-2 rounded mb-3">
-<code id="adminWalletDisplay" class="text-xs break-all flex-1">0xb9fec9b1a49726089f058de4f4225ecbaa88cbbc</code>
-<button onclick="copyAdminWallet()" class="text-green-500 ml-2 text-sm">Copy</button>
-</div>
-<p class="text-xs text-red-400 mb-3">⚠️ <strong>Arbitrum Network ONLY!</strong> Sending from BSC, Ethereum, or TRON will lose your funds.</p>
-<p class="text-sm mb-2">Enter Transaction ID:</p>
-<input type="text" id="txIdInput" class="w-full bg-gray-700 p-2 rounded mb-4" placeholder="e.g. 0xabc123...">
-<div class="flex gap-2">
-<button id="submitBoosterBtn" onclick="submitBoosterRequest()" class="flex-1 bg-green-600 py-2 rounded">Submit for Approval</button>
-<button onclick="document.getElementById('boosterModal').classList.add('hidden')" class="flex-1 bg-gray-600 py-2 rounded">Cancel</button>
-</div>
-</div>
-</div>
-<!-- Withdraw Modal -->
-<div id="withdrawModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
-<div class="bg-gray-800 p-6 rounded-xl w-96">
-<h3 class="text-lg font-bold mb-3">Withdraw Funds</h3>
-<p class="text-sm mb-1">Total Balance:</p>
-<p id="withdrawTotal" class="font-bold text-lg">0 UGX</p>
-<p class="text-sm mt-3 mb-1">Processing Fee (20%):</p>
-<p id="withdrawFee" class="text-amber-400 font-bold">0.00 USDT</p>
-<p class="text-sm mb-2">Send <span id="withdrawFee" class="text-amber-400 font-bold">0.00 USDT</span> fee using <strong>Arbitrum Network</strong>:</p>
-<div class="flex items-center bg-gray-700 p-2 rounded mb-3">
-<code id="adminWalletWithdraw" class="text-xs break-all flex-1">0xb9fec9b1a49726089f058de4f4225ecbaa88cbbc</code>
-<button onclick="copyAdminWallet()" class="text-green-500 ml-2 text-sm">Copy</button>
-</div>
-<p class="text-xs text-red-400 mb-3">⚠️ <strong>Use Arbitrum ONLY!</strong> Sending from BSC, Ethereum, or TRON will lose your funds.</p>
-<p class="text-sm mb-2">Your Wallet (auto-filled):</p>
-<p id="userWalletDisplay" class="text-sm bg-gray-700 p-2 rounded mb-3 break-all">—</p>
-<p class="text-sm mb-2">Enter Transaction ID:</p>
-<input type="text" id="withdrawTxId" class="w-full bg-gray-700 p-2 rounded mb-4" placeholder="e.g. 0xabc123...">
-<div class="flex gap-2">
-<button id="submitWithdrawBtn" onclick="submitWithdrawRequest()" class="flex-1 bg-amber-600 py-2 rounded">Submit Request</button>
-<button onclick="document.getElementById('withdrawModal').classList.add('hidden')" class="flex-1 bg-gray-600 py-2 rounded">Cancel</button>
-</div>
-</div>
-</div>
-<!-- HOW IT WORKS MODAL -->
-<div id="howItWorksModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
-<div class="bg-gray-800 rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-<div class="flex justify-between items-center mb-4">
-<h3 class="text-lg font-bold">How It Works</h3>
-<button onclick="document.getElementById('howItWorksModal').classList.add('hidden')" class="text-gray-400 hover:text-white">
-<i class="fas fa-times"></i>
-</button>
-</div>
-<!-- Video 1: Set Wallet -->
-<div class="mb-5">
-<p class="text-xs text-gray-400 mb-2">1. Set Your Arbitrum Wallet</p>
-<div class="aspect-video bg-black rounded-lg overflow-hidden">
-<iframe
-src="https://www.youtube.com/embed/07O80xdXrdY"
-frameborder="0"
-allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-allowfullscreen
-class="w-full h-full">
-</iframe>
-</div>
-</div>
-<!-- Video 2: Buy Boosters -->
-<div class="mb-5">
-<p class="text-xs text-gray-400 mb-2">2. Buy a Booster</p>
-<div class="aspect-video bg-black rounded-lg overflow-hidden">
-<iframe
-src="https://youtu.be/PgG-WO1cWfA"
-frameborder="0"
-allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-allowfullscreen
-class="w-full h-full">
-</iframe>
-</div>
-</div>
-<!-- Video 3: Withdraw -->
-<div class="mb-5">
-<p class="text-xs text-gray-400 mb-2">3. Withdraw Funds</p>
-<div class="aspect-video bg-black rounded-lg overflow-hidden">
-<iframe
-src="https://www.youtube.com/embed/07O80xdXrdY"
-frameborder="0"
-allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-allowfullscreen
-class="w-full h-full">
-</iframe>
-</div>
-</div>
-<p class="text-xs text-gray-500 mt-2 text-center">
-Watch all videos. More coming soon!
-</p>
-</div>
-</div>
-<!-- Need help? -->
-<div class="text-center mt-2">
-<a href="mailto:auraaimoney@gmail.com" target="_blank" class="text-xs text-gray-500 hover:text-gray-300">Need help?</a>
-</div>
-<!-- Terms Footer -->
-<div class="text-center text-xs text-gray-500 mt-8 pb-4">
-<p>UGX Mine is for mining purposes. Ugx and crypto currency used only.
-<a href="#" class="text-gray-400 hover:underline">Terms of Use</a>
-</p>
-</div>
-</div>
-<script>
-// ✅ CLEANED SUPABASE CREDENTIALS
-const SUPABASE_URL = 'https://rryvibgbpqyumfmgsiua.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeXZpYmdicHF5dW1mbWdzaXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTUwNTUsImV4cCI6MjA4MjQ3MTA1NX0.IMqZtMEiPyMwb8AW1gyFao9Yz2qWgMDibfbpVWOeG8o';
-const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+<body class="bg-gray-900 text-gray-100 font-sans">
+  <!-- 👇 Wrapper with dynamic viewport height for iOS -->
+  <div style="min-height: 100dvh;" class="container mx-auto px-4 py-6">
+    <header class="flex justify-between items-center mb-8">
+      <div class="flex items-center space-x-3">
+        <div class="bg-green-500 p-2 rounded-lg"><i class="fas fa-coins text-xl"></i></div>
+        <h1 class="text-2xl font-bold">UGX<span class="text-white">Mine</span></h1>
+      </div>
+      <div class="flex gap-2">
+        <button id="adminPanelBtn" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm hidden">Admin Panel</button>
+        <button id="authToggle" class="px-4 py-2 bg-red-600 hover:bg-green-700 rounded-lg">Logout</button>
+      </div>
+    </header>
 
-let user = null;
-let timer;
-let withdrawFeeUSDT = 0;
-let boosterExpiryTimer = null;
+    <!-- Auth Modal -->
+    <div id="authCard" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center hidden">
+      <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
+        <div class="flex mb-4 bg-gray-700 rounded-lg p-1">
+          <div id="tabSignup" class="auth-tab active flex-1 text-center">Sign Up</div>
+          <div id="tabLogin" class="auth-tab flex-1 text-center">Login</div>
+        </div>
+        <form id="signupForm" class="space-y-4">
+          <input type="text" id="signupUsername" placeholder="Username" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+          <input type="email" id="signupEmail" placeholder="Email" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+          <input type="password" id="signupPassword" placeholder="Password" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+          <button type="submit" class="w-full bg-green-600 py-2 rounded-lg">Create Account</button>
+        </form>
+        <form id="loginForm" class="hidden space-y-4">
+          <input type="text" id="loginUsername" placeholder="Username" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+          <input type="password" id="loginPassword" placeholder="Password" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
+          <a href="mailto:auraaimoney@gmail.com" class="text-xs text-gray-400 hover:text-gray-300 block text-center">Forgot password? Contact admin</a>
+          <button type="submit" class="w-full bg-emerald-600 py-2 rounded-lg">Login</button>
+        </form>
+      </div>
+    </div>
 
-// --- BOOSTER REWARD: 2x COST IN 24H ---
-function getBoosterReward(balance, type) {
-if (balance <= 0) return 0;
-if (type === 'eagle') return Math.floor(balance / 3);
-else if (type === 'falcon') return Math.floor((2 * balance) / 3);
-else return Math.floor((4 * balance) / 3); // phoenix
-}
+    <!-- Main Dashboard -->
+    <main id="mainContent" class="hidden">
+      <!-- Profile Header -->
+      <div class="mining-card flex justify-between items-center">
+        <div>
+          <h2 id="profileUserName" class="text-xl font-bold">---</h2>
+          <p id="profileUserEmail" class="text-gray-400 text-sm">---</p>
+          <p id="profileUserId" class="text-gray-500 text-xs">ID: ---</p>
+        </div>
+        <button id="editProfileBtn" class="border border-green-500 text-green-500 px-4 py-1 rounded-lg text-sm">Set Wallet</button>
+      </div>
 
-// REFERRAL
-const urlParams = new URLSearchParams(window.location.search);
-const referrer = urlParams.get('ref');
+      <!-- Mining Card -->
+      <div class="flex justify-center mb-6">
+        <div class="mining-card w-full max-w-2xl text-center">
+          <p class="font-bold text-amber-400">Your Balance</p>
+          <p id="balanceUGX" class="text-4xl md:text-5xl font-bold text-white my-2">0 UGX</p>
+          <p id="balanceUSDT" class="text-gray-500 text-sm mb-4">~0.00 USDT</p>
+          <div class="flex flex-wrap justify-center gap-4 mb-4">
+            <div>
+              <p class="text-gray-400 text-sm">Next Claim</p>
+              <p id="nextClaimAmount" class="font-bold text-green-400">+5,000 UGX</p>
+            </div>
+            <div>
+              <p class="text-gray-400 text-sm">Mining Cycle</p>
+              <p id="miningCycleDisplay" class="font-bold">24h</p>
+            </div>
+          </div>
+          <div class="flex justify-center items-center mb-2">
+            <div id="miningCountdown" class="countdown-display text-2xl px-4 py-2 min-w-[160px]">Ready!</div>
+          </div>
+          <p id="boosterExpiry" class="text-xs text-gray-400 mt-1 hidden"></p>
+          <button id="miningBtn" class="mt-3 w-full max-w-xs mx-auto bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 py-3 rounded-lg font-bold text-white shadow-lg hover:shadow-xl transition">
+            Claim
+          </button>
+        </div>
+      </div>
 
-// --- BOOSTER EXPIRY ---
-async function checkBoosterExpiry() {
-if (!user || !user.booster_expires_at) return;
-const now = new Date();
-const expires = new Date(user.booster_expires_at);
-if (now > expires) {
-await _supabase.from('users').update({
-mining_cycle_hours: 24,
-mining_reward: 5000,
-booster_expires_at: null
-}).eq('username', user.username);
-user.mining_cycle_hours = 24;
-user.mining_reward = 5000;
-user.booster_expires_at = null;
-updateUI();
-startTimer();
-alert("Your booster has expired. Back to standard mining.");
-}
-}
+      <!-- Withdraw (BEFORE boosters) -->
+      <div class="mining-card mb-6">
+        <h3 class="font-bold mb-2">Withdraw Funds</h3>
+        <button id="openWithdrawModalBtn" class="w-full bg-amber-600 hover:bg-amber-700 py-3 rounded-lg font-bold">
+          Withdraw <span id="withdrawDayLabel">(—)</span>
+        </button>
+        <p id="withdrawCountdown" class="text-xs text-gray-500 mt-1"></p>
+        <p class="text-xs text-gray-500 mt-1">20% USDT fee • Arbitrum Network • Once per week</p>
+      </div>
 
-// --- WITHDRAW DAY HELPER ---
-function getWithdrawInfo() {
-const today = new Date().getDay();
-const userDay = user.withdraw_day;
-if (userDay == null || userDay === undefined) {
-return { dayName: '—', daysLeft: null, isToday: false };
-}
-const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-const dayName = days[userDay];
-let daysLeft = userDay - today;
-if (daysLeft <= 0) daysLeft += 7;
-if (daysLeft === 7) daysLeft = 0;
-return { dayName, daysLeft, isToday: daysLeft === 0 };
-}
+      <!-- Boosters -->
+      <h3 class="text-lg font-bold mb-4">Boosters</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="booster-card relative overflow-hidden">
+          <h4 class="font-bold text-lg">Eager_Miner</h4>
+          <p class="text-3xl md:text-4xl font-bold text-blue-600 my-2">2h cycle</p>
+          <p class="font-bold text-green-400 mt-1" id="eagleReward">+0 UGX / claim</p>
+          <p class="text-gold-500 text-xs mt-1">Double your investment in 24h!</p>
+          <button onclick="showBoosterModal(2, getBoosterReward(user?.balance || 0, 'eagle'), (user?.balance || 0) * 2)" class="w-full mt-2 bg-blue-600 py-3 rounded-lg font-bold">Buy for <span id="priceEagle">—</span></button>
+        </div>
+        <div class="booster-card relative overflow-hidden">
+          <h4 class="font-bold text-lg">Falcon_Miner</h4>
+          <p class="text-3xl md:text-4xl font-bold text-purple-600 my-2">2h cycle</p>
+          <p class="font-bold text-green-400 mt-1" id="falconReward">+0 UGX / claim</p>
+          <p class="text-gold-500 text-xs mt-1">Double your investment in 24h!</p>
+          <button onclick="showBoosterModal(2, getBoosterReward(user?.balance || 0, 'falcon'), (user?.balance || 0) * 4)" class="w-full mt-2 bg-purple-600 py-3 rounded-lg font-bold">Buy for <span id="priceFalcon">—</span></button>
+        </div>
+        <div class="booster-card relative overflow-hidden">
+          <h4 class="font-bold text-lg">Phoenix_Miner</h4>
+          <p class="text-3xl md:text-4xl font-bold text-amber-600 my-2">2h cycle</p>
+          <p class="font-bold text-green-400 mt-1" id="phoenixReward">+0 UGX / claim</p>
+          <p class="text-gold-500 text-xs mt-1">Double your investment in 24h!</p>
+          <button onclick="showBoosterModal(2, getBoosterReward(user?.balance || 0, 'phoenix'), (user?.balance || 0) * 8)" class="w-full mt-2 bg-amber-600 py-3 rounded-lg font-bold">Buy for <span id="pricePhoenix">—</span></button>
+        </div>
+      </div>
 
-// --- AUTH ---
-document.getElementById('tabSignup').onclick = () => {
-document.getElementById('signupForm').classList.remove('hidden');
-document.getElementById('loginForm').classList.add('hidden');
-document.getElementById('tabSignup').classList.add('active');
-document.getElementById('tabLogin').classList.remove('active');
-};
+      <!-- Transaction History -->
+      <div class="mining-card mt-6">
+        <h3 class="font-bold">Transaction History</h3>
+        <div id="transactionHistoryList" class="mt-3 text-sm space-y-2 max-h-60 overflow-y-auto">
+          <p class="text-gray-500">Loading transactions...</p>
+        </div>
+      </div>
 
-document.getElementById('tabLogin').onclick = () => {
-document.getElementById('loginForm').classList.remove('hidden');
-document.getElementById('signupForm').classList.add('hidden');
-document.getElementById('tabLogin').classList.add('active');
-document.getElementById('tabSignup').classList.remove('active');
-};
+      <!-- Invite Friends -->
+      <div class="mining-card mt-6">
+        <h3 class="font-bold">Invite Friends</h3>
+        <p class="text-sm text-gray-400 mb-2">Get 5,000 UGX per friend (max 2 friends)!</p>
+        <div class="flex items-center bg-gray-700 p-2 rounded">
+          <input type="text" id="refLink" class="bg-transparent flex-1 text-xs" readonly>
+          <button onclick="copyRefLink()" class="text-green-500 ml-2 text-sm">Copy</button>
+        </div>
+      </div>
 
-document.getElementById('signupForm').onsubmit = async (e) => {
-e.preventDefault();
-const u = document.getElementById('signupUsername').value;
-const em = document.getElementById('signupEmail').value;
-const p = document.getElementById('signupPassword').value;
-let bonus = 0;
-if (referrer) {
-const {  refUser } = await _supabase.from('users').select('referral_count').eq('username', referrer).single();
-if (refUser && (refUser.referral_count || 0) < 2) {
-bonus = 5000;
-await _supabase.rpc('increment_referral_count', { ref_user: referrer });
-}
-}
-const { error } = await _supabase.from('users').insert([{
-username: u,
-password: p,
-user_email: em,
-balance: bonus,
-mining_reward: 5000,
-mining_cycle_hours: 24,
-next_claim_time: new Date().toISOString(),
-user_id: 'UGX' + Math.floor(Math.random()*1000000),
-referrer: referrer,
-user_wallet: null,
-withdraw_day: null,
-booster_expires_at: null,
-referral_count: 0
-}]);
-if (error) alert(error.message);
-else {
-alert("Signup Success! Please Login.");
-}
-};
+      <!-- Live Activity (FOMO) -->
+      <div class="mining-card mt-6">
+        <h3 class="font-bold mb-3">Live Activity</h3>
+        <div class="space-y-3">
+          <div>
+            <p class="text-xs text-gray-400">Recent Withdrawals</p>
+            <div id="fakeWithdraws" class="text-sm"></div>
+          </div>
+          <div>
+            <p class="text-xs text-gray-400">Booster Activations</p>
+            <div id="fakeBoosters" class="text-sm"></div>
+          </div>
+        </div>
+      </div>
 
-document.getElementById('loginForm').onsubmit = async (e) => {
-e.preventDefault();
-const u = document.getElementById('loginUsername').value;
-const p = document.getElementById('loginPassword').value;
-const { data, error } = await _supabase.from('users').select('*').eq('username', u).eq('password', p).maybeSingle();
-if (!data) return alert("Wrong credentials");
-user = data;
-loadDashboard();
-};
+      <!-- How It Works (FAQ - LAST) -->
+      <div class="mining-card mt-6">
+        <h3 class="font-bold mb-3">How It Works</h3>
+        <ul class="text-sm space-y-2 text-gray-300">
+          <li>✅ <strong>Mine UGX</strong>: Claim 5,000 UGX every 24h (faster with boosters)</li>
+          <li>✅ <strong>Withdraw</strong>: Pay 20% fee in USDT via <strong>Arbitrum Network</strong> → Admin approves → Balance reset</li>
+          <li>✅ <strong>Boosters</strong>: Pay USDT to mine every 2h — **earn 2× your investment in 24h!**</li>
+          <li>✅ <strong>Referrals</strong>: Max 2 friends = 10,000 UGX total</li>
+          <li>⚠️ <strong>Note</strong>: All payouts are processed manually by our team</li>
+          <li>🎬 <button onclick="document.getElementById('howItWorksModal').classList.remove('hidden')" class="text-green-400 underline">Watch tutorial videos</button></li>
+        </ul>
+      </div>
+    </main>
 
-// --- DASHBOARD ---
-function loadDashboard() {
-document.getElementById('authCard').classList.add('hidden');
-document.getElementById('mainContent').classList.remove('hidden');
-document.getElementById('profileUserName').textContent = user.username;
-document.getElementById('profileUserEmail').textContent = user.user_email;
-document.getElementById('profileUserId').textContent = "ID: " + user.user_id;
-const refLink = `${window.location.origin}${window.location.pathname}?ref=${user.username}`;
-document.getElementById('refLink').value = refLink;
-updateUI();
-startTimer();
-checkBoosterExpiry();
-checkApprovedBoosters();
-checkApprovedWithdrawals();
-fetchAllTransactions();
-generateFakeActivity();
-setInterval(generateFakeActivity, 15000);
-}
+    <!-- Modals (Wallet, Booster, Withdraw, How It Works) – unchanged but cleaned -->
+    <!-- Wallet Modal -->
+    <div id="walletModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden">
+      <div class="bg-gray-800 p-6 rounded-xl w-80">
+        <h3 class="mb-4">Enter Arbitrum Wallet</h3>
+        <input type="text" id="walletInput" class="w-full bg-gray-700 p-2 rounded mb-4" placeholder="0x...">
+        <button id="saveWalletBtn" class="w-full bg-green-600 py-2 rounded">Save</button>
+        <button onclick="document.getElementById('walletModal').classList.add('hidden')" class="w-full mt-2 text-gray-400">Cancel</button>
+      </div>
+    </div>
 
-// --- UPDATE UI ---
-function updateUI() {
-const balance = user.balance || 0;
-const reward = user.mining_reward || 5000;
-document.getElementById('balanceUGX').textContent = balance.toLocaleString() + " UGX";
-document.getElementById('balanceUSDT').textContent = "~" + (balance / 3700).toFixed(2) + " USDT";
-document.getElementById('miningCycleDisplay').textContent = (user.mining_cycle_hours || 24) + "h";
-document.getElementById('nextClaimAmount').textContent = "+" + reward.toLocaleString() + " UGX";
+    <!-- Booster Modal -->
+    <div id="boosterModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
+      <div class="bg-gray-800 p-6 rounded-xl w-96">
+        <h3 class="text-lg font-bold mb-3" id="boosterModalTitle">Activate Booster</h3>
+        <p id="boosterModalCurrent" class="text-gray-400 text-sm mb-1">Currently: ...</p>
+        <p id="boosterModalNew" class="text-green-400 font-bold mb-4">After: ...</p>
+        <p class="text-sm mb-2">Send <span id="boosterModalPrice"></span> using <strong>Arbitrum Network</strong>:</p>
+        <div class="flex items-center bg-gray-700 p-2 rounded mb-3">
+          <code id="adminWalletDisplay" class="text-xs break-all flex-1">0xb9fec9b1a49726089f058de4f4225ecbaa88cbbc</code>
+          <button onclick="copyAdminWallet()" class="text-green-500 ml-2 text-sm">Copy</button>
+        </div>
+        <p class="text-xs text-red-400 mb-3">⚠️ <strong>Arbitrum Network ONLY!</strong> Sending from BSC, Ethereum, or TRON will lose your funds.</p>
+        <p class="text-sm mb-2">Enter Transaction ID:</p>
+        <input type="text" id="txIdInput" class="w-full bg-gray-700 p-2 rounded mb-4" placeholder="e.g. 0xabc123...">
+        <div class="flex gap-2">
+          <button id="submitBoosterBtn" onclick="submitBoosterRequest()" class="flex-1 bg-green-600 py-2 rounded">Submit for Approval</button>
+          <button onclick="document.getElementById('boosterModal').classList.add('hidden')" class="flex-1 bg-gray-600 py-2 rounded">Cancel</button>
+        </div>
+      </div>
+    </div>
 
-document.getElementById('eagleReward').textContent = `+${getBoosterReward(balance, 'eagle').toLocaleString()} UGX / claim`;
-document.getElementById('falconReward').textContent = `+${getBoosterReward(balance, 'falcon').toLocaleString()} UGX / claim`;
-document.getElementById('phoenixReward').textContent = `+${getBoosterReward(balance, 'phoenix').toLocaleString()} UGX / claim`;
+    <!-- Withdraw Modal -->
+    <div id="withdrawModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
+      <div class="bg-gray-800 p-6 rounded-xl w-96">
+        <h3 class="text-lg font-bold mb-3">Withdraw Funds</h3>
+        <p class="text-sm mb-1">Total Balance:</p>
+        <p id="withdrawTotal" class="font-bold text-lg">0 UGX</p>
+        <p class="text-sm mt-3 mb-1">Processing Fee (20%):</p>
+        <p id="withdrawFee" class="text-amber-400 font-bold">0.00 USDT</p>
+        <p class="text-sm mb-2">Send <span id="withdrawFeeDisplay" class="text-amber-400 font-bold">0.00 USDT</span> fee using <strong>Arbitrum Network</strong>:</p>
+        <div class="flex items-center bg-gray-700 p-2 rounded mb-3">
+          <code id="adminWalletWithdraw" class="text-xs break-all flex-1">0xb9fec9b1a49726089f058de4f4225ecbaa88cbbc</code>
+          <button onclick="copyAdminWallet()" class="text-green-500 ml-2 text-sm">Copy</button>
+        </div>
+        <p class="text-xs text-red-400 mb-3">⚠️ <strong>Use Arbitrum ONLY!</strong> Sending from BSC, Ethereum, or TRON will lose your funds.</p>
+        <p class="text-sm mb-2">Your Wallet (auto-filled):</p>
+        <p id="userWalletDisplay" class="text-sm bg-gray-700 p-2 rounded mb-3 break-all">—</p>
+        <p class="text-sm mb-2">Enter Transaction ID:</p>
+        <input type="text" id="withdrawTxId" class="w-full bg-gray-700 p-2 rounded mb-4" placeholder="e.g. 0xabc123...">
+        <div class="flex gap-2">
+          <button id="submitWithdrawBtn" onclick="submitWithdrawRequest()" class="flex-1 bg-amber-600 py-2 rounded">Submit Request</button>
+          <button onclick="document.getElementById('withdrawModal').classList.add('hidden')" class="flex-1 bg-gray-600 py-2 rounded">Cancel</button>
+        </div>
+      </div>
+    </div>
 
-const priceEagle = (balance * 2);
-const priceFalcon = (balance * 4);
-const pricePhoenix = (balance * 8);
-document.getElementById('priceEagle').textContent = `${priceEagle.toLocaleString()} UGX (~${(priceEagle / 3700).toFixed(2)} USDT)`;
-document.getElementById('priceFalcon').textContent = `${priceFalcon.toLocaleString()} UGX (~${(priceFalcon / 3700).toFixed(2)} USDT)`;
-document.getElementById('pricePhoenix').textContent = `${pricePhoenix.toLocaleString()} UGX (~${(pricePhoenix / 3700).toFixed(2)} USDT)`;
+    <!-- HOW IT WORKS MODAL -->
+    <div id="howItWorksModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
+      <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-bold">How It Works</h3>
+          <button onclick="document.getElementById('howItWorksModal').classList.add('hidden')" class="text-gray-400 hover:text-white">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
 
-const wInfo = getWithdrawInfo();
-document.getElementById('withdrawDayLabel').textContent = `(${wInfo.dayName})`;
-const countdownEl = document.getElementById('withdrawCountdown');
-if (wInfo.isToday) {
-countdownEl.textContent = "✅ Today! Withdraw now.";
-countdownEl.className = "text-xs text-green-400 mt-1";
-countdownEl.classList.remove('hidden');
-} else if (wInfo.daysLeft !== null) {
-const dayName = wInfo.dayName;
-countdownEl.textContent = `${wInfo.daysLeft} ${wInfo.daysLeft === 1 ? 'day' : 'days'} until ${dayName}`;
-countdownEl.className = "text-xs text-gray-500 mt-1";
-countdownEl.classList.remove('hidden');
-} else {
-countdownEl.textContent = "Withdraw available after first eligibility";
-countdownEl.className = "text-xs text-gray-500 mt-1";
-countdownEl.classList.remove('hidden');
-}
+        <!-- Video 1: Set Wallet -->
+        <div class="mb-5">
+          <p class="text-xs text-gray-400 mb-2">1. Set Your Arbitrum Wallet</p>
+          <div class="aspect-video bg-black rounded-lg overflow-hidden">
+            <iframe
+              src="https://www.youtube.com/embed/07O80xdXrdY"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+              playsinline
+              title="Set Wallet Tutorial"
+              class="w-full h-full">
+            </iframe>
+          </div>
+        </div>
 
-const expiryEl = document.getElementById('boosterExpiry');
-if (user.booster_expires_at) {
-const diff = new Date(user.booster_expires_at) - Date.now();
-if (diff > 0) {
-const h = Math.floor(diff / 3600000);
-const m = Math.floor((diff % 3600000) / 60000);
-expiryEl.textContent = `Booster expires in: ${h}h ${m}m`;
-expiryEl.classList.remove('hidden');
-} else {
-expiryEl.classList.add('hidden');
-}
-} else {
-expiryEl.classList.add('hidden');
-}
-}
+        <!-- Video 2: Buy Boosters -->
+        <div class="mb-5">
+          <p class="text-xs text-gray-400 mb-2">2. Buy a Booster</p>
+          <div class="aspect-video bg-black rounded-lg overflow-hidden">
+            <iframe
+              src="https://www.youtube.com/embed/PgG-WO1cWfA"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+              playsinline
+              title="How to Buy a Booster"
+              class="w-full h-full">
+            </iframe>
+          </div>
+        </div>
 
-function startTimer() {
-if (timer) clearInterval(timer);
-const next = new Date(user.next_claim_time).getTime();
-timer = setInterval(() => {
-const diff = next - Date.now();
-if (diff <= 0) {
-document.getElementById('miningCountdown').textContent = "Ready!";
-if (Notification.permission === "granted") {
-new Notification("UGX Mine", { body: "Your reward is ready to claim!" });
-}
-return clearInterval(timer);
-}
-const h = Math.floor(diff/3600000).toString().padStart(2,'0');
-const m = Math.floor((diff%3600000)/60000).toString().padStart(2,'0');
-const s = Math.floor((diff%60000)/1000).toString().padStart(2,'0');
-document.getElementById('miningCountdown').textContent = `${h}:${m}:${s}`;
-}, 1000);
-if (boosterExpiryTimer) clearInterval(boosterExpiryTimer);
-if (user && user.booster_expires_at) {
-boosterExpiryTimer = setInterval(() => {
-const diff = new Date(user.booster_expires_at) - Date.now();
-if (diff <= 0) {
-clearInterval(boosterExpiryTimer);
-boosterExpiryTimer = null;
-checkBoosterExpiry();
-}
-updateUI();
-}, 60000);
-}
-}
+        <!-- Video 3: Withdraw -->
+        <div class="mb-5">
+          <p class="text-xs text-gray-400 mb-2">3. Withdraw Funds</p>
+          <div class="aspect-video bg-black rounded-lg overflow-hidden">
+            <iframe
+              src="https://www.youtube.com/embed/07O80xdXrdY"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+              playsinline
+              title="Withdraw Tutorial"
+              class="w-full h-full">
+            </iframe>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-2 text-center">Watch all videos. More coming soon!</p>
+      </div>
+    </div>
 
-document.getElementById('miningBtn').onclick = async () => {
-const btn = document.getElementById('miningBtn');
-if (btn.classList.contains('loading-btn')) return;
-await checkBoosterExpiry();
-if (new Date(user.next_claim_time).getTime() > Date.now()) return alert("Still mining!");
-btn.classList.add('loading-btn');
-btn.textContent = "Claiming...";
-try {
-const newBal = (user.balance || 0) + (user.mining_reward || 5000);
-const next = new Date(Date.now() + ((user.mining_cycle_hours || 24) * 3600000)).toISOString();
-await _supabase.from('users').update({ balance: newBal, next_claim_time: next }).eq('username', user.username);
-user.balance = newBal; user.next_claim_time = next;
-updateUI(); startTimer();
-} finally {
-btn.classList.remove('loading-btn');
-btn.textContent = "Claim Reward";
-}
-};
+    <!-- Need help? -->
+    <div class="text-center mt-2">
+      <a href="mailto:auraaimoney@gmail.com" target="_blank" class="text-xs text-gray-500 hover:text-gray-300">Need help?</a>
+    </div>
 
-// --- BOOSTERS ---
-let selectedBoosterHours = null;
-let selectedBoosterReward = null;
-let selectedBoosterPriceUGX = null;
+    <!-- Terms Footer -->
+    <div class="text-center text-xs text-gray-500 mt-8 pb-4">
+      <p>UGX Mine is for mining purposes. Ugx and crypto currency used only.
+        <a href="#" class="text-gray-400 hover:underline">Terms of Use</a>
+      </p>
+    </div>
+  </div>
 
-function showBoosterModal(hours, reward, priceUGX) {
-if ((user.balance || 0) === 0) {
-alert("You need a balance to buy a booster!");
-return;
-}
-selectedBoosterHours = hours;
-selectedBoosterReward = reward;
-selectedBoosterPriceUGX = priceUGX;
-const priceUSDT = (priceUGX / 3700).toFixed(2);
-const currentReward = user.mining_reward || 5000;
-const currentHours = user.mining_cycle_hours || 24;
-if (reward === getBoosterReward(user.balance, 'eagle')) {
-document.getElementById('boosterModalTitle').textContent = 'Eagle Miner';
-} else if (reward === getBoosterReward(user.balance, 'falcon')) {
-document.getElementById('boosterModalTitle').textContent = 'Falcon Miner';
-} else {
-document.getElementById('boosterModalTitle').textContent = 'Phoenix Miner';
-}
-document.getElementById('boosterModalCurrent').textContent =
-`Currently: ${currentReward.toLocaleString()} UGX / ${currentHours}h`;
-document.getElementById('boosterModalNew').textContent =
-`After: ${reward.toLocaleString()} UGX / 2h`;
-document.getElementById('boosterModalPrice').textContent =
-`${priceUGX.toLocaleString()} UGX (~${priceUSDT} USDT)`;
-document.getElementById('txIdInput').value = '';
-document.getElementById('boosterModal').classList.remove('hidden');
-}
+  <!-- SCRIPTS -->
+  <script>
+    const SUPABASE_URL = 'https://rryvibgbpqyumfmgsiua.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeXZpYmdicHF5dW1mbWdzaXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTUwNTUsImV4cCI6MjA4MjQ3MTA1NX0.IMqZtMEiPyMwb8AW1gyFao9Yz2qWgMDibfbpVWOeG8o';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ✅ UPDATED COPY FUNCTION FOR ARBITRUM
-function copyAdminWallet() {
-    navigator.clipboard.writeText('0xb9fec9b1a49726089f058de4f4225ecbaa88cbbc');
-    alert('Arbitrum wallet copied! Use Arbitrum network only.');
-}
+    let user = null;
+    let timer;
+    let withdrawFeeUSDT = 0;
+    let boosterExpiryTimer = null;
 
-function copyRefLink() {
-navigator.clipboard.writeText(document.getElementById('refLink').value);
-alert('Referral link copied!');
-}
+    function getBoosterReward(balance, type) {
+      if (balance <= 0) return 0;
+      if (type === 'eagle') return Math.floor(balance / 3);
+      else if (type === 'falcon') return Math.floor((2 * balance) / 3);
+      else return Math.floor((4 * balance) / 3);
+    }
 
-async function submitBoosterRequest() {
-const btn = document.getElementById('submitBoosterBtn');
-if (btn.classList.contains('loading-btn')) return;
-const txId = document.getElementById('txIdInput').value.trim();
-if (!txId) return alert('Please enter a Transaction ID.');
-btn.classList.add('loading-btn');
-btn.textContent = "Submitting...";
-try {
-const priceUSDT = (selectedBoosterPriceUGX / 3700).toFixed(2);
-const { error } = await _supabase.from('booster_requests').insert({
-username: user.username,
-booster_hours: selectedBoosterHours,
-reward: selectedBoosterReward,
-usdt_amount: parseFloat(priceUSDT),
-txid: txId,
-status: 'pending',
-requested_at: new Date().toISOString(),
-duration_hours: 24
-});
-if (error) {
-alert('Failed to submit: ' + error.message);
-return;
-}
-document.getElementById('boosterModal').classList.add('hidden');
-fetchAllTransactions();
-alert('Request submitted! Please wait for admin approval.');
-} finally {
-btn.classList.remove('loading-btn');
-btn.textContent = "Submit for Approval";
-}
-}
+    const urlParams = new URLSearchParams(window.location.search);
+    const referrer = urlParams.get('ref');
 
-async function checkApprovedBoosters() {
-const { data } = await _supabase
-.from('booster_requests')
-.select('*')
-.eq('username', user.username)
-.eq('status', 'approved')
-.order('requested_at', { ascending: false })
-.limit(1);
-if (data && data.length > 0) {
-const latest = data[0];
-const expiresAt = new Date(Date.now() + 24 * 3600000).toISOString();
-await _supabase
-.from('users')
-.update({
-mining_cycle_hours: latest.booster_hours,
-mining_reward: latest.reward,
-booster_expires_at: expiresAt
-})
-.eq('username', user.username);
-const {  updated } = await _supabase
-.from('users')
-.select('*')
-.eq('username', user.username)
-.single();
-user = updated;
-updateUI();
-startTimer();
-await _supabase
-.from('booster_requests')
-.update({ status: 'applied' })
-.eq('id', latest.id);
-}
-}
+    async function checkBoosterExpiry() {
+      if (!user || !user.booster_expires_at) return;
+      const now = new Date();
+      const expires = new Date(user.booster_expires_at);
+      if (now > expires) {
+        await _supabase.from('users').update({
+          mining_cycle_hours: 24,
+          mining_reward: 5000,
+          booster_expires_at: null
+        }).eq('username', user.username);
+        user.mining_cycle_hours = 24;
+        user.mining_reward = 5000;
+        user.booster_expires_at = null;
+        updateUI();
+        startTimer();
+        alert("Your booster has expired. Back to standard mining.");
+      }
+    }
 
-// --- WITHDRAWALS ---
-document.getElementById('openWithdrawModalBtn').onclick = async () => {
-if ((user.balance || 0) < 50000) return alert("Min 50,000 UGX required");
-if (!user.user_wallet) return alert("Set wallet first!");
-const today = new Date().getDay();
-if (user.withdraw_day === null || user.withdraw_day === undefined) {
-await _supabase.from('users').update({ withdraw_day: today }).eq('username', user.username);
-user.withdraw_day = today;
-const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-alert(`✅ Your weekly withdrawal day is set to ${days[today]}.`);
-}
-if (user.withdraw_day !== today) {
-const wInfo = getWithdrawInfo();
-return alert(`Withdrawals are only allowed on ${wInfo.dayName}. ${wInfo.daysLeft} ${wInfo.daysLeft === 1 ? 'day' : 'days'} left.`);
-}
-const total = user.balance || 0;
-withdrawFeeUSDT = (total * 0.20) / 3700;
-document.getElementById('withdrawTotal').textContent = total.toLocaleString() + " UGX";
-document.getElementById('withdrawFee').textContent = withdrawFeeUSDT.toFixed(2) + " USDT";
-document.getElementById('userWalletDisplay').textContent = user.user_wallet;
-document.getElementById('withdrawTxId').value = '';
-document.getElementById('withdrawModal').classList.remove('hidden');
-};
+    function getWithdrawInfo() {
+      const today = new Date().getDay();
+      const userDay = user.withdraw_day;
+      if (userDay == null || userDay === undefined) {
+        return { dayName: '—', daysLeft: null, isToday: false };
+      }
+      const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      const dayName = days[userDay];
+      let daysLeft = userDay - today;
+      if (daysLeft <= 0) daysLeft += 7;
+      if (daysLeft === 7) daysLeft = 0;
+      return { dayName, daysLeft, isToday: daysLeft === 0 };
+    }
 
-async function submitWithdrawRequest() {
-const btn = document.getElementById('submitWithdrawBtn');
-if (btn.classList.contains('loading-btn')) return;
-const txId = document.getElementById('withdrawTxId').value.trim();
-if (!txId) return alert('Please enter a Transaction ID.');
-btn.classList.add('loading-btn');
-btn.textContent = "Submitting...";
-try {
-const total = user.balance || 0;
-const { error } = await _supabase.from('withdraw_requests').insert({
-username: user.username,
-balance_ugx: total,
-fee_usdt: parseFloat(withdrawFeeUSDT.toFixed(2)),
-wallet_address: user.user_wallet,
-txid: txId,
-status: 'pending'
-});
-if (error) {
-alert('Failed to submit: ' + error.message);
-return;
-}
-document.getElementById('withdrawModal').classList.add('hidden');
-alert('Withdraw request submitted! Admin will review your payment.');
-} finally {
-btn.classList.remove('loading-btn');
-btn.textContent = "Submit Request";
-}
-}
+    // Auth tabs
+    document.getElementById('tabSignup').onclick = () => {
+      document.getElementById('signupForm').classList.remove('hidden');
+      document.getElementById('loginForm').classList.add('hidden');
+      document.getElementById('tabSignup').classList.add('active');
+      document.getElementById('tabLogin').classList.remove('active');
+    };
+    document.getElementById('tabLogin').onclick = () => {
+      document.getElementById('loginForm').classList.remove('hidden');
+      document.getElementById('signupForm').classList.add('hidden');
+      document.getElementById('tabLogin').classList.add('active');
+      document.getElementById('tabSignup').classList.remove('active');
+    };
 
-async function checkApprovedWithdrawals() {
-const { data } = await _supabase
-.from('withdraw_requests')
-.select('*')
-.eq('username', user.username)
-.eq('status', 'approved')
-.order('requested_at', { ascending: false })
-.limit(1);
-if (data && data.length > 0) {
-await _supabase
-.from('users')
-.update({
-balance: 0,
-mining_cycle_hours: 24,
-mining_reward: 5000,
-booster_expires_at: null
-})
-.eq('username', user.username);
-user.balance = 0;
-user.mining_cycle_hours = 24;
-user.mining_reward = 5000;
-user.booster_expires_at = null;
-updateUI();
-startTimer();
-await _supabase
-.from('withdraw_requests')
-.update({ status: 'processed' })
-.eq('id', data[0].id);
-alert("✅ Withdrawal approved! Your balance has been reset.");
-}
-}
+    document.getElementById('signupForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const u = document.getElementById('signupUsername').value;
+      const em = document.getElementById('signupEmail').value;
+      const p = document.getElementById('signupPassword').value;
+      let bonus = 0;
+      if (referrer) {
+        const { data: refUser } = await _supabase.from('users').select('referral_count').eq('username', referrer).single();
+        if (refUser && (refUser.referral_count || 0) < 2) {
+          bonus = 5000;
+          await _supabase.rpc('increment_referral_count', { ref_user: referrer });
+        }
+      }
+      const { error } = await _supabase.from('users').insert([{
+        username: u,
+        password: p,
+        user_email: em,
+        balance: bonus,
+        mining_reward: 5000,
+        mining_cycle_hours: 24,
+        next_claim_time: new Date().toISOString(),
+        user_id: 'UGX' + Math.floor(Math.random()*1000000),
+        referrer: referrer,
+        user_wallet: null,
+        withdraw_day: null,
+        booster_expires_at: null,
+        referral_count: 0
+      }]);
+      if (error) alert(error.message);
+      else alert("Signup Success! Please Login.");
+    };
 
-// --- Unified Transaction History ---
-async function fetchAllTransactions() {
-try {
-const [boosterData, withdrawData] = await Promise.all([
-_supabase
-.from('booster_requests')
-.select('*')
-.eq('username', user.username)
-.order('requested_at', { ascending: false }),
-_supabase
-.from('withdraw_requests')
-.select('*')
-.eq('username', user.username)
-.order('requested_at', { ascending: false })
-]);
-const boosters = (boosterData.data || []).map(r => ({
-...r,
-type: 'booster',
-displayType: 'Booster Purchase',
-amount: `${r.reward} UGX / 2h`,
-fee: `${r.usdt_amount} USDT`,
-timestamp: r.requested_at
-}));
-const withdrawals = (withdrawData.data || []).map(r => ({
-...r,
-type: 'withdraw',
-displayType: 'Withdrawal Request',
-amount: `${r.balance_ugx} UGX`,
-fee: `${r.fee_usdt} USDT`,
-timestamp: r.requested_at
-}));
-const all = [...boosters, ...withdrawals]
-.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-.slice(0, 20);
-renderTransactionHistory(all);
-} catch (error) {
-console.error('Failed to load history:', error);
-document.getElementById('transactionHistoryList').innerHTML =
-'<p class="text-red-400">Failed to load history.</p>';
-}
-}
+    document.getElementById('loginForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const u = document.getElementById('loginUsername').value;
+      const p = document.getElementById('loginPassword').value;
+      const { data, error } = await _supabase.from('users').select('*').eq('username', u).eq('password', p).maybeSingle();
+      if (!data) return alert("Wrong credentials");
+      user = data;
+      loadDashboard();
+    };
 
-function renderTransactionHistory(transactions) {
-const container = document.getElementById('transactionHistoryList');
-if (transactions.length === 0) {
-container.innerHTML = '<p class="text-gray-500">No transactions yet.</p>';
-return;
-}
-const statusColors = {
-pending: 'text-yellow-400',
-approved: 'text-green-400',
-applied: 'text-blue-400',
-processed: 'text-blue-400',
-rejected: 'text-red-400'
-};
-container.innerHTML = transactions.map(tx => `
-<div class="p-2 bg-gray-900 rounded border border-gray-700">
-<div class="flex justify-between">
-<span class="font-bold">${tx.displayType}</span>
-<span class="text-xs ${statusColors[tx.status] || 'text-gray-400'}">
-${tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
-</span>
-</div>
-<div class="text-gray-300 text-sm mt-1">${tx.amount}</div>
-<div class="text-gray-400 text-xs">Fee: ${tx.fee}</div>
-<div class="text-xs text-gray-500 mt-1">
-${new Date(tx.timestamp).toLocaleString()}
-</div>
-</div>
-`).join('');
-}
+    function loadDashboard() {
+      document.getElementById('authCard').classList.add('hidden');
+      document.getElementById('mainContent').classList.remove('hidden');
+      document.getElementById('profileUserName').textContent = user.username;
+      document.getElementById('profileUserEmail').textContent = user.user_email;
+      document.getElementById('profileUserId').textContent = "ID: " + user.user_id;
+      const refLink = `${window.location.origin}${window.location.pathname}?ref=${user.username}`;
+      document.getElementById('refLink').value = refLink;
+      updateUI();
+      startTimer();
+      checkBoosterExpiry();
+      checkApprovedBoosters();
+      checkApprovedWithdrawals();
+      fetchAllTransactions();
+      generateFakeActivity();
+      setInterval(generateFakeActivity, 15000);
+    }
 
-// --- FOMO Fake Activity ---
-const names = ["Mugisha", "Nalweyiso", "Kato", "Nakato", "Ssebunya", "Ampaire", "Tumusiime", "Kyomuhendo", "Namutebi", "Wasswa", "Nakabugo", "Kizza", "Nabwami", "Ssebuufu", "Lukyamuzi"];
-const wallets = ["0x...", "0x...", "0x...", "0x...", "0x..."];
+    function updateUI() {
+      const balance = user.balance || 0;
+      const reward = user.mining_reward || 5000;
+      document.getElementById('balanceUGX').textContent = balance.toLocaleString() + " UGX";
+      document.getElementById('balanceUSDT').textContent = "~" + (balance / 3700).toFixed(2) + " USDT";
+      document.getElementById('miningCycleDisplay').textContent = (user.mining_cycle_hours || 24) + "h";
+      document.getElementById('nextClaimAmount').textContent = "+" + reward.toLocaleString() + " UGX";
 
-function generateFakeActivity() {
-let withdrawHTML = '';
-for (let i = 0; i < 3; i++) {
-const name = names[Math.floor(Math.random() * names.length)];
-const amount = (Math.floor(Math.random() * 50) + 50) * 1000;
-const wallet = wallets[Math.floor(Math.random() * wallets.length)] + Math.random().toString(36).substr(2, 8);
-const timeAgo = Math.floor(Math.random() * 15) + 1;
-withdrawHTML += `<p class="text-amber-400 text-xs">${name} withdrew ${amount.toLocaleString()} UGX to ${wallet} (${timeAgo}m ago)</p>`;
-}
-document.getElementById('fakeWithdraws').innerHTML = withdrawHTML;
+      document.getElementById('eagleReward').textContent = `+${getBoosterReward(balance, 'eagle').toLocaleString()} UGX / claim`;
+      document.getElementById('falconReward').textContent = `+${getBoosterReward(balance, 'falcon').toLocaleString()} UGX / claim`;
+      document.getElementById('phoenixReward').textContent = `+${getBoosterReward(balance, 'phoenix').toLocaleString()} UGX / claim`;
 
-let boosterHTML = '';
-const boosterTypes = ["Eagle Miner", "Falcon Miner", "Phoenix Miner"];
-for (let i = 0; i < 3; i++) {
-const name = names[Math.floor(Math.random() * names.length)];
-const type = boosterTypes[Math.floor(Math.random() * boosterTypes.length)];
-const timeAgo = Math.floor(Math.random() * 20) + 1;
-boosterHTML += `<p class="text-green-400 text-xs">${name} activated ${type} (${timeAgo}m ago)</p>`;
-}
-document.getElementById('fakeBoosters').innerHTML = boosterHTML;
-}
+      const priceEagle = (balance * 2);
+      const priceFalcon = (balance * 4);
+      const pricePhoenix = (balance * 8);
+      document.getElementById('priceEagle').textContent = `${priceEagle.toLocaleString()} UGX (~${(priceEagle / 3700).toFixed(2)} USDT)`;
+      document.getElementById('priceFalcon').textContent = `${priceFalcon.toLocaleString()} UGX (~${(priceFalcon / 3700).toFixed(2)} USDT)`;
+      document.getElementById('pricePhoenix').textContent = `${pricePhoenix.toLocaleString()} UGX (~${(pricePhoenix / 3700).toFixed(2)} USDT)`;
 
-// --- PROFILE & WALLET ---
-document.getElementById('editProfileBtn').onclick = () => document.getElementById('walletModal').classList.remove('hidden');
-document.getElementById('saveWalletBtn').onclick = async () => {
-const w = document.getElementById('walletInput').value.trim();
-if (!/^0x[a-zA-Z0-9]{40}$/.test(w)) {
-alert("Invalid Arbitrum wallet! Must start with '0x' and be 42 characters.");
-return;
-}
-const btn = document.getElementById('saveWalletBtn');
-btn.classList.add('loading-btn');
-btn.textContent = "Saving...";
-try {
-await _supabase.from('users').update({ user_wallet: w }).eq('username', user.username);
-user.user_wallet = w;
-document.getElementById('walletModal').classList.add('hidden');
-} finally {
-btn.classList.remove('loading-btn');
-btn.textContent = "Save";
-}
-};
-document.getElementById('authToggle').onclick = () => location.reload();
+      const wInfo = getWithdrawInfo();
+      document.getElementById('withdrawDayLabel').textContent = `(${wInfo.dayName})`;
+      const countdownEl = document.getElementById('withdrawCountdown');
+      if (wInfo.isToday) {
+        countdownEl.textContent = "✅ Today! Withdraw now.";
+        countdownEl.className = "text-xs text-green-400 mt-1";
+        countdownEl.classList.remove('hidden');
+      } else if (wInfo.daysLeft !== null) {
+        const dayName = wInfo.dayName;
+        countdownEl.textContent = `${wInfo.daysLeft} ${wInfo.daysLeft === 1 ? 'day' : 'days'} until ${dayName}`;
+        countdownEl.className = "text-xs text-gray-500 mt-1";
+        countdownEl.classList.remove('hidden');
+      } else {
+        countdownEl.textContent = "Withdraw available after first eligibility";
+        countdownEl.className = "text-xs text-gray-500 mt-1";
+        countdownEl.classList.remove('hidden');
+      }
 
-// --- ADMIN ---
-async function loadAdmin() {
-document.getElementById('authCard').classList.add('hidden');
-document.getElementById('adminPanel').classList.remove('hidden');
-const { data } = await _supabase.from('users').select('*');
-document.getElementById('adminUserList').innerHTML = data.map(u =>
-`<div class="p-2 bg-gray-800 rounded">
-${u.username} - ${u.balance} UGX<br>
-<span class="text-xs text-gray-400">Wallet: ${u.user_wallet || '—'}, Withdraw Day: ${u.withdraw_day !== null ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][u.withdraw_day] : '—'}, Referrals: ${u.referral_count || 0}/2</span>
-</div>`
-).join('');
-}
+      const expiryEl = document.getElementById('boosterExpiry');
+      if (user.booster_expires_at) {
+        const diff = new Date(user.booster_expires_at) - Date.now();
+        if (diff > 0) {
+          const h = Math.floor(diff / 3600000);
+          const m = Math.floor((diff % 3600000) / 60000);
+          expiryEl.textContent = `Booster expires in: ${h}h ${m}m`;
+          expiryEl.classList.remove('hidden');
+        } else {
+          expiryEl.classList.add('hidden');
+        }
+      } else {
+        expiryEl.classList.add('hidden');
+      }
+    }
 
-if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-Notification.requestPermission();
-}
+    function startTimer() {
+      if (timer) clearInterval(timer);
+      const next = new Date(user.next_claim_time).getTime();
+      timer = setInterval(() => {
+        const diff = next - Date.now();
+        if (diff <= 0) {
+          document.getElementById('miningCountdown').textContent = "Ready!";
+          if (Notification.permission === "granted") {
+            new Notification("UGX Mine", { body: "Your reward is ready to claim!" });
+          }
+          return clearInterval(timer);
+        }
+        const h = Math.floor(diff/3600000).toString().padStart(2,'0');
+        const m = Math.floor((diff%3600000)/60000).toString().padStart(2,'0');
+        const s = Math.floor((diff%60000)/1000).toString().padStart(2,'0');
+        document.getElementById('miningCountdown').textContent = `${h}:${m}:${s}`;
+      }, 1000);
 
-window.onload = () => {
-if (window.location.hash === '#admin999') {
-loadAdmin();
-return;
-}
-document.getElementById('authCard').classList.remove('hidden');
-};
-</script>
+      if (boosterExpiryTimer) clearInterval(boosterExpiryTimer);
+      if (user && user.booster_expires_at) {
+        boosterExpiryTimer = setInterval(() => {
+          const diff = new Date(user.booster_expires_at) - Date.now();
+          if (diff <= 0) {
+            clearInterval(boosterExpiryTimer);
+            boosterExpiryTimer = null;
+            checkBoosterExpiry();
+          }
+          updateUI();
+        }, 60000);
+      }
+    }
+
+    document.getElementById('miningBtn').onclick = async () => {
+      const btn = document.getElementById('miningBtn');
+      if (btn.classList.contains('loading-btn')) return;
+      await checkBoosterExpiry();
+      if (new Date(user.next_claim_time).getTime() > Date.now()) return alert("Still mining!");
+      btn.classList.add('loading-btn');
+      btn.textContent = "Claiming...";
+      try {
+        const newBal = (user.balance || 0) + (user.mining_reward || 5000);
+        const next = new Date(Date.now() + ((user.mining_cycle_hours || 24) * 3600000)).toISOString();
+        await _supabase.from('users').update({ balance: newBal, next_claim_time: next }).eq('username', user.username);
+        user.balance = newBal; user.next_claim_time = next;
+        updateUI(); startTimer();
+      } finally {
+        btn.classList.remove('loading-btn');
+        btn.textContent = "Claim Reward";
+      }
+    };
+
+    let selectedBoosterHours = null;
+    let selectedBoosterReward = null;
+    let selectedBoosterPriceUGX = null;
+
+    function showBoosterModal(hours, reward, priceUGX) {
+      if ((user.balance || 0) === 0) {
+        alert("You need a balance to buy a booster!");
+        return;
+      }
+      selectedBoosterHours = hours;
+      selectedBoosterReward = reward;
+      selectedBoosterPriceUGX = priceUGX;
+      const priceUSDT = (priceUGX / 3700).toFixed(2);
+      const currentReward = user.mining_reward || 5000;
+      const currentHours = user.mining_cycle_hours || 24;
+      if (reward === getBoosterReward(user.balance, 'eagle')) {
+        document.getElementById('boosterModalTitle').textContent = 'Eagle Miner';
+      } else if (reward === getBoosterReward(user.balance, 'falcon')) {
+        document.getElementById('boosterModalTitle').textContent = 'Falcon Miner';
+      } else {
+        document.getElementById('boosterModalTitle').textContent = 'Phoenix Miner';
+      }
+      document.getElementById('boosterModalCurrent').textContent =
+        `Currently: ${currentReward.toLocaleString()} UGX / ${currentHours}h`;
+      document.getElementById('boosterModalNew').textContent =
+        `After: ${reward.toLocaleString()} UGX / 2h`;
+      document.getElementById('boosterModalPrice').textContent =
+        `${priceUGX.toLocaleString()} UGX (~${priceUSDT} USDT)`;
+      document.getElementById('txIdInput').value = '';
+      document.getElementById('boosterModal').classList.remove('hidden');
+    }
+
+    function copyAdminWallet() {
+      navigator.clipboard.writeText('0xb9fec9b1a49726089f058de4f4225ecbaa88cbbc');
+      alert('Arbitrum wallet copied! Use Arbitrum network only.');
+    }
+
+    function copyRefLink() {
+      navigator.clipboard.writeText(document.getElementById('refLink').value);
+      alert('Referral link copied!');
+    }
+
+    async function submitBoosterRequest() {
+      const btn = document.getElementById('submitBoosterBtn');
+      if (btn.classList.contains('loading-btn')) return;
+      const txId = document.getElementById('txIdInput').value.trim();
+      if (!txId) return alert('Please enter a Transaction ID.');
+      btn.classList.add('loading-btn');
+      btn.textContent = "Submitting...";
+      try {
+        const priceUSDT = (selectedBoosterPriceUGX / 3700).toFixed(2);
+        const { error } = await _supabase.from('booster_requests').insert({
+          username: user.username,
+          booster_hours: selectedBoosterHours,
+          reward: selectedBoosterReward,
+          usdt_amount: parseFloat(priceUSDT),
+          txid: txId,
+          status: 'pending',
+          requested_at: new Date().toISOString(),
+          duration_hours: 24
+        });
+        if (error) {
+          alert('Failed to submit: ' + error.message);
+          return;
+        }
+        document.getElementById('boosterModal').classList.add('hidden');
+        fetchAllTransactions();
+        alert('Request submitted! Please wait for admin approval.');
+      } finally {
+        btn.classList.remove('loading-btn');
+        btn.textContent = "Submit for Approval";
+      }
+    }
+
+    async function checkApprovedBoosters() {
+      const { data } = await _supabase
+        .from('booster_requests')
+        .select('*')
+        .eq('username', user.username)
+        .eq('status', 'approved')
+        .order('requested_at', { ascending: false })
+        .limit(1);
+      if (data && data.length > 0) {
+        const latest = data[0];
+        const now = Date.now();
+        const nextClaimTime = new Date(now + (latest.booster_hours * 3600000)).toISOString(); // 🔥 2-hour reset
+        const expiresAt = new Date(now + 24 * 3600000).toISOString();
+
+        await _supabase
+          .from('users')
+          .update({
+            mining_cycle_hours: latest.booster_hours,
+            mining_reward: latest.reward,
+            booster_expires_at: expiresAt,
+            next_claim_time: nextClaimTime // 🔥 Critical for 2h countdown
+          })
+          .eq('username', user.username);
+
+        // Refresh user object
+        const { data: updated } = await _supabase
+          .from('users')
+          .select('*')
+          .eq('username', user.username)
+          .single();
+        user = updated;
+
+        updateUI();
+        startTimer();
+
+        await _supabase
+          .from('booster_requests')
+          .update({ status: 'applied' })
+          .eq('id', latest.id);
+      }
+    }
+
+    document.getElementById('openWithdrawModalBtn').onclick = async () => {
+      if ((user.balance || 0) < 50000) return alert("Min 50,000 UGX required");
+      if (!user.user_wallet) return alert("Set wallet first!");
+      const today = new Date().getDay();
+      if (user.withdraw_day === null || user.withdraw_day === undefined) {
+        await _supabase.from('users').update({ withdraw_day: today }).eq('username', user.username);
+        user.withdraw_day = today;
+        const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        alert(`✅ Your weekly withdrawal day is set to ${days[today]}.`);
+      }
+      if (user.withdraw_day !== today) {
+        const wInfo = getWithdrawInfo();
+        return alert(`Withdrawals are only allowed on ${wInfo.dayName}. ${wInfo.daysLeft} ${wInfo.daysLeft === 1 ? 'day' : 'days'} left.`);
+      }
+      const total = user.balance || 0;
+      withdrawFeeUSDT = (total * 0.20) / 3700;
+      document.getElementById('withdrawTotal').textContent = total.toLocaleString() + " UGX";
+      document.getElementById('withdrawFee').textContent = withdrawFeeUSDT.toFixed(2) + " USDT";
+      document.getElementById('withdrawFeeDisplay').textContent = withdrawFeeUSDT.toFixed(2) + " USDT";
+      document.getElementById('userWalletDisplay').textContent = user.user_wallet;
+      document.getElementById('withdrawTxId').value = '';
+      document.getElementById('withdrawModal').classList.remove('hidden');
+    };
+
+    async function submitWithdrawRequest() {
+      const btn = document.getElementById('submitWithdrawBtn');
+      if (btn.classList.contains('loading-btn')) return;
+      const txId = document.getElementById('withdrawTxId').value.trim();
+      if (!txId) return alert('Please enter a Transaction ID.');
+      btn.classList.add('loading-btn');
+      btn.textContent = "Submitting...";
+      try {
+        const total = user.balance || 0;
+        const { error } = await _supabase.from('withdraw_requests').insert({
+          username: user.username,
+          balance_ugx: total,
+          fee_usdt: parseFloat(withdrawFeeUSDT.toFixed(2)),
+          wallet_address: user.user_wallet,
+          txid: txId,
+          status: 'pending'
+        });
+        if (error) {
+          alert('Failed to submit: ' + error.message);
+          return;
+        }
+        document.getElementById('withdrawModal').classList.add('hidden');
+        alert('Withdraw request submitted! Admin will review your payment.');
+      } finally {
+        btn.classList.remove('loading-btn');
+        btn.textContent = "Submit Request";
+      }
+    }
+
+    async function checkApprovedWithdrawals() {
+      const { data } = await _supabase
+        .from('withdraw_requests')
+        .select('*')
+        .eq('username', user.username)
+        .eq('status', 'approved')
+        .order('requested_at', { ascending: false })
+        .limit(1);
+      if (data && data.length > 0) {
+        await _supabase
+          .from('users')
+          .update({
+            balance: 0,
+            mining_cycle_hours: 24,
+            mining_reward: 5000,
+            booster_expires_at: null
+          })
+          .eq('username', user.username);
+        user.balance = 0;
+        user.mining_cycle_hours = 24;
+        user.mining_reward = 5000;
+        user.booster_expires_at = null;
+        updateUI();
+        startTimer();
+        await _supabase
+          .from('withdraw_requests')
+          .update({ status: 'processed' })
+          .eq('id', data[0].id);
+        alert("✅ Withdrawal approved! Your balance has been reset.");
+      }
+    }
+
+    async function fetchAllTransactions() {
+      try {
+        const [boosterData, withdrawData] = await Promise.all([
+          _supabase.from('booster_requests').select('*').eq('username', user.username).order('requested_at', { ascending: false }),
+          _supabase.from('withdraw_requests').select('*').eq('username', user.username).order('requested_at', { ascending: false })
+        ]);
+        const boosters = (boosterData.data || []).map(r => ({
+          ...r,
+          type: 'booster',
+          displayType: 'Booster Purchase',
+          amount: `${r.reward} UGX / 2h`,
+          fee: `${r.usdt_amount} USDT`,
+          timestamp: r.requested_at
+        }));
+        const withdrawals = (withdrawData.data || []).map(r => ({
+          ...r,
+          type: 'withdraw',
+          displayType: 'Withdrawal Request',
+          amount: `${r.balance_ugx} UGX`,
+          fee: `${r.fee_usdt} USDT`,
+          timestamp: r.requested_at
+        }));
+        const all = [...boosters, ...withdrawals]
+          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+          .slice(0, 20);
+        renderTransactionHistory(all);
+      } catch (error) {
+        console.error('Failed to load history:', error);
+        document.getElementById('transactionHistoryList').innerHTML = '<p class="text-red-400">Failed to load history.</p>';
+      }
+    }
+
+    function renderTransactionHistory(transactions) {
+      const container = document.getElementById('transactionHistoryList');
+      if (transactions.length === 0) {
+        container.innerHTML = '<p class="text-gray-500">No transactions yet.</p>';
+        return;
+      }
+      const statusColors = {
+        pending: 'text-yellow-400',
+        approved: 'text-green-400',
+        applied: 'text-blue-400',
+        processed: 'text-blue-400',
+        rejected: 'text-red-400'
+      };
+      container.innerHTML = transactions.map(tx => `
+        <div class="p-2 bg-gray-900 rounded border border-gray-700">
+          <div class="flex justify-between">
+            <span class="font-bold">${tx.displayType}</span>
+            <span class="text-xs ${statusColors[tx.status] || 'text-gray-400'}">
+              ${tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
+            </span>
+          </div>
+          <div class="text-gray-300 text-sm mt-1">${tx.amount}</div>
+          <div class="text-gray-400 text-xs">Fee: ${tx.fee}</div>
+          <div class="text-xs text-gray-500 mt-1">
+            ${new Date(tx.timestamp).toLocaleString()}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    const names = ["Mugisha", "Nalweyiso", "Kato", "Nakato", "Ssebunya", "Ampaire", "Tumusiime", "Kyomuhendo", "Namutebi", "Wasswa", "Nakabugo", "Kizza", "Nabwami", "Ssebuufu", "Lukyamuzi"];
+    const wallets = ["0x...", "0x...", "0x...", "0x...", "0x..."];
+
+    function generateFakeActivity() {
+      let withdrawHTML = '';
+      for (let i = 0; i < 3; i++) {
+        const name = names[Math.floor(Math.random() * names.length)];
+        const amount = (Math.floor(Math.random() * 50) + 50) * 1000;
+        const wallet = wallets[Math.floor(Math.random() * wallets.length)] + Math.random().toString(36).substr(2, 8);
+        const timeAgo = Math.floor(Math.random() * 15) + 1;
+        withdrawHTML += `<p class="text-amber-400 text-xs">${name} withdrew ${amount.toLocaleString()} UGX to ${wallet} (${timeAgo}m ago)</p>`;
+      }
+      document.getElementById('fakeWithdraws').innerHTML = withdrawHTML;
+
+      let boosterHTML = '';
+      const boosterTypes = ["Eagle Miner", "Falcon Miner", "Phoenix Miner"];
+      for (let i = 0; i < 3; i++) {
+        const name = names[Math.floor(Math.random() * names.length)];
+        const type = boosterTypes[Math.floor(Math.random() * boosterTypes.length)];
+        const timeAgo = Math.floor(Math.random() * 20) + 1;
+        boosterHTML += `<p class="text-green-400 text-xs">${name} activated ${type} (${timeAgo}m ago)</p>`;
+      }
+      document.getElementById('fakeBoosters').innerHTML = boosterHTML;
+    }
+
+    document.getElementById('editProfileBtn').onclick = () => document.getElementById('walletModal').classList.remove('hidden');
+    document.getElementById('saveWalletBtn').onclick = async () => {
+      const w = document.getElementById('walletInput').value.trim();
+      if (!/^0x[a-zA-Z0-9]{40}$/.test(w)) {
+        alert("Invalid Arbitrum wallet! Must start with '0x' and be 42 characters.");
+        return;
+      }
+      const btn = document.getElementById('saveWalletBtn');
+      btn.classList.add('loading-btn');
+      btn.textContent = "Saving...";
+      try {
+        await _supabase.from('users').update({ user_wallet: w }).eq('username', user.username);
+        user.user_wallet = w;
+        document.getElementById('walletModal').classList.add('hidden');
+      } finally {
+        btn.classList.remove('loading-btn');
+        btn.textContent = "Save";
+      }
+    };
+    document.getElementById('authToggle').onclick = () => location.reload();
+
+    async function loadAdmin() {
+      document.getElementById('authCard').classList.add('hidden');
+      document.getElementById('adminPanel').classList.remove('hidden');
+      const { data } = await _supabase.from('users').select('*');
+      document.getElementById('adminUserList').innerHTML = data.map(u =>
+        `<div class="p-2 bg-gray-800 rounded">
+          ${u.username} - ${u.balance} UGX<br>
+          <span class="text-xs text-gray-400">Wallet: ${u.user_wallet || '—'}, Withdraw Day: ${u.withdraw_day !== null ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][u.withdraw_day] : '—'}, Referrals: ${u.referral_count || 0}/2</span>
+        </div>`
+      ).join('');
+    }
+
+    if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+      Notification.requestPermission();
+    }
+
+    // ✅ iOS-SAFE STARTUP
+    function initApp() {
+      if (window.location.hash === '#admin999') {
+        loadAdmin();
+        return;
+      }
+      // Ensure auth modal appears on iOS
+      const authCard = document.getElementById('authCard');
+      if (authCard) {
+        authCard.classList.remove('hidden');
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+      setTimeout(initApp, 100); // Delay for iOS rendering
+    }
+  </script>
 </body>
 </html>
