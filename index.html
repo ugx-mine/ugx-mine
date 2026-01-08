@@ -261,7 +261,13 @@ width: 0; height: 0; border-left: 15px solid transparent;
 border-right: 15px solid transparent; border-top: 25px solid #ffffff; z-index: 10;
 }
 #wheel { border-radius: 50%; border: 10px solid #959494; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); }
-#result { margin: 15px 0; font-size: 1.4rem; height: 35px; font-weight: bold; text-transform: uppercase; color: white; text-align: center; }
+/* FADE-IN/OUT ANIMATION FOR POPUP */
+@keyframes fadeInOut {
+0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+20%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+80%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+100% { opacity: 0; transform: translate(-50%, -50%) scale(1.1); }
+}
 </style>
 </head>
 <body>
@@ -291,7 +297,6 @@ border-right: 15px solid transparent; border-top: 25px solid #ffffff; z-index: 1
 </form>
 </div>
 </div>
-
 <!-- ✅ DEPOSIT INPUT MODAL -->
 <div id="depositInputModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
 <div class="bg-white p-6 rounded-xl w-96">
@@ -314,7 +319,6 @@ min="10000"
 </div>
 </div>
 </div>
-
 <!-- Main App (initially hidden) -->
 <div id="mainApp" class="hidden">
 <div class="container mx-auto px-4 pb-[72px] pt-4">
@@ -503,12 +507,13 @@ LOCK INVESTMENT
 </div>
 </div>
 <!-- 🎰 WHEEL GAME -->
-<div class="mining-card p-4 bg-gray-50 relative">
+<div class="mining-card p-3 bg-gray-50 relative">
 <canvas id="rain-canvas" style="position: absolute; top: 0; left: 0; pointer-events: none; z-index: 100; width: 100%; height: 100%;"></canvas>
 <div style="position: relative; z-index: 101; display: flex; flex-direction: column; align-items: center;">
 <div class="wheel-wrapper">
 <div class="pointer"></div>
-<canvas id="wheel" width="380" height="380"></canvas>
+<canvas id="wheel" width="304" height="304"></canvas>
+<!-- Popup will be inserted here dynamically -->
 </div>
 <!-- ✅ CLEAN STAKE PANEL -->
 <div class="mining-card bg-white w-full max-w-xs mt-4 p-3">
@@ -532,7 +537,6 @@ min="2000"
 SPIN WHEEL
 </button>
 </div>
-<div id="result" class="mt-3"></div>
 </div>
 </div>
 <!-- 📜 GAME HISTORY -->
@@ -694,7 +698,6 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let user = null;
 let timer;
 const UGX_PER_USDT = 3700;
-
 // ========================
 // LIVE USDT UPDATE FOR DEPOSIT INPUT
 // ========================
@@ -703,7 +706,6 @@ const amount = parseFloat(document.getElementById('depositAmountInput').value) |
 const usdt = (amount / UGX_PER_USDT).toFixed(4);
 document.getElementById('depositAmountUSDT').textContent = `~${usdt} USDT`;
 });
-
 // ========================
 // SHOW DEPOSIT INPUT MODAL
 // ========================
@@ -712,7 +714,6 @@ document.getElementById('depositInputModal').classList.remove('hidden');
 document.getElementById('depositAmountInput').value = '';
 document.getElementById('depositAmountUSDT').textContent = '~0.00 USDT';
 }
-
 // ========================
 // CONFIRM DEPOSIT AMOUNT & OPEN PAYMENT MODAL
 // ========================
@@ -726,7 +727,6 @@ return;
 document.getElementById('depositInputModal').classList.add('hidden');
 openPaymentModal('deposit', amount, 'Deposit Funds');
 }
-
 // ========================
 // INVESTMENT LOGIC (10X at 100 days)
 // ========================
@@ -767,7 +767,6 @@ btn.disabled = (amount <= 0);
 }
 document.getElementById('customInvestAmount').addEventListener('input', updateInvestPreview);
 document.getElementById('durationSlider').addEventListener('input', updateInvestPreview);
-
 // ========================
 // UNIFIED PAYMENT SYSTEM
 // ========================
@@ -839,11 +838,9 @@ alert('Withdrawal request submitted!\nSend the 20% fee and wait for admin approv
 alert(`Request submitted! Wait for admin approval.`);
 }
 }
-
 // ========================
 // ORIGINAL openDepositModal REMOVED – REPLACED BY showDepositInput()
 // ========================
-
 function openInvestModal() {
 const amount = parseFloat(document.getElementById('customInvestAmount').value);
 const minAmount = (user?.balance || 0) * 2;
@@ -857,7 +854,6 @@ const balance = user.balance || 0;
 const fee = balance * 0.2;
 openPaymentModal('withdraw', fee, 'Withdraw Fee');
 }
-
 // ========================
 // BOOSTER SYSTEM (UNCHANGED)
 // ========================
@@ -919,7 +915,6 @@ requested_at: new Date().toISOString()
 document.getElementById('boosterModal').classList.add('hidden');
 alert('Booster request submitted! Wait for admin approval.');
 }
-
 // ========================
 // CLAIM BUTTON LOGIC
 // ========================
@@ -979,7 +974,6 @@ user.next_claim_time = next;
 updateHomeDashboard();
 startTimer();
 };
-
 // ========================
 // 💰 UNIFIED BALANCE SYSTEM
 // ========================
@@ -1011,7 +1005,6 @@ document.getElementById('miningStatus').innerHTML = statusText;
 updateBoosterPrices();
 updateInvestPreview();
 }
-
 // ========================
 // 🎡 WHEEL GAME LOGIC
 // ========================
@@ -1022,6 +1015,7 @@ const canvas = document.getElementById('wheel');
 const ctx = canvas.getContext('2d');
 const rainCanvas = document.getElementById('rain-canvas');
 const rainCtx = rainCanvas.getContext('2d');
+let particles = [];
 function playTone(freq, type, dur, vol = 0.1) {
 const osc = audioCtx.createOscillator();
 const gain = audioCtx.createGain();
@@ -1062,21 +1056,33 @@ if(p.y > window.innerHeight) particles.splice(i, 1);
 });
 if(particles.length > 0) requestAnimationFrame(animateRain);
 }
+// ✅ UPDATED drawWheel WITH UNIQUE COLORS
 function drawWheel() {
+const totalSectors = sectors.length;
+const arc = (2 * Math.PI) / totalSectors;
+// Define 15 distinct hues (avoiding red ~0°)
+const hues = [30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 20, 50, 80, 110];
+let hueIndex = 0;
 sectors.forEach((label, i) => {
-const arc = 2 * Math.PI / sectors.length;
 const angle = i * arc;
 ctx.save();
 ctx.beginPath();
-if (label === "0x") ctx.fillStyle = "#e74c3c";
-else if (label === "MEGA" || label === "GRAND") ctx.fillStyle = "#f1c40f";
-else if (label === "ROYAL") ctx.fillStyle = "#66e2ff";
-else ctx.fillStyle = i % 2 === 0 ? "#285e60" : "#258150";
-ctx.moveTo(190, 190); ctx.arc(190, 190, 190, angle, angle + arc);
+if (label === "0x") {
+ctx.fillStyle = "#e74c3c"; // Keep red for losses
+} else {
+const hue = hues[hueIndex % hues.length];
+ctx.fillStyle = `hsl(${hue}, 70%, 60%)`;
+hueIndex++;
+}
+ctx.moveTo(152, 152);
+ctx.arc(152, 152, 152, angle, angle + arc);
 ctx.fill();
-ctx.translate(190, 190); ctx.rotate(angle + arc / 2);
-ctx.textAlign = "right"; ctx.fillStyle = "white";
-ctx.font = "bold 14px Arial"; ctx.fillText(label, 175, 5);
+ctx.translate(152, 152);
+ctx.rotate(angle + arc / 2);
+ctx.textAlign = "right";
+ctx.fillStyle = "white";
+ctx.font = "bold 14px Arial";
+ctx.fillText(label, 137, 5);
 ctx.restore();
 });
 }
@@ -1110,22 +1116,87 @@ setTimeout(async () => {
 const sectorIndex = Math.floor((360 - (currentRotation % 360) + 270) % 360 / (360 / sectors.length));
 const res = sectors[sectorIndex];
 let mult = 0;
-if (res === "MEGA") { mult = 100; sounds.jackpot(); createRain(); }
-else if (res === "ROYAL") { mult = 75; sounds.jackpot(); createRain(); }
-else if (res === "GRAND") { mult = 50; sounds.jackpot(); createRain(); }
-else { mult = parseFloat(res); if (mult === 0) sounds.loss(); else if (mult > 2) sounds.bigWin(); else sounds.smallWin(); }
-const win = stake * mult;
+let win = 0;
+let soundType = 'loss';
+if (res === "MEGA") {
+mult = 100;
+soundType = 'jackpot';
+createRain();
+} else if (res === "ROYAL") {
+mult = 75;
+soundType = 'jackpot';
+createRain();
+} else if (res === "GRAND") {
+mult = 50;
+soundType = 'jackpot';
+createRain();
+} else {
+mult = parseFloat(res);
+if (mult === 0) {
+soundType = 'loss';
+} else if (mult > 2) {
+soundType = 'bigWin';
+} else {
+soundType = 'smallWin';
+}
+}
+win = stake * mult;
+// Update balance & history
 if (win > 0) {
 user.balance += win;
 await _supabase.from('users').update({ balance: user.balance }).eq('username', user.username);
 addWheelHistory(res, win);
-document.getElementById('result').innerText = `WIN: ${win.toLocaleString()} UGX`;
-document.getElementById('result').style.color = "#00ff88";
 } else {
 addWheelHistory(res, -stake);
-document.getElementById('result').innerText = "LOST!";
-document.getElementById('result').style.color = "#ff4757";
 }
+// Sync sound + popup
+sounds[soundType]();
+// Create or update popup
+const wheelWrapper = document.querySelector('#tab-casino .wheel-wrapper');
+let popup = document.getElementById('wheel-popup');
+if (!popup) {
+popup = document.createElement('div');
+popup.id = 'wheel-popup';
+popup.style.cssText = `
+position: absolute;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+z-index: 102;
+pointer-events: none;
+width: 160px;
+`;
+wheelWrapper.appendChild(popup);
+}
+// ✅ UPDATED POPUP STYLE: CENTERED, CLASSIC, COLOR-CODED
+let message, bgColor, textColor;
+if (win > 0) {
+  message = `WIN<br>${win.toLocaleString()} UGX`;
+  bgColor = '#dcfce7'; // light green
+  textColor = '#166534'; // dark green
+} else {
+  message = 'LOST';
+  bgColor = '#fee2e2'; // light red
+  textColor = '#991b1b'; // dark red
+}
+
+popup.innerHTML = `
+<div style="
+  background: ${bgColor};
+  color: ${textColor};
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  animation: fadeInOut 3s ease-in-out forwards;
+">
+  ${message}
+</div>
+`;
+
+// Final UI cleanup
 updateHomeDashboard();
 stakeInput.value = "";
 document.getElementById('stakeUSDT').textContent = "~0.00 USDT";
@@ -1155,7 +1226,6 @@ rainCanvas.height = container.clientHeight;
 }
 window.addEventListener('resize', resizeRainCanvas);
 resizeRainCanvas();
-
 // ========================
 // PROFILE & NAV
 // ========================
