@@ -4,937 +4,1281 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>UGX Mining Platform</title>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#10b981">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<!-- CDN -->
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.0"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
 <style>
-.mining-card {
-  background-color: #00000028;
-  border: 1px solid #409c9e;
-  border-radius: 16px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+/* 🌌 ANIMATED BACKGROUND */
+.fixed-bg {
+position: fixed;
+inset: 0;
+z-index: -10;
+overflow: hidden;
 }
-.booster-card {
-  background-color: #041f3b;
-  border: 1px solid #a4a9aae7;
-  border-radius: 16px;
-  padding: 1.5rem;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+.fixed-bg .radial {
+position: absolute;
+top: -50%;
+left: -50%;
+width: 200%;
+height: 200%;
+background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.08), transparent 60%);
+animation: pulse-slow 8s ease-in-out infinite;
 }
-.booster-card::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: #48bede33;
-  transform: rotate(30deg);
-  pointer-events: none;
+.fixed-bg .conic {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: conic-gradient(from 0deg, transparent 0%, #10b981 10%, transparent 20%, #3b82f6 30%, transparent 40%, #f59e0b 50%, transparent 60%);
+opacity: 0.05;
+animation: rotate-slow 120s linear infinite;
 }
-.booster-card:hover {
-  transform: translateY(-5px);
-  border-color: #00c16a;
-  box-shadow: 0 10px 25px rgba(0, 193, 106, 0.2);
+@keyframes rotate-slow {
+from { transform: rotate(0deg); }
+to { transform: rotate(360deg); }
 }
-.auth-tab {
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  border-radius: 0.5rem;
+@keyframes pulse-slow {
+0%, 100% { opacity: 0.05; }
+50% { opacity: 0.12; }
 }
-.auth-tab.active {
-  background: rgba(0, 193, 106, 0.2);
-  color: #00c16a;
-}
-.countdown-display {
-  font-family: 'Courier New', monospace;
-  font-size: 1.8rem;
-  background: rgba(0, 30, 20, 0.6);
-  color: #ff6b35;
-  border: 1px solid #ff0000;
-  padding: 0.5rem 1rem;
-  border-radius: 12px;
-  min-width: 160px;
-  text-align: center;
-  box-shadow: 0 0 10px rgba(227, 96, 20, 0.911);
-  letter-spacing: 2px;
-}
-.loading-btn {
-  opacity: 0.75;
-  cursor: not-allowed;
-}
+/* 🖥️ BASE STYLES */
 body {
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+background-color: #f3f4f6;
+color: #1f2937;
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+min-height: 100dvh;
+-webkit-tap-highlight-color: transparent;
+touch-action: manipulation;
+transition: background-color 0.4s ease, color 0.4s ease;
 }
 button {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
+-webkit-appearance: none;
+-moz-appearance: none;
+appearance: none;
 }
+#authCard {
+-webkit-overflow-scrolling: touch;
+touch-action: manipulation;
+pointer-events: auto !important;
+}
+#authCard * {
+pointer-events: auto;
+}
+/* 🪞 GLASS CARDS */
+.mining-card {
+background: rgba(255, 255, 255, 0.75);
+backdrop-filter: blur(12px);
+-webkit-backdrop-filter: blur(12px);
+border: 1px solid rgba(16, 185, 129, 0.2);
+border-radius: 16px;
+padding: 1.25rem;
+margin-bottom: 1.25rem;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+position: relative;
+overflow: hidden;
+}
+.mining-card::before {
+content: '';
+position: absolute;
+top: -2px;
+left: -2px;
+right: -2px;
+bottom: -2px;
+background: linear-gradient(45deg, #10b981, #3b82f6, #f59e0b, #10b981);
+background-size: 400%;
+z-index: -1;
+border-radius: 18px;
+opacity: 0;
+transition: opacity 0.4s;
+}
+.mining-card:hover::before {
+opacity: 1;
+}
+.mining-card:hover {
+transform: translateY(-4px);
+box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+/* 🔷 BOOSTER CARDS */
+.booster-card {
+background: rgba(240, 249, 255, 0.6);
+backdrop-filter: blur(10px);
+border: 1px solid rgba(59, 130, 246, 0.3);
+border-radius: 16px;
+padding: 1.25rem;
+transition: all 0.3s ease;
+position: relative;
+overflow: hidden;
+}
+.booster-card:hover {
+background: rgba(226, 232, 240, 0.8);
+transform: translateY(-6px);
+box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+/* 🔘 TABS */
+.auth-tab {
+padding: 0.5rem 1rem;
+cursor: pointer;
+border-radius: 0.5rem;
+font-weight: 600;
+color: #4b5563;
+}
+.auth-tab.active {
+background: rgba(16, 185, 129, 0.15);
+color: #10b981;
+}
+/* ✨ PULSE ANIMATION */
+@keyframes pulse-glow {
+0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+50% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+}
+.animate-pulse-glow {
+animation: pulse-glow 2s infinite;
+}
+/* 📱 BOTTOM NAV */
+#bottomNav {
+background: rgba(255, 255, 255, 0.85);
+backdrop-filter: blur(10px);
+-webkit-backdrop-filter: blur(10px);
+border-top: 1px solid rgba(229, 231, 235, 0.7);
+position: fixed;
+bottom: 0;
+left: 0;
+right: 0;
+z-index: 40;
+}
+#bottomNav button {
+color: #6b7280;
+font-size: 0.75rem;
+}
+#bottomNav button.active, #bottomNav button:hover {
+color: #10b981;
+}
+/* THEME TOGGLE SWITCH */
+.theme-toggle {
+display: flex;
+align-items: center;
+justify-content: center;
+background-color: #e5e7eb;
+border-radius: 9999px;
+padding: 2px;
+width: 80px;
+height: 24px;
+cursor: pointer;
+transition: background-color 0.3s ease;
+}
+.theme-toggle input {
+display: none;
+}
+.theme-toggle .toggle-thumb {
+height: 20px;
+width: 20px;
+background-color: white;
+border-radius: 50%;
+box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.theme-toggle input:checked + .toggle-thumb {
+transform: translateX(56px);
+background-color: #4b5563;
+}
+/* DARK MODE STYLES */
+body.dark-mode {
+background-color: #111827;
+color: #e5e7eb;
+}
+body.dark-mode .mining-card,
+body.dark-mode .booster-card {
+background: rgba(31, 41, 55, 0.8);
+color: #f9fafb;
+border-color: rgba(79, 70, 229, 0.3);
+}
+body.dark-mode #authCard .bg-white {
+background-color: #1f2937 !important;
+color: #e5e7eb;
+}
+body.dark-mode #bottomNav {
+background: rgba(17, 24, 39, 0.85);
+border-top-color: rgba(55, 65, 81, 0.7);
+}
+body.dark-mode #bottomNav button {
+color: #9ca3af;
+}
+body.dark-mode #bottomNav button.active,
+body.dark-mode #bottomNav button:hover {
+color: #60a5fa;
+}
+body.dark-mode .auth-tab {
+color: #d1d5db;
+}
+body.dark-mode .auth-tab.active {
+background: rgba(96, 165, 250, 0.15);
+color: #60a5fa;
+}
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+background-color: #1f2937;
+color: #f9fafb;
+border-color: #374151;
+}
+/* ANIMATIONS FOR ICONS */
+#nextClaimAmount .fa-coins {
+animation: shimmer 3s infinite;
+}
+#miningStatus .fa-bolt {
+animation: pulse-booster 2s infinite;
+}
+@keyframes shimmer {
+0%, 100% { opacity: 0.9; transform: translateY(0); }
+50% { opacity: 1; transform: translateY(-2px); }
+}
+@keyframes pulse-booster {
+0%, 100% { opacity: 1; transform: scale(1); }
+50% { opacity: 0.8; transform: scale(1.1); }
+}
+/* OTHER */
+.loading-btn {
+opacity: 0.75;
+cursor: not-allowed;
+}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+/* == WHEEL GAME STYLES == */
+.wheel-wrapper { position: relative; margin: 10px 0; }
+.pointer {
+position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+width: 0; height: 0; border-left: 15px solid transparent;
+border-right: 15px solid transparent; border-top: 25px solid #ffffff; z-index: 10;
+}
+#wheel { border-radius: 50%; border: 10px solid #959494; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); }
+#result { margin: 15px 0; font-size: 1.4rem; height: 35px; font-weight: bold; text-transform: uppercase; color: white; text-align: center; }
 </style>
 </head>
-<!-- 📱 iOS FIX: Add min-h-[100dvh] to body -->
-<body class="bg-gray-900 text-gray-100 font-sans min-h-[100dvh]">
+<body>
+<!-- 🌌 ANIMATED BACKGROUND -->
+<div class="fixed-bg">
+<div class="radial"></div>
+<div class="conic"></div>
+</div>
+<!-- Auth Modal -->
+<div id="authCard" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+<div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+<div class="flex mb-4 bg-gray-100 rounded-lg p-1">
+<div id="tabSignup" class="auth-tab active flex-1 text-center">Sign Up</div>
+<div id="tabLogin" class="auth-tab flex-1 text-center">Login</div>
+</div>
+<form id="signupForm" class="space-y-4">
+<input type="text" id="signupUsername" placeholder="Username" class="w-full bg-gray-50 rounded-lg px-4 py-2 border border-gray-300" required>
+<input type="email" id="signupEmail" placeholder="Email" class="w-full bg-gray-50 rounded-lg px-4 py-2 border border-gray-300" required>
+<input type="password" id="signupPassword" placeholder="Password" class="w-full bg-gray-50 rounded-lg px-4 py-2 border border-gray-300" required>
+<button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 rounded-lg text-white font-bold">Create Account</button>
+</form>
+<form id="loginForm" class="hidden space-y-4">
+<input type="text" id="loginUsername" placeholder="Username" class="w-full bg-gray-50 rounded-lg px-4 py-2 border border-gray-300" required>
+<input type="password" id="loginPassword" placeholder="Password" class="w-full bg-gray-50 rounded-lg px-4 py-2 border border-gray-300" required>
+<a href="mailto:auraaimoney@gmail.com" class="text-xs text-gray-500 hover:text-gray-700 block text-center">Forgot password? Contact admin</a>
+<button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 rounded-lg text-white font-bold">Login</button>
+</form>
+</div>
+</div>
 
-  <!-- 📱 iOS FIX: AUTH MODAL MOVED OUTSIDE CONTAINER (critical!) -->
-  <div id="authCard" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center hidden">
-    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
-      <div class="flex mb-4 bg-gray-700 rounded-lg p-1">
-        <div id="tabSignup" class="auth-tab active flex-1 text-center">Sign Up</div>
-        <div id="tabLogin" class="auth-tab flex-1 text-center">Login</div>
-      </div>
-      <form id="signupForm" class="space-y-4">
-        <input type="text" id="signupUsername" placeholder="Username" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-        <input type="email" id="signupEmail" placeholder="Email" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-        <input type="password" id="signupPassword" placeholder="Password" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-        <button type="submit" class="w-full bg-green-600 py-2 rounded-lg">Create Account</button>
-      </form>
-      <form id="loginForm" class="hidden space-y-4">
-        <input type="text" id="loginUsername" placeholder="Username" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-        <input type="password" id="loginPassword" placeholder="Password" class="w-full bg-gray-700 rounded-lg px-4 py-2" required>
-        <a href="mailto:auraaimoney@gmail.com" class="text-xs text-gray-400 hover:text-gray-300 block text-center">Forgot password? Contact admin</a>
-        <button type="submit" class="w-full bg-emerald-600 py-2 rounded-lg">Login</button>
-      </form>
-    </div>
-  </div>
+<!-- ✅ DEPOSIT INPUT MODAL -->
+<div id="depositInputModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
+<div class="bg-white p-6 rounded-xl w-96">
+<h3 class="text-lg font-bold mb-4">Enter Deposit Amount</h3>
+<p class="text-xs text-gray-600 mb-3">Minimum deposit: <strong>10,000 UGX</strong></p>
+<div class="mb-3">
+<label class="block text-xs text-gray-600 mb-1">Amount (UGX)</label>
+<input
+type="number"
+id="depositAmountInput"
+placeholder="e.g. 10000"
+class="w-full bg-gray-50 border border-gray-300 rounded px-3 py-2 text-sm"
+min="10000"
+>
+<p id="depositAmountUSDT" class="text-xs text-gray-500 mt-1">~0.00 USDT</p>
+</div>
+<div class="flex gap-2">
+<button id="confirmDepositBtn" onclick="confirmDepositAmount()" class="flex-1 bg-emerald-600 py-2 rounded text-white text-sm font-medium">Continue</button>
+<button onclick="document.getElementById('depositInputModal').classList.add('hidden')" class="flex-1 bg-gray-300 py-2 rounded text-sm">Cancel</button>
+</div>
+</div>
+</div>
 
-  <!-- 📱 iOS FIX: App content wrapped in 100dvh container -->
-  <div class="min-h-[100dvh] container mx-auto px-4 py-6">
+<!-- Main App (initially hidden) -->
+<div id="mainApp" class="hidden">
+<div class="container mx-auto px-4 pb-[72px] pt-4">
+<!-- ✅ STICKY HEADER -->
+<header class="flex justify-between items-center mb-5 py-2 bg-white/90 backdrop-blur-sm sticky top-0 z-30 rounded-lg shadow-sm">
+<div class="flex items-center space-x-2.5">
+<div class="bg-emerald-500 p-1.5 rounded-lg"><i class="fas fa-coins text-lg text-white"></i></div>
+<h1 class="text-xl font-bold tracking-tight">UGX<span class="text-gray-800">Mine</span></h1>
+</div>
+<div class="flex gap-1.5">
+<button class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700">
+<i class="fas fa-bell text-sm"></i>
+</button>
+<button id="authToggle" class="p-1.5 bg-red-500 hover:bg-red-600 rounded-lg text-white">
+<i class="fas fa-power-off text-sm"></i>
+</button>
+</div>
+</header>
+<!-- DASHBOARD -->
+<main id="mainContent">
+<!-- HOME -->
+<section id="tab-home" class="tab-content active">
+<div class="mining-card flex justify-between items-center">
+<div>
+<h2 id="profileUserName" class="text-lg font-bold">---</h2>
+<p id="profileUserEmail" class="text-gray-600 text-sm">---</p>
+<p id="profileUserId" class="text-gray-500 text-xs">ID: ---</p>
+</div>
+<button id="editProfileBtn" class="border border-emerald-500 text-emerald-500 px-3 py-1 rounded text-xs font-medium">Set Wallet</button>
+</div>
+<!-- ✅ TOTAL BALANCE CARD -->
+<div class="mining-card w-full max-w-3xl text-center mb-5">
+<p class="font-bold text-amber-600 mb-2">Total Balance</p>
+<p id="totalBalance" class="text-3xl font-bold text-amber-700">0 UGX</p>
+<p id="totalBalanceUSDT" class="text-sm text-gray-600">~0.00 USDT</p>
+<div class="grid grid-cols-2 gap-3 mt-4">
+<button onclick="showDepositInput()" class="bg-amber-500 hover:bg-amber-600 py-2 rounded text-sm text-white font-medium">Deposit</button>
+<button onclick="openWithdrawModal()" class="bg-emerald-500 hover:bg-emerald-600 py-2 rounded text-sm text-white font-medium">Withdraw (20% fee)</button>
+</div>
+</div>
+<!-- ✅ NEXT CLAIM & MINING STATUS -->
+<div class="flex justify-between items-center mt-4 pt-3 border-t border-gray-200 text-sm">
+<div>
+<p class="text-xs text-gray-600">Next Claim</p>
+<p id="nextClaimAmount" class="font-bold text-emerald-700"><i class="fas fa-coins text-emerald-500 mr-1"></i>5,000 UGX</p>
+</div>
+<div class="text-right">
+<p class="text-xs text-gray-600">Mining Status</p>
+<p id="miningStatus" class="font-bold"><i class="fas fa-bolt text-amber-500 mr-1"></i>Default 24h cycle</p>
+</div>
+</div>
+<!-- ✅ CENTERED CLAIM BUTTON -->
+<div class="flex justify-center my-4">
+<button id="miningBtn" class="w-full max-w-xs bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 py-2.5 rounded-lg font-bold text-white shadow-lg transition animate-pulse-glow">
+Claim Funds
+</button>
+</div>
+<!-- ✅ BOOSTERS (CLAIM ENHANCERS) -->
+<div class="mining-card mb-5">
+<h3 class="font-bold text-gray-900 mb-3 text-center">Boosters</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+<div class="booster-card">
+<h4 class="font-bold text-sm text-blue-700">Eager_Miner</h4>
+<p class="text-xl font-bold text-blue-600 my-1">2h cycle</p>
+<p class="font-bold text-emerald-600 text-xs mt-1">+2,000 UGX / claim</p>
+<p class="text-xs text-gray-600 mt-1">Price: <span id="priceEagle">—</span></p>
+<button onclick="openBoosterModal('eagle', 2, 2000)" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 py-2 rounded text-xs text-white">Buy</button>
+</div>
+<div class="booster-card">
+<h4 class="font-bold text-sm text-purple-700">Falcon_Miner</h4>
+<p class="text-xl font-bold text-purple-600 my-1">2h cycle</p>
+<p class="font-bold text-emerald-600 text-xs mt-1">+5,000 UGX / claim</p>
+<p class="text-xs text-gray-600 mt-1">Price: <span id="priceFalcon">—</span></p>
+<button onclick="openBoosterModal('falcon', 2, 5000)" class="w-full mt-2 bg-purple-600 hover:bg-purple-700 py-2 rounded text-xs text-white">Buy</button>
+</div>
+<div class="booster-card">
+<h4 class="font-bold text-sm text-amber-700">Phoenix_Miner</h4>
+<p class="text-xl font-bold text-amber-600 my-1">2h cycle</p>
+<p class="font-bold text-emerald-600 text-xs mt-1">+10,000 UGX / claim</p>
+<p class="text-xs text-gray-600 mt-1">Price: <span id="pricePhoenix">—</span></p>
+<button onclick="openBoosterModal('phoenix', 2, 10000)" class="w-full mt-2 bg-amber-600 hover:bg-amber-700 py-2 rounded text-xs text-white">Buy</button>
+</div>
+</div>
+</div>
+<!-- INVITE -->
+<div class="mining-card">
+<h3 class="font-bold text-gray-900 mb-2">Invite Friends</h3>
+<p class="text-xs text-gray-600 mb-2">+5,000 UGX per friend (max 2)</p>
+<div class="flex items-center bg-gray-50 p-1.5 rounded">
+<input type="text" id="refLink" class="bg-transparent flex-1 text-xs" readonly>
+<button onclick="copyRefLink()" class="text-emerald-600 ml-2 text-xs font-medium">Copy</button>
+</div>
+</div>
+</section>
+<!-- INVESTMENTS -->
+<section id="tab-investments" class="tab-content">
+<!-- ✅ TOTAL BALANCE CARD -->
+<div class="mining-card w-full max-w-3xl text-center mb-5">
+<p class="font-bold text-amber-600 mb-2">Total Balance</p>
+<p id="investTotalBalance" class="text-3xl font-bold text-amber-700">0 UGX</p>
+<p id="investTotalBalanceUSDT" class="text-sm text-gray-600">~0.00 USDT</p>
+<div class="grid grid-cols-2 gap-3 mt-4">
+<button onclick="showDepositInput()" class="bg-amber-500 hover:bg-amber-600 py-2 rounded text-sm text-white font-medium">Deposit</button>
+<button onclick="openWithdrawModal()" class="bg-emerald-500 hover:bg-emerald-600 py-2 rounded text-sm text-white font-medium">Withdraw (20% fee)</button>
+</div>
+</div>
+<!-- ✅ UNIFIED INVESTMENT CARD -->
+<div class="mining-card">
+<h3 class="text-lg font-bold text-gray-900 mb-3 text-center">Custom Investment</h3>
+<p class="text-xs text-gray-600 mb-4 text-center">Minimum: 2× your balance. Higher duration = higher returns.</p>
+<!-- Amount Input (with validation) -->
+<div class="mb-4">
+<label class="text-xs text-gray-600 block mb-1">Investment Amount (UGX)</label>
+<input
+type="number"
+id="customInvestAmount"
+placeholder="Enter amount"
+class="w-full bg-gray-50 border border-gray-300 rounded px-3 py-2 text-sm"
+min="1000"
+>
+<p id="investAmountUSDT" class="text-xs text-gray-500 mt-1">~0.00 USDT</p>
+<p id="minAmountNotice" class="text-xs text-red-500 mt-1 hidden">Minimum: <span id="minAmountValue">0</span> UGX</p>
+</div>
+<!-- Duration Slider -->
+<div class="mb-4">
+<label class="text-xs text-gray-600 block mb-1">
+Duration: <span id="durationValue">10</span> days
+</label>
+<input
+type="range"
+id="durationSlider"
+min="10"
+max="100"
+value="10"
+step="1"
+class="w-full"
+>
+<div class="flex justify-between text-xs text-gray-500 mt-1">
+<span>10 days</span>
+<span>100 days</span>
+</div>
+</div>
+<!-- Live Preview -->
+<div class="p-3 bg-gray-50 rounded-lg mb-4">
+<div class="flex justify-between text-sm mb-1">
+<span>Multiplier:</span>
+<span id="multiplierValue" class="font-bold text-purple-600">2.0×</span>
+</div>
+<div class="flex justify-between text-sm mb-1">
+<span>Total Return:</span>
+<span id="totalReturnValue" class="font-bold text-emerald-600">0 UGX</span>
+</div>
+<div class="flex justify-between text-sm">
+<span>USDT Equivalent:</span>
+<span id="returnUSDTValue" class="text-xs text-gray-600">~0.00 USDT</span>
+</div>
+</div>
+<!-- Invest Button -->
+<button
+id="investCustomBtn"
+onclick="openInvestModal()"
+class="w-full bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 py-2.5 rounded text-white font-bold shadow"
+disabled
+>
+LOCK INVESTMENT
+</button>
+</div>
+<!-- Active Investments -->
+<div class="mining-card mt-4">
+<h4 class="font-bold text-gray-900 mb-2">Active Investments</h4>
+<div id="activeInvestmentsList" class="text-xs space-y-1 max-h-32 overflow-y-auto">
+<p class="text-gray-500">No active investments.</p>
+</div>
+</div>
+</section>
+<!-- PLAY -->
+<section id="tab-casino" class="tab-content">
+<!-- ✅ TOTAL BALANCE CARD -->
+<div class="mining-card w-full max-w-3xl text-center mb-5">
+<p class="font-bold text-amber-600 mb-2">Total Balance</p>
+<p id="casinoTotalBalance" class="text-3xl font-bold text-amber-700">0 UGX</p>
+<p id="casinoTotalBalanceUSDT" class="text-sm text-gray-600">~0.00 USDT</p>
+<div class="grid grid-cols-2 gap-3 mt-4">
+<button onclick="showDepositInput()" class="bg-amber-500 hover:bg-amber-600 py-2 rounded text-sm text-white font-medium">Deposit</button>
+<button onclick="openWithdrawModal()" class="bg-emerald-500 hover:bg-emerald-600 py-2 rounded text-sm text-white font-medium">Withdraw (20% fee)</button>
+</div>
+</div>
+<!-- 🎰 WHEEL GAME -->
+<div class="mining-card p-4 bg-gray-50 relative">
+<canvas id="rain-canvas" style="position: absolute; top: 0; left: 0; pointer-events: none; z-index: 100; width: 100%; height: 100%;"></canvas>
+<div style="position: relative; z-index: 101; display: flex; flex-direction: column; align-items: center;">
+<div class="wheel-wrapper">
+<div class="pointer"></div>
+<canvas id="wheel" width="380" height="380"></canvas>
+</div>
+<!-- ✅ CLEAN STAKE PANEL -->
+<div class="mining-card bg-white w-full max-w-xs mt-4 p-3">
+<h4 class="font-bold text-gray-800 text-center mb-2">Place Your Stake</h4>
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs text-gray-600">Available:</span>
+<span id="availableBalanceStake" class="text-sm font-bold text-amber-700">0 UGX</span>
+</div>
+<div class="relative mb-2">
+<input
+type="number"
+id="stakeInput"
+placeholder="Min: 2,000 UGX"
+class="w-full bg-gray-50 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+min="2000"
+>
+<span class="absolute right-2 top-2 text-xs text-gray-500">UGX</span>
+</div>
+<div id="stakeUSDT" class="text-xs text-gray-600 text-center mb-3">~0.00 USDT</div>
+<button id="spinBtn" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 py-2 rounded font-bold text-white shadow">
+SPIN WHEEL
+</button>
+</div>
+<div id="result" class="mt-3"></div>
+</div>
+</div>
+<!-- 📜 GAME HISTORY -->
+<div class="mining-card mt-4">
+<h4 class="font-bold text-gray-900 mb-2">Game History</h4>
+<div id="wheelGameHistory" class="text-xs space-y-1 max-h-32 overflow-y-auto">
+<p class="text-gray-500">No games played yet.</p>
+</div>
+</div>
+</section>
+<!-- PROFILE -->
+<section id="tab-profile" class="tab-content">
+<div class="mining-card text-center">
+<div class="relative inline-block mb-3">
+<img id="profileAvatar" src="https://via.placeholder.com/80/10b981/FFFFFF?text=U" alt="Avatar" class="w-20 h-20 rounded-full border-2 border-emerald-500 object-cover" />
+<label for="avatarInput" class="absolute bottom-0 right-0 bg-emerald-500 rounded-full p-1 cursor-pointer shadow-md">
+<i class="fas fa-camera text-white text-xs"></i>
+</label>
+<input type="file" id="avatarInput" accept="image/*" class="hidden" />
+</div>
+<h2 id="profileUserName2" class="text-lg font-bold">---</h2>
+<p id="profileUserEmail2" class="text-gray-600 text-sm">---</p>
+<p id="profileUserId2" class="text-gray-500 text-xs">ID: ---</p>
+<button id="editProfileInfoBtn" class="mt-3 border border-emerald-500 text-emerald-500 px-3 py-1 rounded text-xs font-medium">Edit Profile</button>
+</div>
+<div class="mining-card mt-4">
+<h3 class="font-bold text-gray-900 mb-2">Transaction History</h3>
+<div id="transactionHistoryList" class="text-xs space-y-1 max-h-32 overflow-y-auto">
+<p class="text-gray-500">No transactions yet.</p>
+</div>
+</div>
+<div class="mining-card mt-4">
+<h3 class="font-bold text-gray-900 mb-2">Settings</h3>
+<div class="text-xs space-y-3">
+<div>
+<label class="block text-xs text-gray-600 mb-2">App Theme</label>
+<div class="flex items-center justify-center">
+<label class="theme-toggle">
+<input type="checkbox" id="themeToggle">
+<span class="toggle-thumb"></span>
+</label>
+<span id="themeLabel" class="ml-2 text-xs text-gray-500">Light</span>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<span>Auto-claim</span>
+<span class="text-emerald-600">On</span>
+</div>
+</div>
+</div>
+<div class="mining-card mt-4">
+<h3 class="font-bold text-gray-900 mb-2">Support</h3>
+<a href="mailto:auraaimoney@gmail.com?subject=UGX%20Mine%20Support" target="_blank" class="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-800 py-1.5 rounded text-xs transition">
+<i class="fas fa-envelope mr-1"></i>Contact Admin
+</a>
+</div>
+<div class="mt-4 text-center">
+<button id="logoutBtn" class="px-4 py-1.5 bg-red-500 hover:bg-red-600 rounded text-white text-xs font-medium">
+<i class="fas fa-sign-out-alt mr-1"></i>Logout
+</button>
+</div>
+</section>
+</main>
+</div>
+<!-- ✅ BOTTOM NAV -->
+<nav id="bottomNav" class="md:hidden fixed bottom-0 left-0 right-0 z-40">
+<div class="flex justify-around items-center py-2">
+<button onclick="switchTab('home')" class="flex flex-col items-center active">
+<div class="w-6 h-6 flex items-center justify-center"><i class="fas fa-home text-xs"></i></div>
+<span class="mt-1">Home</span>
+</button>
+<button onclick="switchTab('investments')" class="flex flex-col items-center">
+<div class="w-6 h-6 flex items-center justify-center"><i class="fas fa-chart-line text-xs"></i></div>
+<span class="mt-1">Invest</span>
+</button>
+<button onclick="switchTab('casino')" class="flex flex-col items-center">
+<div class="w-6 h-6 flex items-center justify-center"><i class="fas fa-dice text-xs"></i></div>
+<span class="mt-1">Play</span>
+</button>
+<button onclick="switchTab('profile')" class="flex flex-col items-center">
+<div class="w-6 h-6 flex items-center justify-center"><i class="fas fa-user text-xs"></i></div>
+<span class="mt-1">Me</span>
+</button>
+</div>
+</nav>
+</div>
+<!-- MODALS -->
+<div id="editProfileModal" class="fixed inset-0 bg-black/70 flex items-center justify-center hidden z-50">
+<div class="bg-white p-6 rounded-xl w-96 shadow-xl">
+<h3 class="text-lg font-bold mb-4 text-gray-900">Edit Profile</h3>
+<div class="mb-3">
+<label class="block text-xs text-gray-600 mb-1">Username</label>
+<input type="text" id="editUsername" class="w-full bg-gray-50 p-2 rounded text-sm border" readonly>
+</div>
+<div class="mb-3">
+<label class="block text-xs text-gray-600 mb-1">Email</label>
+<input type="email" id="editEmail" class="w-full bg-gray-50 p-2 rounded text-sm border">
+</div>
+<div class="mb-4">
+<label class="block text-xs text-gray-600 mb-1">Arbitrum Wallet</label>
+<input type="text" id="editWallet" class="w-full bg-gray-50 p-2 rounded text-sm border" placeholder="0x...">
+</div>
+<div class="flex gap-2">
+<button id="saveProfileBtn" class="flex-1 bg-emerald-600 py-2 rounded text-white text-sm font-medium">Save</button>
+<button onclick="document.getElementById('editProfileModal').classList.add('hidden')" class="flex-1 bg-gray-200 py-2 rounded text-sm">Cancel</button>
+</div>
+</div>
+</div>
+<!-- ✅ UNIFIED PAYMENT MODAL -->
+<div id="paymentModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
+<div class="bg-white p-6 rounded-xl w-96">
+<h3 class="text-lg font-bold mb-3" id="paymentModalTitle">Confirm Action</h3>
+<div class="bg-gray-50 p-3 rounded mb-3 text-sm">
+<div class="flex justify-between"><span>Action:</span> <span id="paymentAction">—</span></div>
+<div class="flex justify-between"><span>Amount:</span> <span id="paymentAmount">—</span></div>
+<div class="flex justify-between"><span>USDT:</span> <span id="paymentUSDT" class="font-bold text-emerald-600">—</span></div>
+</div>
+<p class="text-sm mb-2">Send <strong id="usdtToSend">—</strong> USDT to the admin wallet below using <strong>Arbitrum Network</strong>:</p>
+<div class="flex items-center bg-gray-100 p-2 rounded mb-3">
+<code id="adminWalletDisplay" class="text-xs break-all flex-1">0xb9fec9b1a49726089f058de4f4225ecbaa88cbbc</code>
+<button onclick="copyAdminWallet()" class="text-emerald-500 ml-2 text-sm">Copy</button>
+</div>
+<p class="text-xs text-red-500 mb-3">⚠️ <strong>Arbitrum ONLY!</strong> Sending from BSC, Ethereum, or TRON will lose your funds.</p>
+<p class="text-sm mb-2">Enter Transaction ID:</p>
+<input type="text" id="paymentTxId" class="w-full bg-gray-100 p-2 rounded mb-4" placeholder="e.g. 0xabc123...">
+<div class="flex gap-2">
+<button id="submitPaymentBtn" onclick="submitPayment()" class="flex-1 bg-emerald-600 py-2 rounded text-white">Submit for Approval</button>
+<button onclick="document.getElementById('paymentModal').classList.add('hidden')" class="flex-1 bg-gray-300 py-2 rounded">Cancel</button>
+</div>
+</div>
+</div>
+<!-- BOOSTER MODAL -->
+<div id="boosterModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
+<div class="bg-white p-6 rounded-xl w-96">
+<h3 class="text-lg font-bold mb-3" id="boosterModalTitle">Activate Booster</h3>
+<p id="boosterModalCurrent" class="text-gray-600 text-sm mb-1">Currently: ...</p>
+<p id="boosterModalNew" class="text-emerald-600 font-bold mb-2">After: ...</p>
+<p class="text-sm mb-1">Price: <span id="boosterModalPriceUGX">0 UGX</span></p>
+<p class="text-sm mb-3">Send <strong id="boosterModalPriceUSDT">0.00</strong> USDT to the admin wallet below using <strong>Arbitrum Network</strong>:</p>
+<div class="flex items-center bg-gray-100 p-2 rounded mb-3">
+<code id="adminWalletBooster" class="text-xs break-all flex-1">0xb9fec9b1a49726089f058de4f4225ecbaa88cbbc</code>
+<button onclick="copyAdminWallet()" class="text-emerald-500 ml-2 text-sm">Copy</button>
+</div>
+<p class="text-xs text-red-500 mb-3">⚠️ <strong>Arbitrum ONLY!</strong> Sending from BSC, Ethereum, or TRON will lose your funds.</p>
+<p class="text-sm mb-2">Enter Transaction ID:</p>
+<input type="text" id="txIdInput" class="w-full bg-gray-100 p-2 rounded mb-4" placeholder="e.g. 0xabc123...">
+<div class="flex gap-2">
+<button id="submitBoosterBtn" onclick="submitBoosterRequest()" class="flex-1 bg-emerald-600 py-2 rounded text-white">Submit for Approval</button>
+<button onclick="document.getElementById('boosterModal').classList.add('hidden')" class="flex-1 bg-gray-300 py-2 rounded">Cancel</button>
+</div>
+</div>
+</div>
+<!-- SCRIPTS -->
+<script>
+// 🔥 SUPABASE
+const SUPABASE_URL = 'https://rryvibgbpqyumfmgsiua.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeXZpYmdicHF5dW1mbWdzaXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTUwNTUsImV4cCI6MjA4MjQ3MTA1NX0.IMqZtMEiPyMwb8AW1gyFao9Yz2qWgMDibfbpVWOeG8o';
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let user = null;
+let timer;
+const UGX_PER_USDT = 3700;
 
-    <header class="flex justify-between items-center mb-8">
-      <div class="flex items-center space-x-3">
-        <div class="bg-green-500 p-2 rounded-lg"><i class="fas fa-coins text-xl"></i></div>
-        <h1 class="text-2xl font-bold">UGX<span class="text-white">Mine</span></h1>
-      </div>
-      <div class="flex gap-2">
-        <button id="adminPanelBtn" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm hidden">Admin Panel</button>
-        <button id="authToggle" class="px-4 py-2 bg-red-600 hover:bg-green-700 rounded-lg">Logout</button>
-      </div>
-    </header>
+// ========================
+// LIVE USDT UPDATE FOR DEPOSIT INPUT
+// ========================
+document.getElementById('depositAmountInput').addEventListener('input', () => {
+const amount = parseFloat(document.getElementById('depositAmountInput').value) || 0;
+const usdt = (amount / UGX_PER_USDT).toFixed(4);
+document.getElementById('depositAmountUSDT').textContent = `~${usdt} USDT`;
+});
 
-    <!-- Main Dashboard -->
-    <main id="mainContent" class="hidden">
-      <!-- (rest of your existing HTML remains exactly the same) -->
-      <!-- Profile Header -->
-      <div class="mining-card flex justify-between items-center">
-        <div>
-          <h2 id="profileUserName" class="text-xl font-bold">---</h2>
-          <p id="profileUserEmail" class="text-gray-400 text-sm">---</p>
-          <p id="profileUserId" class="text-gray-500 text-xs">ID: ---</p>
-        </div>
-        <button id="editProfileBtn" class="border border-green-500 text-green-500 px-4 py-1 rounded-lg text-sm">Set Wallet</button>
-      </div>
+// ========================
+// SHOW DEPOSIT INPUT MODAL
+// ========================
+function showDepositInput() {
+document.getElementById('depositInputModal').classList.remove('hidden');
+document.getElementById('depositAmountInput').value = '';
+document.getElementById('depositAmountUSDT').textContent = '~0.00 USDT';
+}
 
-      <!-- Mining Card -->
-      <div class="flex justify-center mb-6">
-        <div class="mining-card w-full max-w-2xl text-center">
-          <p class="font-bold text-amber-400">Your Balance</p>
-          <p id="balanceUGX" class="text-4xl md:text-5xl font-bold text-white my-2">0 UGX</p>
-          <p id="balanceUSDT" class="text-gray-500 text-sm mb-4">~0.00 USDT</p>
-          <div class="flex flex-wrap justify-center gap-4 mb-4">
-            <div>
-              <p class="text-gray-400 text-sm">Next Claim</p>
-              <p id="nextClaimAmount" class="font-bold text-green-400">+5,000 UGX</p>
-            </div>
-            <div>
-              <p class="text-gray-400 text-sm">Mining Cycle</p>
-              <p id="miningCycleDisplay" class="font-bold">24h</p>
-            </div>
-          </div>
-          <div class="flex justify-center items-center mb-2">
-            <div id="miningCountdown" class="countdown-display text-2xl px-4 py-2 min-w-[160px]">Ready!</div>
-          </div>
-          <p id="boosterExpiry" class="text-xs text-gray-400 mt-1 hidden"></p>
-          <button id="miningBtn" class="mt-3 w-full max-w-xs mx-auto bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 py-3 rounded-lg font-bold text-white shadow-lg hover:shadow-xl transition">
-            Claim
-          </button>
-        </div>
-      </div>
+// ========================
+// CONFIRM DEPOSIT AMOUNT & OPEN PAYMENT MODAL
+// ========================
+function confirmDepositAmount() {
+const input = document.getElementById('depositAmountInput');
+const amount = parseFloat(input.value);
+if (!amount || amount < 10000) {
+alert('Minimum deposit is 10,000 UGX');
+return;
+}
+document.getElementById('depositInputModal').classList.add('hidden');
+openPaymentModal('deposit', amount, 'Deposit Funds');
+}
 
-      <!-- Withdraw (BEFORE boosters) -->
-      <div class="mining-card mb-6">
-        <h3 class="font-bold mb-2">Withdraw Funds</h3>
-        <button id="openWithdrawModalBtn" class="w-full bg-amber-600 hover:bg-amber-700 py-3 rounded-lg font-bold">
-          Withdraw <span id="withdrawDayLabel">(—)</span>
-        </button>
-        <p id="withdrawCountdown" class="text-xs text-gray-500 mt-1"></p>
-        <p class="text-xs text-gray-500 mt-1">20% USDT fee • Arbitrum Network • Once per week</p>
-      </div>
+// ========================
+// INVESTMENT LOGIC (10X at 100 days)
+// ========================
+function getMultiplier(days) {
+const clampedDays = Math.min(100, Math.max(10, days));
+const multiplier = 2 + (clampedDays - 10) * (8 / 90);
+return parseFloat(multiplier.toFixed(2));
+}
+function updateInvestPreview() {
+const amountInput = document.getElementById('customInvestAmount');
+const amount = parseFloat(amountInput.value) || 0;
+const days = parseInt(document.getElementById('durationSlider').value);
+document.getElementById('durationValue').textContent = days;
+const multiplier = getMultiplier(days);
+const totalReturn = amount * multiplier;
+const amountUSDT = (amount / UGX_PER_USDT).toFixed(4);
+const returnUSDT = (totalReturn / UGX_PER_USDT).toFixed(4);
+document.getElementById('investAmountUSDT').textContent = `~${amountUSDT} USDT`;
+document.getElementById('multiplierValue').textContent = `${multiplier}×`;
+document.getElementById('totalReturnValue').textContent = `${totalReturn.toLocaleString()} UGX`;
+document.getElementById('returnUSDTValue').textContent = `~${returnUSDT} USDT`;
+const minAmount = (user?.balance || 0) * 2;
+const minNotice = document.getElementById('minAmountNotice');
+const minValue = document.getElementById('minAmountValue');
+const btn = document.getElementById('investCustomBtn');
+if (amount > 0 && amount < minAmount) {
+amountInput.classList.add('border-red-500');
+amountInput.classList.remove('border-gray-300');
+minValue.textContent = minAmount.toLocaleString();
+minNotice.classList.remove('hidden');
+btn.disabled = true;
+} else {
+amountInput.classList.remove('border-red-500');
+amountInput.classList.add('border-gray-300');
+minNotice.classList.add('hidden');
+btn.disabled = (amount <= 0);
+}
+}
+document.getElementById('customInvestAmount').addEventListener('input', updateInvestPreview);
+document.getElementById('durationSlider').addEventListener('input', updateInvestPreview);
 
-      <!-- Boosters -->
-      <h3 class="text-lg font-bold mb-4">Boosters</h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="booster-card relative overflow-hidden">
-          <h4 class="font-bold text-lg">Eager_Miner</h4>
-          <p class="text-3xl md:text-4xl font-bold text-blue-600 my-2">2h cycle</p>
-          <p class="font-bold text-green-400 mt-1" id="eagleReward">+0 UGX / claim</p>
-          <p class="text-gold-500 text-xs mt-1">Double your investment in 24h!</p>
-          <button onclick="showBoosterModal(2, getBoosterReward(user?.balance || 0, 'eagle'), (user?.balance || 0) * 2)" class="w-full mt-2 bg-blue-600 py-3 rounded-lg font-bold">Buy for <span id="priceEagle">—</span></button>
-        </div>
-        <div class="booster-card relative overflow-hidden">
-          <h4 class="font-bold text-lg">Falcon_Miner</h4>
-          <p class="text-3xl md:text-4xl font-bold text-purple-600 my-2">2h cycle</p>
-          <p class="font-bold text-green-400 mt-1" id="falconReward">+0 UGX / claim</p>
-          <p class="text-gold-500 text-xs mt-1">Double your investment in 24h!</p>
-          <button onclick="showBoosterModal(2, getBoosterReward(user?.balance || 0, 'falcon'), (user?.balance || 0) * 4)" class="w-full mt-2 bg-purple-600 py-3 rounded-lg font-bold">Buy for <span id="priceFalcon">—</span></button>
-        </div>
-        <div class="booster-card relative overflow-hidden">
-          <h4 class="font-bold text-lg">Phoenix_Miner</h4>
-          <p class="text-3xl md:text-4xl font-bold text-amber-600 my-2">2h cycle</p>
-          <p class="font-bold text-green-400 mt-1" id="phoenixReward">+0 UGX / claim</p>
-          <p class="text-gold-500 text-xs mt-1">Double your investment in 24h!</p>
-          <button onclick="showBoosterModal(2, getBoosterReward(user?.balance || 0, 'phoenix'), (user?.balance || 0) * 8)" class="w-full mt-2 bg-amber-600 py-3 rounded-lg font-bold">Buy for <span id="pricePhoenix">—</span></button>
-        </div>
-      </div>
+// ========================
+// UNIFIED PAYMENT SYSTEM
+// ========================
+const ADMIN_WALLET = "0xb9fec9b1a49726089f058de4f4225ecbaa88cbbc";
+function copyAdminWallet() {
+navigator.clipboard.writeText(ADMIN_WALLET);
+alert('Admin Arbitrum wallet copied!');
+}
+let currentPaymentType = null;
+let currentPaymentAmountUGX = 0;
+let currentPaymentUSDT = 0;
+function openPaymentModal(type, amountUGX, description) {
+currentPaymentType = type;
+currentPaymentAmountUGX = amountUGX;
+currentPaymentUSDT = (amountUGX / UGX_PER_USDT).toFixed(4);
+document.getElementById('paymentModalTitle').textContent =
+type === 'withdraw' ? 'Confirm Withdrawal' :
+type === 'invest' ? 'Confirm Investment' : 'Confirm Deposit';
+document.getElementById('paymentAction').textContent =
+type === 'withdraw' ? 'Withdraw Fee' :
+type === 'invest' ? 'Investment Lock' : 'Deposit Funds';
+document.getElementById('paymentAmount').textContent = `${amountUGX.toLocaleString()} UGX`;
+document.getElementById('paymentUSDT').textContent = `${currentPaymentUSDT} USDT`;
+document.getElementById('usdtToSend').textContent = currentPaymentUSDT;
+document.getElementById('adminWalletDisplay').textContent = ADMIN_WALLET;
+document.getElementById('paymentTxId').value = '';
+document.getElementById('paymentModal').classList.remove('hidden');
+}
+async function submitPayment() {
+const txId = document.getElementById('paymentTxId').value.trim();
+if (!txId) return alert('Please enter Transaction ID.');
+const actionMap = {
+deposit: 'deposit_requests',
+invest: 'investment_requests',
+withdraw: 'withdraw_requests'
+};
+const table = actionMap[currentPaymentType];
+if (!table) return;
+const data = {
+username: user.username,
+txid: txId,
+status: 'pending',
+requested_at: new Date().toISOString()
+};
+if (currentPaymentType === 'deposit') {
+data.ugx_amount = currentPaymentAmountUGX;
+data.usdt_amount = parseFloat(currentPaymentUSDT);
+}
+else if (currentPaymentType === 'invest') {
+const days = parseInt(document.getElementById('durationSlider').value);
+const multiplier = getMultiplier(days);
+data.ugx_amount = currentPaymentAmountUGX;
+data.ugx_return = currentPaymentAmountUGX * multiplier;
+data.usdt_paid = parseFloat(currentPaymentUSDT);
+data.days = days;
+data.multiplier = multiplier;
+data.maturity_time = new Date(Date.now() + days * 24 * 3600000).toISOString();
+}
+else if (currentPaymentType === 'withdraw') {
+data.ugx_amount = user.balance || 0;
+data.ugx_fee = currentPaymentAmountUGX;
+data.usdt_fee = parseFloat(currentPaymentUSDT);
+}
+await _supabase.from(table).insert(data);
+document.getElementById('paymentModal').classList.add('hidden');
+if (currentPaymentType === 'withdraw') {
+alert('Withdrawal request submitted!\nSend the 20% fee and wait for admin approval.');
+} else {
+alert(`Request submitted! Wait for admin approval.`);
+}
+}
 
-      <!-- Transaction History -->
-      <div class="mining-card mt-6">
-        <h3 class="font-bold">Transaction History</h3>
-        <div id="transactionHistoryList" class="mt-3 text-sm space-y-2 max-h-60 overflow-y-auto">
-          <p class="text-gray-500">Loading transactions...</p>
-        </div>
-      </div>
+// ========================
+// ORIGINAL openDepositModal REMOVED – REPLACED BY showDepositInput()
+// ========================
 
-      <!-- Invite Friends -->
-      <div class="mining-card mt-6">
-        <h3 class="font-bold">Invite Friends</h3>
-        <p class="text-sm text-gray-400 mb-2">Get 5,000 UGX per friend (max 2 friends)!</p>
-        <div class="flex items-center bg-gray-700 p-2 rounded">
-          <input type="text" id="refLink" class="bg-transparent flex-1 text-xs" readonly>
-          <button onclick="copyRefLink()" class="text-green-500 ml-2 text-sm">Copy</button>
-        </div>
-      </div>
+function openInvestModal() {
+const amount = parseFloat(document.getElementById('customInvestAmount').value);
+const minAmount = (user?.balance || 0) * 2;
+if (!amount || amount <= 0) return alert("Enter a valid amount");
+if (amount < minAmount) return alert(`Minimum: ${minAmount.toLocaleString()} UGX`);
+openPaymentModal('invest', amount, 'Lock Investment');
+}
+function openWithdrawModal() {
+if (!user || (user.balance || 0) <= 0) return alert("No balance to withdraw");
+const balance = user.balance || 0;
+const fee = balance * 0.2;
+openPaymentModal('withdraw', fee, 'Withdraw Fee');
+}
 
-      <!-- Live Activity (FOMO) -->
-      <div class="mining-card mt-6">
-        <h3 class="font-bold mb-3">Live Activity</h3>
-        <div class="space-y-3">
-          <div>
-            <p class="text-xs text-gray-400">Recent Withdrawals</p>
-            <div id="fakeWithdraws" class="text-sm"></div>
-          </div>
-          <div>
-            <p class="text-xs text-gray-400">Booster Activations</p>
-            <div id="fakeBoosters" class="text-sm"></div>
-          </div>
-        </div>
-      </div>
+// ========================
+// BOOSTER SYSTEM (UNCHANGED)
+// ========================
+function updateBoosterPrices() {
+if (!user) return;
+const balance = user.balance || 0;
+const boosters = [
+{ id: 'Eagle', mult: 2 },
+{ id: 'Falcon', mult: 4 },
+{ id: 'Phoenix', mult: 8 }
+];
+boosters.forEach(b => {
+const priceUGX = balance * b.mult;
+const priceUSDT = (priceUGX / UGX_PER_USDT).toFixed(4);
+document.getElementById(`price${b.id}`).textContent =
+`${priceUGX.toLocaleString()} UGX (~${priceUSDT} USDT)`;
+});
+}
+let selectedBoosterType, selectedBoosterHours, selectedBoosterReward;
+function openBoosterModal(type, hours, reward) {
+if (!user) return;
+selectedBoosterType = type;
+selectedBoosterHours = hours;
+selectedBoosterReward = reward;
+const balance = user.balance || 0;
+const multiplier = type === 'eagle' ? 2 : type === 'falcon' ? 4 : 8;
+const priceUGX = balance * multiplier;
+const priceUSDT = (priceUGX / UGX_PER_USDT).toFixed(4);
+const currentReward = user.mining_reward || 5000;
+const currentHours = user.mining_cycle_hours || 24;
+const newReward = currentReward + reward;
+document.getElementById('boosterModalTitle').textContent = `Activate ${type.charAt(0).toUpperCase() + type.slice(1)}_Miner`;
+document.getElementById('boosterModalCurrent').innerHTML = `Currently: <strong>${currentReward.toLocaleString()} UGX / ${currentHours}h</strong>`;
+document.getElementById('boosterModalNew').innerHTML = `After: <strong>${newReward.toLocaleString()} UGX / 2h</strong>`;
+document.getElementById('boosterModalPriceUGX').textContent = `${priceUGX.toLocaleString()} UGX`;
+document.getElementById('boosterModalPriceUSDT').textContent = priceUSDT;
+document.getElementById('adminWalletBooster').textContent = ADMIN_WALLET;
+document.getElementById('txIdInput').value = '';
+document.getElementById('boosterModal').classList.remove('hidden');
+}
+async function submitBoosterRequest() {
+const txId = document.getElementById('txIdInput').value.trim();
+if (!txId) return alert('Please enter TRX ID');
+const balance = user.balance || 0;
+const multiplier = selectedBoosterType === 'eagle' ? 2 : selectedBoosterType === 'falcon' ? 4 : 8;
+const priceUGX = balance * multiplier;
+const priceUSDT = (priceUGX / UGX_PER_USDT).toFixed(4);
+const boosterName =
+selectedBoosterType === 'eagle' ? 'Eager_Miner' :
+selectedBoosterType === 'falcon' ? 'Falcon_Miner' : 'Phoenix_Miner';
+await _supabase.from('booster_requests').insert({
+username: user.username,
+booster_type: boosterName,
+usdt_amount: parseFloat(priceUSDT),
+txid: txId,
+status: 'pending',
+requested_at: new Date().toISOString()
+});
+document.getElementById('boosterModal').classList.add('hidden');
+alert('Booster request submitted! Wait for admin approval.');
+}
 
-      <!-- How It Works (FAQ - LAST) -->
-      <div class="mining-card mt-6">
-        <h3 class="font-bold mb-3">How It Works</h3>
-        <ul class="text-sm space-y-2 text-gray-300">
-          <li>✅ <strong>Mine UGX</strong>: Claim 5,000 UGX every 24h (faster with boosters)</li>
-          <li>✅ <strong>Withdraw</strong>: Pay 20% fee in USDT via <strong>Arbitrum Network</strong> → Admin approves → Balance reset</li>
-          <li>✅ <strong>Boosters</strong>: Pay USDT to mine every 2h — **earn 2× your investment in 24h!**</li>
-          <li>✅ <strong>Referrals</strong>: Max 2 friends = 10,000 UGX total</li>
-          <li>⚠️ <strong>Note</strong>: All payouts are processed manually by our team</li>
-          <li>🎬 <button onclick="document.getElementById('howItWorksModal').classList.remove('hidden')" class="text-green-400 underline">Watch tutorial videos</button></li>
-        </ul>
-      </div>
-    </main>
+// ========================
+// CLAIM BUTTON LOGIC
+// ========================
+function startTimer() {
+if (timer) clearInterval(timer);
+const nextClaimTime = new Date(user.next_claim_time).getTime();
+const miningBtn = document.getElementById('miningBtn');
+const updateClaimButton = () => {
+const now = Date.now();
+const diff = nextClaimTime - now;
+if (diff <= 0) {
+miningBtn.textContent = "Claim Funds";
+miningBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+miningBtn.disabled = false;
+} else {
+const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+miningBtn.textContent = `${h}:${m}:${s}`;
+miningBtn.classList.add('opacity-75', 'cursor-not-allowed');
+miningBtn.disabled = true;
+}
+};
+updateClaimButton();
+timer = setInterval(updateClaimButton, 1000);
+}
+document.getElementById('miningBtn').onclick = async () => {
+const btn = document.getElementById('miningBtn');
+if (btn.textContent !== "Claim Funds") return;
+if (user.booster_expires_at) {
+const now = new Date();
+const expiry = new Date(user.booster_expires_at);
+if (now > expiry) {
+await _supabase.from('users').update({
+mining_cycle_hours: 24,
+mining_reward: 5000,
+booster_expires_at: null,
+booster_type: null
+}).eq('username', user.username);
+user.mining_cycle_hours = 24;
+user.mining_reward = 5000;
+user.booster_expires_at = null;
+user.booster_type = null;
+}
+}
+const reward = user.mining_reward || 5000;
+const newBalance = (user.balance || 0) + reward;
+const next = new Date(Date.now() + ((user.mining_cycle_hours || 24) * 3600000)).toISOString();
+await _supabase.from('users').update({
+balance: newBalance,
+claimed_total: (user.claimed_total || 0) + reward,
+next_claim_time: next
+}).eq('username', user.username);
+user.balance = newBalance;
+user.claimed_total = (user.claimed_total || 0) + reward;
+user.next_claim_time = next;
+updateHomeDashboard();
+startTimer();
+};
 
-    <!-- All other modals (wallet, booster, withdraw, how-it-works) stay inside container -->
-    <div id="walletModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden">
-      <div class="bg-gray-800 p-6 rounded-xl w-80">
-        <h3 class="mb-4">Enter Arbitrum Wallet</h3>
-        <input type="text" id="walletInput" class="w-full bg-gray-700 p-2 rounded mb-4" placeholder="0x...">
-        <button id="saveWalletBtn" class="w-full bg-green-600 py-2 rounded">Save</button>
-        <button onclick="document.getElementById('walletModal').classList.add('hidden')" class="w-full mt-2 text-gray-400">Cancel</button>
-      </div>
-    </div>
+// ========================
+// 💰 UNIFIED BALANCE SYSTEM
+// ========================
+async function updateHomeDashboard() {
+if (!user) return;
+const balance = user.balance || 0;
+const formatted = balance.toLocaleString() + " UGX";
+const usdt = "~" + (balance / UGX_PER_USDT).toFixed(2) + " USDT";
+// Update all balance displays
+document.getElementById('totalBalance').textContent = formatted;
+document.getElementById('totalBalanceUSDT').textContent = usdt;
+document.getElementById('investTotalBalance').textContent = formatted;
+document.getElementById('investTotalBalanceUSDT').textContent = usdt;
+document.getElementById('casinoTotalBalance').textContent = formatted;
+document.getElementById('casinoTotalBalanceUSDT').textContent = usdt;
+// Update stake panel
+document.getElementById('availableBalanceStake').textContent = formatted;
+// Update claim & status
+const nextReward = user.mining_reward || 5000;
+document.getElementById('nextClaimAmount').innerHTML = `<i class="fas fa-coins text-emerald-500 mr-1"></i>${nextReward.toLocaleString()} UGX`;
+let statusText = "Default 24h cycle";
+if (user.booster_expires_at) {
+const expiry = new Date(user.booster_expires_at);
+if (expiry > new Date()) {
+statusText = `<i class="fas fa-bolt text-amber-500 mr-1"></i>${user.booster_type}`;
+}
+}
+document.getElementById('miningStatus').innerHTML = statusText;
+updateBoosterPrices();
+updateInvestPreview();
+}
 
-    <div id="boosterModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
-      <div class="bg-gray-800 p-6 rounded-xl w-96">
-        <h3 class="text-lg font-bold mb-3" id="boosterModalTitle">Activate Booster</h3>
-        <p id="boosterModalCurrent" class="text-gray-400 text-sm mb-1">Currently: ...</p>
-        <p id="boosterModalNew" class="text-green-400 font-bold mb-4">After: ...</p>
-        <p class="text-sm mb-2">Send <span id="boosterModalPrice"></span> using <strong>Arbitrum Network</strong>:</p>
-        <div class="flex items-center bg-gray-700 p-2 rounded mb-3">
-          <code id="adminWalletDisplay" class="text-xs break-all flex-1">0xb9fec9b1a49726089f058de4f4225ecbaa88cbbc</code>
-          <button onclick="copyAdminWallet()" class="text-green-500 ml-2 text-sm">Copy</button>
-        </div>
-        <p class="text-xs text-red-400 mb-3">⚠️ <strong>Arbitrum Network ONLY!</strong> Sending from BSC, Ethereum, or TRON will lose your funds.</p>
-        <p class="text-sm mb-2">Enter Transaction ID:</p>
-        <input type="text" id="txIdInput" class="w-full bg-gray-700 p-2 rounded mb-4" placeholder="e.g. 0xabc123...">
-        <div class="flex gap-2">
-          <button id="submitBoosterBtn" onclick="submitBoosterRequest()" class="flex-1 bg-green-600 py-2 rounded">Submit for Approval</button>
-          <button onclick="document.getElementById('boosterModal').classList.add('hidden')" class="flex-1 bg-gray-600 py-2 rounded">Cancel</button>
-        </div>
-      </div>
-    </div>
+// ========================
+// 🎡 WHEEL GAME LOGIC
+// ========================
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let isSpinning = false;
+const sectors = ["0x", "5x", "MEGA", "2x", "0x", "10x", "ROYAL", "2x", "0x", "5x", "GRAND", "2x", "0x", "10x", "1.5x", "2x"];
+const canvas = document.getElementById('wheel');
+const ctx = canvas.getContext('2d');
+const rainCanvas = document.getElementById('rain-canvas');
+const rainCtx = rainCanvas.getContext('2d');
+function playTone(freq, type, dur, vol = 0.1) {
+const osc = audioCtx.createOscillator();
+const gain = audioCtx.createGain();
+osc.type = type;
+osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+osc.connect(gain); gain.connect(audioCtx.destination);
+osc.start(); osc.stop(audioCtx.currentTime + dur);
+}
+const sounds = {
+tick: () => playTone(600, 'sine', 0.1, 0.05),
+loss: () => { playTone(150, 'sawtooth', 0.5); playTone(110, 'sawtooth', 0.5); },
+smallWin: () => { playTone(523, 'sine', 0.2); setTimeout(() => playTone(659, 'sine', 0.2), 100); },
+bigWin: () => { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => playTone(f, 'square', 0.4, 0.05), i * 100)); },
+jackpot: () => { [523, 659, 783, 1046, 1318, 1567].forEach((f, i) => setTimeout(() => playTone(f, 'sine', 1, 0.1), i * 100)); }
+};
+function createRain() {
+for(let i = 0; i < 100; i++) {
+particles.push({
+x: Math.random() * window.innerWidth,
+y: Math.random() * -window.innerHeight,
+size: Math.random() * 10 + 5,
+speed: Math.random() * 5 + 2,
+color: `hsl(${Math.random() * 360}, 70%, 60%)`
+});
+}
+animateRain();
+}
+function animateRain() {
+rainCtx.clearRect(0, 0, rainCanvas.width, rainCanvas.height);
+particles.forEach((p, i) => {
+p.y += p.speed;
+rainCtx.fillStyle = p.color;
+rainCtx.font = p.size + "px Arial";
+rainCtx.fillText("$", p.x, p.y);
+if(p.y > window.innerHeight) particles.splice(i, 1);
+});
+if(particles.length > 0) requestAnimationFrame(animateRain);
+}
+function drawWheel() {
+sectors.forEach((label, i) => {
+const arc = 2 * Math.PI / sectors.length;
+const angle = i * arc;
+ctx.save();
+ctx.beginPath();
+if (label === "0x") ctx.fillStyle = "#e74c3c";
+else if (label === "MEGA" || label === "GRAND") ctx.fillStyle = "#f1c40f";
+else if (label === "ROYAL") ctx.fillStyle = "#66e2ff";
+else ctx.fillStyle = i % 2 === 0 ? "#285e60" : "#258150";
+ctx.moveTo(190, 190); ctx.arc(190, 190, 190, angle, angle + arc);
+ctx.fill();
+ctx.translate(190, 190); ctx.rotate(angle + arc / 2);
+ctx.textAlign = "right"; ctx.fillStyle = "white";
+ctx.font = "bold 14px Arial"; ctx.fillText(label, 175, 5);
+ctx.restore();
+});
+}
+// Stake input live USDT update
+document.getElementById('stakeInput').addEventListener('input', () => {
+const stake = parseFloat(document.getElementById('stakeInput').value) || 0;
+const usdt = (stake / UGX_PER_USDT).toFixed(4);
+document.getElementById('stakeUSDT').textContent = `~${usdt} USDT`;
+});
+// SPIN
+async function spin() {
+if (isSpinning || !user) return;
+const stakeInput = document.getElementById('stakeInput');
+const stake = parseFloat(stakeInput.value);
+if (isNaN(stake) || stake < 2000) return alert("Minimum stake is 2,000 UGX");
+if (stake > user.balance) return alert("Insufficient balance");
+user.balance -= stake;
+await _supabase.from('users').update({ balance: user.balance }).eq('username', user.username);
+updateHomeDashboard();
+isSpinning = true;
+const btn = document.getElementById('spinBtn');
+btn.textContent = "SPINNING...";
+btn.disabled = true;
+const spinDeg = Math.floor(Math.random() * 360) + 3600;
+let currentRotation = parseFloat(canvas.style.transform.replace('rotate(', '').replace('deg)', '') || 0);
+currentRotation += spinDeg;
+canvas.style.transform = `rotate(${currentRotation}deg)`;
+let ticks = 0;
+const tickInt = setInterval(() => { ticks++; if(ticks < 40) sounds.tick(); else clearInterval(tickInt); }, 100);
+setTimeout(async () => {
+const sectorIndex = Math.floor((360 - (currentRotation % 360) + 270) % 360 / (360 / sectors.length));
+const res = sectors[sectorIndex];
+let mult = 0;
+if (res === "MEGA") { mult = 100; sounds.jackpot(); createRain(); }
+else if (res === "ROYAL") { mult = 75; sounds.jackpot(); createRain(); }
+else if (res === "GRAND") { mult = 50; sounds.jackpot(); createRain(); }
+else { mult = parseFloat(res); if (mult === 0) sounds.loss(); else if (mult > 2) sounds.bigWin(); else sounds.smallWin(); }
+const win = stake * mult;
+if (win > 0) {
+user.balance += win;
+await _supabase.from('users').update({ balance: user.balance }).eq('username', user.username);
+addWheelHistory(res, win);
+document.getElementById('result').innerText = `WIN: ${win.toLocaleString()} UGX`;
+document.getElementById('result').style.color = "#00ff88";
+} else {
+addWheelHistory(res, -stake);
+document.getElementById('result').innerText = "LOST!";
+document.getElementById('result').style.color = "#ff4757";
+}
+updateHomeDashboard();
+stakeInput.value = "";
+document.getElementById('stakeUSDT').textContent = "~0.00 USDT";
+isSpinning = false;
+btn.textContent = "SPIN WHEEL";
+btn.disabled = false;
+}, 4000);
+}
+document.getElementById('spinBtn').onclick = spin;
+function addWheelHistory(res, amount) {
+const list = document.getElementById('wheelGameHistory');
+const item = document.createElement('div');
+item.className = 'flex justify-between text-xs';
+const isWin = amount > 0;
+item.innerHTML = `<span>${res}</span><span style="color:${isWin ? '#00ff88' : '#ff4757'}">${isWin ? '+' : ''}${amount.toFixed(0)}</span>`;
+list.insertBefore(item, list.firstChild);
+if (list.children.length > 10) list.removeChild(list.lastChild);
+}
+// Init wheel
+setTimeout(() => drawWheel(), 100);
+function resizeRainCanvas() {
+const container = document.querySelector('#tab-casino .mining-card');
+if (container) {
+rainCanvas.width = container.clientWidth;
+rainCanvas.height = container.clientHeight;
+}
+}
+window.addEventListener('resize', resizeRainCanvas);
+resizeRainCanvas();
 
-    <div id="withdrawModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
-      <div class="bg-gray-800 p-6 rounded-xl w-96">
-        <h3 class="text-lg font-bold mb-3">Withdraw Funds</h3>
-        <p class="text-sm mb-1">Total Balance:</p>
-        <p id="withdrawTotal" class="font-bold text-lg">0 UGX</p>
-        <p class="text-sm mt-3 mb-1">Processing Fee (20%):</p>
-        <p id="withdrawFee" class="text-amber-400 font-bold">0.00 USDT</p>
-        <p class="text-sm mb-2">Send <span id="withdrawFeeDisplay" class="text-amber-400 font-bold">0.00 USDT</span> fee using <strong>Arbitrum Network</strong>:</p>
-        <div class="flex items-center bg-gray-700 p-2 rounded mb-3">
-          <code id="adminWalletWithdraw" class="text-xs break-all flex-1">0xb9fec9b1a49726089f058de4f4225ecbaa88cbbc</code>
-          <button onclick="copyAdminWallet()" class="text-green-500 ml-2 text-sm">Copy</button>
-        </div>
-        <p class="text-xs text-red-400 mb-3">⚠️ <strong>Use Arbitrum ONLY!</strong> Sending from BSC, Ethereum, or TRON will lose your funds.</p>
-        <p class="text-sm mb-2">Your Wallet (auto-filled):</p>
-        <p id="userWalletDisplay" class="text-sm bg-gray-700 p-2 rounded mb-3 break-all">—</p>
-        <p class="text-sm mb-2">Enter Transaction ID:</p>
-        <input type="text" id="withdrawTxId" class="w-full bg-gray-700 p-2 rounded mb-4" placeholder="e.g. 0xabc123...">
-        <div class="flex gap-2">
-          <button id="submitWithdrawBtn" onclick="submitWithdrawRequest()" class="flex-1 bg-amber-600 py-2 rounded">Submit Request</button>
-          <button onclick="document.getElementById('withdrawModal').classList.add('hidden')" class="flex-1 bg-gray-600 py-2 rounded">Cancel</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="howItWorksModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
-      <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-bold">How It Works</h3>
-          <button onclick="document.getElementById('howItWorksModal').classList.add('hidden')" class="text-gray-400 hover:text-white">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-
-        <div class="mb-5">
-          <p class="text-xs text-gray-400 mb-2">1. Set Your Arbitrum Wallet</p>
-          <div class="aspect-video bg-black rounded-lg overflow-hidden">
-            <iframe
-              src="https://www.youtube.com/embed/07O80xdXrdY"
-              frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowfullscreen
-              playsinline
-              title="Set Wallet Tutorial"
-              class="w-full h-full">
-            </iframe>
-          </div>
-        </div>
-
-        <div class="mb-5">
-          <p class="text-xs text-gray-400 mb-2">2. Buy a Booster</p>
-          <div class="aspect-video bg-black rounded-lg overflow-hidden">
-            <iframe
-              src="https://www.youtube.com/embed/PgG-WO1cWfA"
-              frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowfullscreen
-              playsinline
-              title="How to Buy a Booster"
-              class="w-full h-full">
-            </iframe>
-          </div>
-        </div>
-
-        <div class="mb-5">
-          <p class="text-xs text-gray-400 mb-2">3. Withdraw Funds</p>
-          <div class="aspect-video bg-black rounded-lg overflow-hidden">
-            <iframe
-              src="https://www.youtube.com/embed/07O80xdXrdY"
-              frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowfullscreen
-              playsinline
-              title="Withdraw Tutorial"
-              class="w-full h-full">
-            </iframe>
-          </div>
-        </div>
-        <p class="text-xs text-gray-500 mt-2 text-center">Watch all videos. More coming soon!</p>
-      </div>
-    </div>
-
-    <div class="text-center mt-2">
-      <a href="mailto:auraaimoney@gmail.com" target="_blank" class="text-xs text-gray-500 hover:text-gray-300">Need help?</a>
-    </div>
-
-    <div class="text-center text-xs text-gray-500 mt-8 pb-4">
-      <p>UGX Mine is for mining purposes. Ugx and crypto currency used only.
-        <a href="#" class="text-gray-400 hover:underline">Terms of Use</a>
-      </p>
-    </div>
-  </div>
-
-  <!-- SCRIPTS -->
-  <script>
-    const SUPABASE_URL = 'https://rryvibgbpqyumfmgsiua.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeXZpYmdicHF5dW1mbWdzaXVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4OTUwNTUsImV4cCI6MjA4MjQ3MTA1NX0.IMqZtMEiPyMwb8AW1gyFao9Yz2qWgMDibfbpVWOeG8o';
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    let user = null;
-    let timer;
-    let withdrawFeeUSDT = 0;
-    let boosterExpiryTimer = null;
-
-    function getBoosterReward(balance, type) {
-      if (balance <= 0) return 0;
-      if (type === 'eagle') return Math.floor(balance / 3);
-      else if (type === 'falcon') return Math.floor((2 * balance) / 3);
-      else return Math.floor((4 * balance) / 3);
-    }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const referrer = urlParams.get('ref');
-
-    async function checkBoosterExpiry() {
-      if (!user || !user.booster_expires_at) return;
-      const now = new Date();
-      const expires = new Date(user.booster_expires_at);
-      if (now > expires) {
-        await _supabase.from('users').update({
-          mining_cycle_hours: 24,
-          mining_reward: 5000,
-          booster_expires_at: null
-        }).eq('username', user.username);
-        user.mining_cycle_hours = 24;
-        user.mining_reward = 5000;
-        user.booster_expires_at = null;
-        updateUI();
-        startTimer();
-        alert("Your booster has expired. Back to standard mining.");
-      }
-    }
-
-    function getWithdrawInfo() {
-      const today = new Date().getDay();
-      const userDay = user.withdraw_day;
-      if (userDay == null || userDay === undefined) {
-        return { dayName: '—', daysLeft: null, isToday: false };
-      }
-      const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-      const dayName = days[userDay];
-      let daysLeft = userDay - today;
-      if (daysLeft <= 0) daysLeft += 7;
-      if (daysLeft === 7) daysLeft = 0;
-      return { dayName, daysLeft, isToday: daysLeft === 0 };
-    }
-
-    document.getElementById('tabSignup').onclick = () => {
-      document.getElementById('signupForm').classList.remove('hidden');
-      document.getElementById('loginForm').classList.add('hidden');
-      document.getElementById('tabSignup').classList.add('active');
-      document.getElementById('tabLogin').classList.remove('active');
-    };
-    document.getElementById('tabLogin').onclick = () => {
-      document.getElementById('loginForm').classList.remove('hidden');
-      document.getElementById('signupForm').classList.add('hidden');
-      document.getElementById('tabLogin').classList.add('active');
-      document.getElementById('tabSignup').classList.remove('active');
-    };
-
-    document.getElementById('signupForm').onsubmit = async (e) => {
-      e.preventDefault();
-      const u = document.getElementById('signupUsername').value;
-      const em = document.getElementById('signupEmail').value;
-      const p = document.getElementById('signupPassword').value;
-      let bonus = 0;
-      if (referrer) {
-        const { data: refUser } = await _supabase.from('users').select('referral_count').eq('username', referrer).single();
-        if (refUser && (refUser.referral_count || 0) < 2) {
-          bonus = 5000;
-          await _supabase.rpc('increment_referral_count', { ref_user: referrer });
-        }
-      }
-      const { error } = await _supabase.from('users').insert([{
-        username: u,
-        password: p,
-        user_email: em,
-        balance: bonus,
-        mining_reward: 5000,
-        mining_cycle_hours: 24,
-        next_claim_time: new Date().toISOString(),
-        user_id: 'UGX' + Math.floor(Math.random()*1000000),
-        referrer: referrer,
-        user_wallet: null,
-        withdraw_day: null,
-        booster_expires_at: null,
-        referral_count: 0
-      }]);
-      if (error) alert(error.message);
-      else alert("Signup Success! Please Login.");
-    };
-
-    document.getElementById('loginForm').onsubmit = async (e) => {
-      e.preventDefault();
-      const u = document.getElementById('loginUsername').value;
-      const p = document.getElementById('loginPassword').value;
-      const { data, error } = await _supabase.from('users').select('*').eq('username', u).eq('password', p).maybeSingle();
-      if (!data) return alert("Wrong credentials");
-      user = data;
-      loadDashboard();
-    };
-
-    function loadDashboard() {
-      document.getElementById('authCard').classList.add('hidden');
-      document.getElementById('mainContent').classList.remove('hidden');
-      document.getElementById('profileUserName').textContent = user.username;
-      document.getElementById('profileUserEmail').textContent = user.user_email;
-      document.getElementById('profileUserId').textContent = "ID: " + user.user_id;
-      const refLink = `${window.location.origin}${window.location.pathname}?ref=${user.username}`;
-      document.getElementById('refLink').value = refLink;
-      updateUI();
-      startTimer();
-      checkBoosterExpiry();
-      checkApprovedBoosters();
-      checkApprovedWithdrawals();
-      fetchAllTransactions();
-      generateFakeActivity();
-      setInterval(generateFakeActivity, 15000);
-    }
-
-    function updateUI() {
-      const balance = user.balance || 0;
-      const reward = user.mining_reward || 5000;
-      document.getElementById('balanceUGX').textContent = balance.toLocaleString() + " UGX";
-      document.getElementById('balanceUSDT').textContent = "~" + (balance / 3700).toFixed(2) + " USDT";
-      document.getElementById('miningCycleDisplay').textContent = (user.mining_cycle_hours || 24) + "h";
-      document.getElementById('nextClaimAmount').textContent = "+" + reward.toLocaleString() + " UGX";
-
-      document.getElementById('eagleReward').textContent = `+${getBoosterReward(balance, 'eagle').toLocaleString()} UGX / claim`;
-      document.getElementById('falconReward').textContent = `+${getBoosterReward(balance, 'falcon').toLocaleString()} UGX / claim`;
-      document.getElementById('phoenixReward').textContent = `+${getBoosterReward(balance, 'phoenix').toLocaleString()} UGX / claim`;
-
-      const priceEagle = (balance * 2);
-      const priceFalcon = (balance * 4);
-      const pricePhoenix = (balance * 8);
-      document.getElementById('priceEagle').textContent = `${priceEagle.toLocaleString()} UGX (~${(priceEagle / 3700).toFixed(2)} USDT)`;
-      document.getElementById('priceFalcon').textContent = `${priceFalcon.toLocaleString()} UGX (~${(priceFalcon / 3700).toFixed(2)} USDT)`;
-      document.getElementById('pricePhoenix').textContent = `${pricePhoenix.toLocaleString()} UGX (~${(pricePhoenix / 3700).toFixed(2)} USDT)`;
-
-      const wInfo = getWithdrawInfo();
-      document.getElementById('withdrawDayLabel').textContent = `(${wInfo.dayName})`;
-      const countdownEl = document.getElementById('withdrawCountdown');
-      if (wInfo.isToday) {
-        countdownEl.textContent = "✅ Today! Withdraw now.";
-        countdownEl.className = "text-xs text-green-400 mt-1";
-        countdownEl.classList.remove('hidden');
-      } else if (wInfo.daysLeft !== null) {
-        const dayName = wInfo.dayName;
-        countdownEl.textContent = `${wInfo.daysLeft} ${wInfo.daysLeft === 1 ? 'day' : 'days'} until ${dayName}`;
-        countdownEl.className = "text-xs text-gray-500 mt-1";
-        countdownEl.classList.remove('hidden');
-      } else {
-        countdownEl.textContent = "Withdraw available after first eligibility";
-        countdownEl.className = "text-xs text-gray-500 mt-1";
-        countdownEl.classList.remove('hidden');
-      }
-
-      const expiryEl = document.getElementById('boosterExpiry');
-      if (user.booster_expires_at) {
-        const diff = new Date(user.booster_expires_at) - Date.now();
-        if (diff > 0) {
-          const h = Math.floor(diff / 3600000);
-          const m = Math.floor((diff % 3600000) / 60000);
-          expiryEl.textContent = `Booster expires in: ${h}h ${m}m`;
-          expiryEl.classList.remove('hidden');
-        } else {
-          expiryEl.classList.add('hidden');
-        }
-      } else {
-        expiryEl.classList.add('hidden');
-      }
-    }
-
-    function startTimer() {
-      if (timer) clearInterval(timer);
-      const next = new Date(user.next_claim_time).getTime();
-      timer = setInterval(() => {
-        const diff = next - Date.now();
-        if (diff <= 0) {
-          document.getElementById('miningCountdown').textContent = "Ready!";
-          if (Notification.permission === "granted") {
-            new Notification("UGX Mine", { body: "Your reward is ready to claim!" });
-          }
-          return clearInterval(timer);
-        }
-        const h = Math.floor(diff/3600000).toString().padStart(2,'0');
-        const m = Math.floor((diff%3600000)/60000).toString().padStart(2,'0');
-        const s = Math.floor((diff%60000)/1000).toString().padStart(2,'0');
-        document.getElementById('miningCountdown').textContent = `${h}:${m}:${s}`;
-      }, 1000);
-
-      if (boosterExpiryTimer) clearInterval(boosterExpiryTimer);
-      if (user && user.booster_expires_at) {
-        boosterExpiryTimer = setInterval(() => {
-          const diff = new Date(user.booster_expires_at) - Date.now();
-          if (diff <= 0) {
-            clearInterval(boosterExpiryTimer);
-            boosterExpiryTimer = null;
-            checkBoosterExpiry();
-          }
-          updateUI();
-        }, 60000);
-      }
-    }
-
-    document.getElementById('miningBtn').onclick = async () => {
-      const btn = document.getElementById('miningBtn');
-      if (btn.classList.contains('loading-btn')) return;
-      await checkBoosterExpiry();
-      if (new Date(user.next_claim_time).getTime() > Date.now()) return alert("Still mining!");
-      btn.classList.add('loading-btn');
-      btn.textContent = "Claiming...";
-      try {
-        const newBal = (user.balance || 0) + (user.mining_reward || 5000);
-        const next = new Date(Date.now() + ((user.mining_cycle_hours || 24) * 3600000)).toISOString();
-        await _supabase.from('users').update({ balance: newBal, next_claim_time: next }).eq('username', user.username);
-        user.balance = newBal; user.next_claim_time = next;
-        updateUI(); startTimer();
-      } finally {
-        btn.classList.remove('loading-btn');
-        btn.textContent = "Claim Reward";
-      }
-    };
-
-    let selectedBoosterHours = null;
-    let selectedBoosterReward = null;
-    let selectedBoosterPriceUGX = null;
-
-    function showBoosterModal(hours, reward, priceUGX) {
-      if ((user.balance || 0) === 0) {
-        alert("You need a balance to buy a booster!");
-        return;
-      }
-      selectedBoosterHours = hours;
-      selectedBoosterReward = reward;
-      selectedBoosterPriceUGX = priceUGX;
-      const priceUSDT = (priceUGX / 3700).toFixed(2);
-      const currentReward = user.mining_reward || 5000;
-      const currentHours = user.mining_cycle_hours || 24;
-      if (reward === getBoosterReward(user.balance, 'eagle')) {
-        document.getElementById('boosterModalTitle').textContent = 'Eagle Miner';
-      } else if (reward === getBoosterReward(user.balance, 'falcon')) {
-        document.getElementById('boosterModalTitle').textContent = 'Falcon Miner';
-      } else {
-        document.getElementById('boosterModalTitle').textContent = 'Phoenix Miner';
-      }
-      document.getElementById('boosterModalCurrent').textContent =
-        `Currently: ${currentReward.toLocaleString()} UGX / ${currentHours}h`;
-      document.getElementById('boosterModalNew').textContent =
-        `After: ${reward.toLocaleString()} UGX / 2h`;
-      document.getElementById('boosterModalPrice').textContent =
-        `${priceUGX.toLocaleString()} UGX (~${priceUSDT} USDT)`;
-      document.getElementById('txIdInput').value = '';
-      document.getElementById('boosterModal').classList.remove('hidden');
-    }
-
-    function copyAdminWallet() {
-      navigator.clipboard.writeText('0xb9fec9b1a49726089f058de4f4225ecbaa88cbbc');
-      alert('Arbitrum wallet copied! Use Arbitrum network only.');
-    }
-
-    function copyRefLink() {
-      navigator.clipboard.writeText(document.getElementById('refLink').value);
-      alert('Referral link copied!');
-    }
-
-    async function submitBoosterRequest() {
-      const btn = document.getElementById('submitBoosterBtn');
-      if (btn.classList.contains('loading-btn')) return;
-      const txId = document.getElementById('txIdInput').value.trim();
-      if (!txId) return alert('Please enter a Transaction ID.');
-      btn.classList.add('loading-btn');
-      btn.textContent = "Submitting...";
-      try {
-        const priceUSDT = (selectedBoosterPriceUGX / 3700).toFixed(2);
-        const { error } = await _supabase.from('booster_requests').insert({
-          username: user.username,
-          booster_hours: selectedBoosterHours,
-          reward: selectedBoosterReward,
-          usdt_amount: parseFloat(priceUSDT),
-          txid: txId,
-          status: 'pending',
-          requested_at: new Date().toISOString(),
-          duration_hours: 24
-        });
-        if (error) {
-          alert('Failed to submit: ' + error.message);
-          return;
-        }
-        document.getElementById('boosterModal').classList.add('hidden');
-        fetchAllTransactions();
-        alert('Request submitted! Please wait for admin approval.');
-      } finally {
-        btn.classList.remove('loading-btn');
-        btn.textContent = "Submit for Approval";
-      }
-    }
-
-    async function checkApprovedBoosters() {
-      const { data } = await _supabase
-        .from('booster_requests')
-        .select('*')
-        .eq('username', user.username)
-        .eq('status', 'approved')
-        .order('requested_at', { ascending: false })
-        .limit(1);
-      if (data && data.length > 0) {
-        const latest = data[0];
-        const now = Date.now();
-        const nextClaimTime = new Date(now + (latest.booster_hours * 3600000)).toISOString();
-        const expiresAt = new Date(now + 24 * 3600000).toISOString();
-
-        await _supabase
-          .from('users')
-          .update({
-            mining_cycle_hours: latest.booster_hours,
-            mining_reward: latest.reward,
-            booster_expires_at: expiresAt,
-            next_claim_time: nextClaimTime
-          })
-          .eq('username', user.username);
-
-        const {  updated } = await _supabase
-          .from('users')
-          .select('*')
-          .eq('username', user.username)
-          .single();
-        user = updated;
-
-        updateUI();
-        startTimer();
-
-        await _supabase
-          .from('booster_requests')
-          .update({ status: 'applied' })
-          .eq('id', latest.id);
-      }
-    }
-
-    document.getElementById('openWithdrawModalBtn').onclick = async () => {
-      if ((user.balance || 0) < 50000) return alert("Min 50,000 UGX required");
-      if (!user.user_wallet) return alert("Set wallet first!");
-      const today = new Date().getDay();
-      if (user.withdraw_day === null || user.withdraw_day === undefined) {
-        await _supabase.from('users').update({ withdraw_day: today }).eq('username', user.username);
-        user.withdraw_day = today;
-        const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-        alert(`✅ Your weekly withdrawal day is set to ${days[today]}.`);
-      }
-      if (user.withdraw_day !== today) {
-        const wInfo = getWithdrawInfo();
-        return alert(`Withdrawals are only allowed on ${wInfo.dayName}. ${wInfo.daysLeft} ${wInfo.daysLeft === 1 ? 'day' : 'days'} left.`);
-      }
-      const total = user.balance || 0;
-      withdrawFeeUSDT = (total * 0.20) / 3700;
-      document.getElementById('withdrawTotal').textContent = total.toLocaleString() + " UGX";
-      document.getElementById('withdrawFee').textContent = withdrawFeeUSDT.toFixed(2) + " USDT";
-      document.getElementById('withdrawFeeDisplay').textContent = withdrawFeeUSDT.toFixed(2) + " USDT";
-      document.getElementById('userWalletDisplay').textContent = user.user_wallet;
-      document.getElementById('withdrawTxId').value = '';
-      document.getElementById('withdrawModal').classList.remove('hidden');
-    };
-
-    async function submitWithdrawRequest() {
-      const btn = document.getElementById('submitWithdrawBtn');
-      if (btn.classList.contains('loading-btn')) return;
-      const txId = document.getElementById('withdrawTxId').value.trim();
-      if (!txId) return alert('Please enter a Transaction ID.');
-      btn.classList.add('loading-btn');
-      btn.textContent = "Submitting...";
-      try {
-        const total = user.balance || 0;
-        const { error } = await _supabase.from('withdraw_requests').insert({
-          username: user.username,
-          balance_ugx: total,
-          fee_usdt: parseFloat(withdrawFeeUSDT.toFixed(2)),
-          wallet_address: user.user_wallet,
-          txid: txId,
-          status: 'pending'
-        });
-        if (error) {
-          alert('Failed to submit: ' + error.message);
-          return;
-        }
-        document.getElementById('withdrawModal').classList.add('hidden');
-        alert('Withdraw request submitted! Admin will review your payment.');
-      } finally {
-        btn.classList.remove('loading-btn');
-        btn.textContent = "Submit Request";
-      }
-    }
-
-    async function checkApprovedWithdrawals() {
-      const { data } = await _supabase
-        .from('withdraw_requests')
-        .select('*')
-        .eq('username', user.username)
-        .eq('status', 'approved')
-        .order('requested_at', { ascending: false })
-        .limit(1);
-      if (data && data.length > 0) {
-        await _supabase
-          .from('users')
-          .update({
-            balance: 0,
-            mining_cycle_hours: 24,
-            mining_reward: 5000,
-            booster_expires_at: null
-          })
-          .eq('username', user.username);
-        user.balance = 0;
-        user.mining_cycle_hours = 24;
-        user.mining_reward = 5000;
-        user.booster_expires_at = null;
-        updateUI();
-        startTimer();
-        await _supabase
-          .from('withdraw_requests')
-          .update({ status: 'processed' })
-          .eq('id', data[0].id);
-        alert("✅ Withdrawal approved! Your balance has been reset.");
-      }
-    }
-
-    async function fetchAllTransactions() {
-      try {
-        const [boosterData, withdrawData] = await Promise.all([
-          _supabase.from('booster_requests').select('*').eq('username', user.username).order('requested_at', { ascending: false }),
-          _supabase.from('withdraw_requests').select('*').eq('username', user.username).order('requested_at', { ascending: false })
-        ]);
-        const boosters = (boosterData.data || []).map(r => ({
-          ...r,
-          type: 'booster',
-          displayType: 'Booster Purchase',
-          amount: `${r.reward} UGX / 2h`,
-          fee: `${r.usdt_amount} USDT`,
-          timestamp: r.requested_at
-        }));
-        const withdrawals = (withdrawData.data || []).map(r => ({
-          ...r,
-          type: 'withdraw',
-          displayType: 'Withdrawal Request',
-          amount: `${r.balance_ugx} UGX`,
-          fee: `${r.fee_usdt} USDT`,
-          timestamp: r.requested_at
-        }));
-        const all = [...boosters, ...withdrawals]
-          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-          .slice(0, 20);
-        renderTransactionHistory(all);
-      } catch (error) {
-        console.error('Failed to load history:', error);
-        document.getElementById('transactionHistoryList').innerHTML = '<p class="text-red-400">Failed to load history.</p>';
-      }
-    }
-
-    function renderTransactionHistory(transactions) {
-      const container = document.getElementById('transactionHistoryList');
-      if (transactions.length === 0) {
-        container.innerHTML = '<p class="text-gray-500">No transactions yet.</p>';
-        return;
-      }
-      const statusColors = {
-        pending: 'text-yellow-400',
-        approved: 'text-green-400',
-        applied: 'text-blue-400',
-        processed: 'text-blue-400',
-        rejected: 'text-red-400'
-      };
-      container.innerHTML = transactions.map(tx => `
-        <div class="p-2 bg-gray-900 rounded border border-gray-700">
-          <div class="flex justify-between">
-            <span class="font-bold">${tx.displayType}</span>
-            <span class="text-xs ${statusColors[tx.status] || 'text-gray-400'}">
-              ${tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
-            </span>
-          </div>
-          <div class="text-gray-300 text-sm mt-1">${tx.amount}</div>
-          <div class="text-gray-400 text-xs">Fee: ${tx.fee}</div>
-          <div class="text-xs text-gray-500 mt-1">
-            ${new Date(tx.timestamp).toLocaleString()}
-          </div>
-        </div>
-      `).join('');
-    }
-
-    const names = ["Mugisha", "Nalweyiso", "Kato", "Nakato", "Ssebunya", "Ampaire", "Tumusiime", "Kyomuhendo", "Namutebi", "Wasswa", "Nakabugo", "Kizza", "Nabwami", "Ssebuufu", "Lukyamuzi"];
-    const wallets = ["0x...", "0x...", "0x...", "0x...", "0x..."];
-
-    function generateFakeActivity() {
-      let withdrawHTML = '';
-      for (let i = 0; i < 3; i++) {
-        const name = names[Math.floor(Math.random() * names.length)];
-        const amount = (Math.floor(Math.random() * 50) + 50) * 1000;
-        const wallet = wallets[Math.floor(Math.random() * wallets.length)] + Math.random().toString(36).substr(2, 8);
-        const timeAgo = Math.floor(Math.random() * 15) + 1;
-        withdrawHTML += `<p class="text-amber-400 text-xs">${name} withdrew ${amount.toLocaleString()} UGX to ${wallet} (${timeAgo}m ago)</p>`;
-      }
-      document.getElementById('fakeWithdraws').innerHTML = withdrawHTML;
-
-      let boosterHTML = '';
-      const boosterTypes = ["Eagle Miner", "Falcon Miner", "Phoenix Miner"];
-      for (let i = 0; i < 3; i++) {
-        const name = names[Math.floor(Math.random() * names.length)];
-        const type = boosterTypes[Math.floor(Math.random() * boosterTypes.length)];
-        const timeAgo = Math.floor(Math.random() * 20) + 1;
-        boosterHTML += `<p class="text-green-400 text-xs">${name} activated ${type} (${timeAgo}m ago)</p>`;
-      }
-      document.getElementById('fakeBoosters').innerHTML = boosterHTML;
-    }
-
-    document.getElementById('editProfileBtn').onclick = () => document.getElementById('walletModal').classList.remove('hidden');
-    document.getElementById('saveWalletBtn').onclick = async () => {
-      const w = document.getElementById('walletInput').value.trim();
-      if (!/^0x[a-zA-Z0-9]{40}$/.test(w)) {
-        alert("Invalid Arbitrum wallet! Must start with '0x' and be 42 characters.");
-        return;
-      }
-      const btn = document.getElementById('saveWalletBtn');
-      btn.classList.add('loading-btn');
-      btn.textContent = "Saving...";
-      try {
-        await _supabase.from('users').update({ user_wallet: w }).eq('username', user.username);
-        user.user_wallet = w;
-        document.getElementById('walletModal').classList.add('hidden');
-      } finally {
-        btn.classList.remove('loading-btn');
-        btn.textContent = "Save";
-      }
-    };
-    document.getElementById('authToggle').onclick = () => location.reload();
-
-    async function loadAdmin() {
-      document.getElementById('authCard').classList.add('hidden');
-      document.getElementById('adminPanel').classList.remove('hidden');
-      const { data } = await _supabase.from('users').select('*');
-      document.getElementById('adminUserList').innerHTML = data.map(u =>
-        `<div class="p-2 bg-gray-800 rounded">
-          ${u.username} - ${u.balance} UGX<br>
-          <span class="text-xs text-gray-400">Wallet: ${u.user_wallet || '—'}, Withdraw Day: ${u.withdraw_day !== null ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][u.withdraw_day] : '—'}, Referrals: ${u.referral_count || 0}/2</span>
-        </div>`
-      ).join('');
-    }
-
-    if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-      Notification.requestPermission();
-    }
-
-    // 📱 iOS-SAFE INIT (delayed + outside container)
-    function initApp() {
-      if (window.location.hash === '#admin999') {
-        loadAdmin();
-        return;
-      }
-      setTimeout(() => {
-        const authCard = document.getElementById('authCard');
-        if (authCard) {
-          authCard.classList.remove('hidden');
-        }
-      }, 200);
-    }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initApp);
-    } else {
-      initApp();
-    }
-  </script>
+// ========================
+// PROFILE & NAV
+// ========================
+document.getElementById('editProfileInfoBtn').onclick = () => {
+if (!user) return;
+document.getElementById('editUsername').value = user.username || '';
+document.getElementById('editEmail').value = user.user_email || '';
+document.getElementById('editWallet').value = user.user_wallet || '';
+document.getElementById('editProfileModal').classList.remove('hidden');
+};
+document.getElementById('saveProfileBtn').onclick = async () => {
+const email = document.getElementById('editEmail').value.trim();
+const wallet = document.getElementById('editWallet').value.trim();
+if (!email || !wallet) return alert("Email and wallet are required.");
+if (!/^0x[a-zA-Z0-9]{40}$/.test(wallet)) return alert("Invalid Arbitrum wallet address.");
+await _supabase.from('users').update({ user_email: email, user_wallet: wallet }).eq('username', user.username);
+user.user_email = email;
+user.user_wallet = wallet;
+document.getElementById('profileUserEmail').textContent = email;
+document.getElementById('profileUserEmail2').textContent = email;
+alert("Profile updated!");
+document.getElementById('editProfileModal').classList.add('hidden');
+};
+document.getElementById('avatarInput').onchange = (e) => {
+const file = e.target.files[0];
+if (file && file.type.startsWith('image/')) {
+const reader = new FileReader();
+reader.onload = (event) => {
+document.getElementById('profileAvatar').src = event.target.result;
+};
+reader.readAsDataURL(file);
+}
+};
+document.getElementById('tabSignup').onclick = () => {
+document.getElementById('signupForm').classList.remove('hidden');
+document.getElementById('loginForm').classList.add('hidden');
+document.getElementById('tabSignup').classList.add('active');
+document.getElementById('tabLogin').classList.remove('active');
+};
+document.getElementById('tabLogin').onclick = () => {
+document.getElementById('loginForm').classList.remove('hidden');
+document.getElementById('signupForm').classList.add('hidden');
+document.getElementById('tabLogin').classList.add('active');
+document.getElementById('tabSignup').classList.remove('active');
+};
+document.getElementById('signupForm').onsubmit = async (e) => {
+e.preventDefault();
+const u = document.getElementById('signupUsername').value;
+const em = document.getElementById('signupEmail').value;
+const p = document.getElementById('signupPassword').value;
+const { error } = await _supabase.from('users').insert([{
+username: u, password: p, user_email: em, balance: 0, mining_reward: 5000,
+mining_cycle_hours: 24, next_claim_time: new Date().toISOString(),
+user_id: 'UGX' + Math.floor(Math.random()*1000000), user_wallet: null,
+withdraw_day: null, booster_expires_at: null, booster_type: null, referral_count: 0, claimed_total: 0
+}]);
+if (error) alert(error.message); else alert("Signup Success! Please Login.");
+};
+document.getElementById('loginForm').onsubmit = async (e) => {
+e.preventDefault();
+const u = document.getElementById('loginUsername').value;
+const p = document.getElementById('loginPassword').value;
+const { data } = await _supabase.from('users').select('*').eq('username', u).eq('password', p).maybeSingle();
+if (!data) return alert("Wrong credentials");
+user = data;
+localStorage.setItem('ugxmine_session', JSON.stringify({ username: u, password: p }));
+document.getElementById('authCard').classList.add('hidden');
+document.getElementById('mainApp').classList.remove('hidden');
+loadDashboard();
+};
+function logout() {
+user = null;
+localStorage.removeItem('ugxmine_session');
+document.getElementById('mainApp').classList.add('hidden');
+document.getElementById('authCard').classList.remove('hidden');
+}
+document.getElementById('authToggle').onclick = logout;
+document.getElementById('logoutBtn').onclick = logout;
+function switchTab(tabName) {
+document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+document.getElementById(`tab-${tabName}`).classList.add('active');
+document.querySelectorAll('#bottomNav button').forEach(btn => btn.classList.remove('active'));
+const activeBtn = Array.from(document.querySelectorAll('#bottomNav button')).find(btn =>
+btn.getAttribute('onclick')?.includes(`switchTab('${tabName}')`)
+);
+if (activeBtn) activeBtn.classList.add('active');
+}
+async function loadDashboard() {
+['UserName', 'UserEmail', 'UserId'].forEach(key => {
+const el1 = document.getElementById(`profile${key}`);
+const el2 = document.getElementById(`profile${key}2`);
+const val = user[key === 'UserName' ? 'username' : key === 'UserEmail' ? 'user_email' : 'user_id'];
+if (el1) el1.textContent = val;
+if (el2) el2.textContent = val;
+});
+document.getElementById('profileUserId').textContent = "ID: " + user.user_id;
+document.getElementById('profileUserId2').textContent = "ID: " + user.user_id;
+const refLink = `${window.location.origin}${window.location.pathname}?ref=${user.username}`;
+document.getElementById('refLink').value = refLink;
+updateHomeDashboard();
+startTimer();
+switchTab('home');
+}
+async function restoreSession() {
+const saved = localStorage.getItem('ugxmine_session');
+if (!saved) return false;
+try {
+const { username, password } = JSON.parse(saved);
+const { data } = await _supabase.from('users').select('*').eq('username', username).eq('password', password).maybeSingle();
+if (data) { user = data; return true; }
+} catch (e) {}
+localStorage.removeItem('ugxmine_session');
+return false;
+}
+// INIT
+(async () => {
+const hasSession = await restoreSession();
+if (hasSession && user) {
+document.getElementById('authCard').classList.add('hidden');
+document.getElementById('mainApp').classList.remove('hidden');
+loadDashboard();
+}
+})();
+</script>
 </body>
 </html>
