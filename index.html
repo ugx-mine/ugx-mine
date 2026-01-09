@@ -269,7 +269,7 @@ border-right: 15px solid transparent; border-top: 25px solid #ffffff; z-index: 1
 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.1); }
 }
 
-/* ✅ NEW: CENTERING STYLES */
+/* ✅ CENTERING STYLES */
 .wheel-game-container {
   display: flex;
   flex-direction: column;
@@ -279,7 +279,7 @@ border-right: 15px solid transparent; border-top: 25px solid #ffffff; z-index: 1
 }
 .stake-panel-centered {
   width: 100%;
-  max-width: 24rem; /* ~xs size */
+  max-width: 24rem;
 }
 </style>
 </head>
@@ -742,7 +742,7 @@ LOCK INVESTMENT
       </button>
     </div>
     <div id="receiptContent" class="text-sm space-y-2 mb-4">
-      <!-- Filled by JS -->
+      Loading...
     </div>
     <div class="flex gap-2">
       <button onclick="printReceipt()" class="flex-1 bg-emerald-600 py-2 rounded text-white text-sm font-medium">Print</button>
@@ -916,56 +916,73 @@ document.getElementById('adminWalletDisplay').textContent = ADMIN_WALLET;
 document.getElementById('paymentTxId').value = '';
 document.getElementById('paymentModal').classList.remove('hidden');
 }
+
+// ✅ UPDATED submitPayment WITH REAL RECEIPT
 async function submitPayment() {
-const txId = document.getElementById('paymentTxId').value.trim();
-if (!txId) return alert('Please enter Transaction ID.');
-const actionMap = {
-deposit: 'deposit_requests',
-invest: 'investment_requests',
-withdraw: 'withdraw_requests'
-};
-const table = actionMap[currentPaymentType];
-if (!table) return;
+  const txId = document.getElementById('paymentTxId').value.trim();
+  if (!txId) return alert('Please enter Transaction ID.');
+  
+  const receiptId = 'RCP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
 
-const receiptId = 'RCP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+  const actionMap = {
+    deposit: 'deposit_requests',
+    invest: 'investment_requests',
+    withdraw: 'withdraw_requests'
+  };
+  const table = actionMap[currentPaymentType];
+  if (!table) return;
 
-const data = {
-username: user.username,
-txid: txId,
-status: 'pending',
-requested_at: new Date().toISOString(),
-receipt_id: receiptId
-};
+  const data = {
+    username: user.username,
+    txid: txId,
+    status: 'pending',
+    requested_at: new Date().toISOString(),
+    receipt_id: receiptId
+  };
 
-if (currentPaymentType === 'deposit') {
-data.ugx_amount = currentPaymentAmountUGX;
-data.usdt_amount = parseFloat(currentPaymentUSDT);
-}
-else if (currentPaymentType === 'invest') {
-const days = parseInt(document.getElementById('durationSlider').value);
-const multiplier = getMultiplier(days);
-data.ugx_amount = currentPaymentAmountUGX;
-data.ugx_return = currentPaymentAmountUGX * multiplier;
-data.usdt_paid = parseFloat(currentPaymentUSDT);
-data.days = days;
-data.multiplier = multiplier;
-data.maturity_time = new Date(Date.now() + days * 24 * 3600000).toISOString();
-}
-else if (currentPaymentType === 'withdraw') {
-data.ugx_amount = user.balance || 0;
-data.ugx_fee = currentPaymentAmountUGX;
-data.usdt_fee = parseFloat(currentPaymentUSDT);
+  if (currentPaymentType === 'deposit') {
+    data.ugx_amount = currentPaymentAmountUGX;
+    data.usdt_amount = parseFloat(currentPaymentUSDT);
+  }
+  else if (currentPaymentType === 'invest') {
+    const days = parseInt(document.getElementById('durationSlider').value);
+    const multiplier = getMultiplier(days);
+    data.ugx_amount = currentPaymentAmountUGX;
+    data.ugx_return = currentPaymentAmountUGX * multiplier;
+    data.usdt_paid = parseFloat(currentPaymentUSDT);
+    data.days = days;
+    data.multiplier = multiplier;
+    data.maturity_time = new Date(Date.now() + days * 24 * 3600000).toISOString();
+  }
+  else if (currentPaymentType === 'withdraw') {
+    data.ugx_amount = user.balance || 0;
+    data.ugx_fee = currentPaymentAmountUGX;
+    data.usdt_fee = parseFloat(currentPaymentUSDT);
+  }
+
+  // Insert into request table
+  await _supabase.from(table).insert(data);
+
+  // 👇 INSERT PENDING RECEIPT
+  await _supabase.from('receipts').insert({
+    receipt_id: receiptId,
+    username: user.username,
+    type: currentPaymentType,
+    amount_ugx: data.ugx_amount || null,
+    amount_usdt: data.usdt_amount || data.usdt_paid || data.usdt_fee || null,
+    status: 'pending',
+    reason: 'Awaiting admin verification',
+    txid: txId
+  });
+
+  document.getElementById('paymentModal').classList.add('hidden');
+  if (currentPaymentType === 'withdraw') {
+    alert('Withdrawal request submitted!\nSend the 20% fee and wait for admin approval.');
+  } else {
+    alert(`Request submitted! Wait for admin approval.`);
+  }
 }
 
-await _supabase.from(table).insert(data);
-document.getElementById('paymentModal').classList.add('hidden');
-
-if (currentPaymentType === 'withdraw') {
-alert('Withdrawal request submitted!\nSend the 20% fee and wait for admin approval.');
-} else {
-alert(`Request submitted! Wait for admin approval.`);
-}
-}
 // ========================
 // ORIGINAL openDepositModal REMOVED – REPLACED BY showDepositInput()
 // ========================
@@ -1022,32 +1039,48 @@ document.getElementById('adminWalletBooster').textContent = ADMIN_WALLET;
 document.getElementById('txIdInput').value = '';
 document.getElementById('boosterModal').classList.remove('hidden');
 }
+
+// ✅ UPDATED submitBoosterRequest WITH REAL RECEIPT
 async function submitBoosterRequest() {
-const txId = document.getElementById('txIdInput').value.trim();
-if (!txId) return alert('Please enter TRX ID');
-const balance = user.balance || 0;
-const multiplier = selectedBoosterType === 'eagle' ? 2 : selectedBoosterType === 'falcon' ? 4 : 8;
-const priceUGX = balance * multiplier;
-const priceUSDT = (priceUGX / UGX_PER_USDT).toFixed(4);
-const boosterName =
-selectedBoosterType === 'eagle' ? 'Eager_Miner' :
-selectedBoosterType === 'falcon' ? 'Falcon_Miner' : 'Phoenix_Miner';
+  const txId = document.getElementById('txIdInput').value.trim();
+  if (!txId) return alert('Please enter TRX ID');
+  const balance = user.balance || 0;
+  const multiplier = selectedBoosterType === 'eagle' ? 2 : selectedBoosterType === 'falcon' ? 4 : 8;
+  const priceUGX = balance * multiplier;
+  const priceUSDT = (priceUGX / UGX_PER_USDT).toFixed(4);
+  const boosterName =
+    selectedBoosterType === 'eagle' ? 'Eager_Miner' :
+    selectedBoosterType === 'falcon' ? 'Falcon_Miner' : 'Phoenix_Miner';
 
-const receiptId = 'RCP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+  const receiptId = 'RCP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
 
-await _supabase.from('booster_requests').insert({
-username: user.username,
-booster_type: boosterName,
-usdt_amount: parseFloat(priceUSDT),
-txid: txId,
-status: 'pending',
-requested_at: new Date().toISOString(),
-receipt_id: receiptId
-});
+  // Insert booster request
+  await _supabase.from('booster_requests').insert({
+    username: user.username,
+    booster_type: boosterName,
+    usdt_amount: parseFloat(priceUSDT),
+    txid: txId,
+    status: 'pending',
+    requested_at: new Date().toISOString(),
+    receipt_id: receiptId
+  });
 
-document.getElementById('boosterModal').classList.add('hidden');
-alert('Booster request submitted! Wait for admin approval.');
+  // 👇 INSERT PENDING RECEIPT
+  await _supabase.from('receipts').insert({
+    receipt_id: receiptId,
+    username: user.username,
+    type: 'booster',
+    amount_ugx: priceUGX,
+    amount_usdt: parseFloat(priceUSDT),
+    status: 'pending',
+    reason: 'Awaiting admin verification',
+    txid: txId
+  });
+
+  document.getElementById('boosterModal').classList.add('hidden');
+  alert('Booster request submitted! Wait for admin approval.');
 }
+
 // ========================
 // CLAIM BUTTON LOGIC
 // ========================
@@ -1491,6 +1524,7 @@ if (tabName === 'home') {
   loadTransactionHistory();
 }
 }
+
 // ========================
 // ✅ TRANSACTION HISTORY SYNC
 // ========================
@@ -1558,50 +1592,50 @@ async function loadTransactionHistory() {
   });
 }
 
-// ✅ NEW: RECEIPT MODAL HANDLER
-function viewReceipt(receiptId) {
-  // In real app, fetch from receipts table. For now, simulate.
-  const mockData = {
-    type: 'Investment',
-    amount: '250,000 UGX',
-    status: 'approved',
-    date: new Date().toLocaleString(),
-    txid: '0xabc123def456...',
-    reason: 'Payment confirmed on Arbitrum.'
-  };
+// ✅ REAL RECEIPT FETCH FROM SUPABASE
+async function viewReceipt(receiptId) {
+  try {
+    const { data, error } = await _supabase
+      .from('receipts')
+      .select('*')
+      .eq('receipt_id', receiptId)
+      .single();
 
-  let statusColor = mockData.status === 'approved' ? 'text-emerald-600' :
-                    mockData.status === 'rejected' ? 'text-red-600' : 'text-amber-600';
+    if (error || !data) {
+      document.getElementById('receiptContent').innerHTML = '<p class="text-red-500">Receipt not found.</p>';
+      document.getElementById('receiptModal').classList.remove('hidden');
+      return;
+    }
 
-  document.getElementById('receiptContent').innerHTML = `
-    <div><strong>Receipt ID:</strong> ${receiptId}</div>
-    <div><strong>Type:</strong> ${mockData.type}</div>
-    <div><strong>Amount:</strong> ${mockData.amount}</div>
-    <div><strong>Status:</strong> <span class="${statusColor}">${mockData.status}</span></div>
-    <div><strong>Date:</strong> ${mockData.date}</div>
-    <div><strong>TX ID:</strong> ${mockData.txid}</div>
-    <div><strong>Reason:</strong> ${mockData.reason}</div>
-  `;
-  document.getElementById('receiptModal').classList.remove('hidden');
+    let amountDisplay = '—';
+    if (data.amount_ugx != null) {
+      amountDisplay = `${Number(data.amount_ugx).toLocaleString()} UGX`;
+    } else if (data.amount_usdt != null) {
+      amountDisplay = `${data.amount_usdt} USDT`;
+    }
+
+    const statusColor = 
+      data.status === 'approved' ? 'text-emerald-600' :
+      data.status === 'rejected' ? 'text-red-600' : 'text-amber-600';
+
+    document.getElementById('receiptContent').innerHTML = `
+      <div><strong>Receipt ID:</strong> ${data.receipt_id}</div>
+      <div><strong>Type:</strong> ${data.type.charAt(0).toUpperCase() + data.type.slice(1)}</div>
+      <div><strong>Amount:</strong> ${amountDisplay}</div>
+      <div><strong>Status:</strong> <span class="${statusColor}">${data.status}</span></div>
+      <div><strong>Date:</strong> ${new Date(data.created_at).toLocaleString()}</div>
+      ${data.txid ? `<div><strong>TX ID:</strong> <code class="text-xs">${data.txid}</code></div>` : ''}
+      <div><strong>Reason:</strong> ${data.reason || '—'}</div>
+    `;
+    document.getElementById('receiptModal').classList.remove('hidden');
+  } catch (err) {
+    console.error(err);
+    alert('Failed to load receipt.');
+  }
 }
 
 function printReceipt() {
-  const printContent = document.getElementById('receiptContent').innerHTML;
-  const originalBody = document.body.innerHTML;
-  
-  document.body.innerHTML = `
-    <div style="padding: 20px; max-width: 500px; margin: auto; font-family: Arial, sans-serif;">
-      <h2 style="text-align:center; color:#10b981; margin-bottom:20px;">UGX Mine - Receipt</h2>
-      ${printContent.replace(/class="[^"]*"/g, '')}
-      <div style="margin-top:30px; text-align:center; font-size:12px; color:#666;">
-        Thank you for using UGX Mine!
-      </div>
-    </div>
-  `;
-  
   window.print();
-  document.body.innerHTML = originalBody;
-  location.reload(); // restore full app after print
 }
 
 async function loadDashboard() {
