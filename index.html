@@ -268,6 +268,19 @@ border-right: 15px solid transparent; border-top: 25px solid #ffffff; z-index: 1
 80%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.1); }
 }
+
+/* ✅ NEW: CENTERING STYLES */
+.wheel-game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 1.25rem;
+}
+.stake-panel-centered {
+  width: 100%;
+  max-width: 24rem; /* ~xs size */
+}
 </style>
 </head>
 <body>
@@ -529,34 +542,36 @@ LOCK INVESTMENT
 <!-- 🎰 WHEEL GAME -->
 <div class="mining-card p-3 bg-gray-50 relative">
 <canvas id="rain-canvas" style="position: absolute; top: 0; left: 0; pointer-events: none; z-index: 100; width: 100%; height: 100%;"></canvas>
-<div style="position: relative; z-index: 101; display: flex; flex-direction: column; align-items-center;">
-<div class="wheel-wrapper">
-<div class="pointer"></div>
-<canvas id="wheel" width="304" height="304"></canvas>
-<!-- Popup will be inserted here dynamically -->
-</div>
-<!-- ✅ CLEAN STAKE PANEL -->
-<div class="mining-card bg-white w-full max-w-xs mt-4 p-3">
-<h4 class="font-bold text-gray-800 text-center mb-2">Place Your Stake</h4>
-<div class="flex items-center justify-between mb-2">
-<span class="text-xs text-gray-600">Available:</span>
-<span id="availableBalanceStake" class="text-sm font-bold text-amber-700">0 UGX</span>
-</div>
-<div class="relative mb-2">
-<input
-type="number"
-id="stakeInput"
-placeholder="Min: 2,000 UGX"
-class="w-full bg-gray-50 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
-min="2000"
->
-<span class="absolute right-2 top-2 text-xs text-gray-500">UGX</span>
-</div>
-<div id="stakeUSDT" class="text-xs text-gray-600 text-center mb-3">~0.00 USDT</div>
-<button id="spinBtn" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 py-2 rounded font-bold text-white shadow">
-SPIN WHEEL
-</button>
-</div>
+<div style="position: relative; z-index: 101; width: 100%;">
+  <div class="wheel-game-container">
+    <div class="wheel-wrapper">
+      <div class="pointer"></div>
+      <canvas id="wheel" width="304" height="304"></canvas>
+    </div>
+
+    <!-- ✅ CENTERED STAKE PANEL -->
+    <div class="mining-card bg-white stake-panel-centered p-3">
+      <h4 class="font-bold text-gray-800 text-center mb-2">Place Your Stake</h4>
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs text-gray-600">Available:</span>
+        <span id="availableBalanceStake" class="text-sm font-bold text-amber-700">0 UGX</span>
+      </div>
+      <div class="relative mb-2">
+        <input
+          type="number"
+          id="stakeInput"
+          placeholder="Min: 2,000 UGX"
+          class="w-full bg-gray-50 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          min="2000"
+        >
+        <span class="absolute right-2 top-2 text-xs text-gray-500">UGX</span>
+      </div>
+      <div id="stakeUSDT" class="text-xs text-gray-600 text-center mb-3">~0.00 USDT</div>
+      <button id="spinBtn" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 py-2 rounded font-bold text-white shadow">
+        SPIN WHEEL
+      </button>
+    </div>
+  </div>
 </div>
 </div>
 <!-- 📜 GAME HISTORY -->
@@ -716,6 +731,26 @@ SPIN WHEEL
 </div>
 </div>
 </div>
+
+<!-- ✅ RECEIPT MODAL -->
+<div id="receiptModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
+  <div class="bg-white p-6 rounded-xl w-96 max-w-[95vw] shadow-xl">
+    <div class="flex justify-between items-start mb-4">
+      <h3 class="text-lg font-bold text-gray-900">Transaction Receipt</h3>
+      <button onclick="document.getElementById('receiptModal').classList.add('hidden')" class="text-gray-500 hover:text-gray-700">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div id="receiptContent" class="text-sm space-y-2 mb-4">
+      <!-- Filled by JS -->
+    </div>
+    <div class="flex gap-2">
+      <button onclick="printReceipt()" class="flex-1 bg-emerald-600 py-2 rounded text-white text-sm font-medium">Print</button>
+      <button onclick="document.getElementById('receiptModal').classList.add('hidden')" class="flex-1 bg-gray-300 py-2 rounded text-sm">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- SCRIPTS -->
 <script>
 // 🔥 SUPABASE
@@ -1523,8 +1558,50 @@ async function loadTransactionHistory() {
   });
 }
 
+// ✅ NEW: RECEIPT MODAL HANDLER
 function viewReceipt(receiptId) {
-  alert(`Receipt ID: ${receiptId}\n\nIn a real app, this would open a modal showing admin notes, TX proof, and reason for approval/rejection.`);
+  // In real app, fetch from receipts table. For now, simulate.
+  const mockData = {
+    type: 'Investment',
+    amount: '250,000 UGX',
+    status: 'approved',
+    date: new Date().toLocaleString(),
+    txid: '0xabc123def456...',
+    reason: 'Payment confirmed on Arbitrum.'
+  };
+
+  let statusColor = mockData.status === 'approved' ? 'text-emerald-600' :
+                    mockData.status === 'rejected' ? 'text-red-600' : 'text-amber-600';
+
+  document.getElementById('receiptContent').innerHTML = `
+    <div><strong>Receipt ID:</strong> ${receiptId}</div>
+    <div><strong>Type:</strong> ${mockData.type}</div>
+    <div><strong>Amount:</strong> ${mockData.amount}</div>
+    <div><strong>Status:</strong> <span class="${statusColor}">${mockData.status}</span></div>
+    <div><strong>Date:</strong> ${mockData.date}</div>
+    <div><strong>TX ID:</strong> ${mockData.txid}</div>
+    <div><strong>Reason:</strong> ${mockData.reason}</div>
+  `;
+  document.getElementById('receiptModal').classList.remove('hidden');
+}
+
+function printReceipt() {
+  const printContent = document.getElementById('receiptContent').innerHTML;
+  const originalBody = document.body.innerHTML;
+  
+  document.body.innerHTML = `
+    <div style="padding: 20px; max-width: 500px; margin: auto; font-family: Arial, sans-serif;">
+      <h2 style="text-align:center; color:#10b981; margin-bottom:20px;">UGX Mine - Receipt</h2>
+      ${printContent.replace(/class="[^"]*"/g, '')}
+      <div style="margin-top:30px; text-align:center; font-size:12px; color:#666;">
+        Thank you for using UGX Mine!
+      </div>
+    </div>
+  `;
+  
+  window.print();
+  document.body.innerHTML = originalBody;
+  location.reload(); // restore full app after print
 }
 
 async function loadDashboard() {
