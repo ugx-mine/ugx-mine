@@ -595,6 +595,43 @@ SPIN WHEEL
 <p id="profileUserId2" class="text-gray-500 text-xs">ID: ---</p>
 <button id="editProfileInfoBtn" class="mt-3 border border-emerald-500 text-emerald-500 px-3 py-1 rounded text-xs font-medium">Edit Profile</button>
 </div>
+
+<!-- ✅ TRANSFER FUNDS CARD -->
+<div class="mining-card mt-4">
+  <h3 class="font-bold text-gray-900 mb-2">Transfer Funds</h3>
+  <p class="text-xs text-gray-600 mb-3">Send UGX to another user using their User ID</p>
+  <div class="space-y-3">
+    <div>
+      <label class="block text-xs text-gray-600 mb-1">Recipient User ID</label>
+      <input
+        type="text"
+        id="transferRecipientId"
+        placeholder="e.g. UGX123456"
+        class="w-full bg-gray-50 border border-gray-300 rounded px-3 py-2 text-sm"
+      />
+    </div>
+    <div>
+      <label class="block text-xs text-gray-600 mb-1">Amount (UGX)</label>
+      <input
+        type="number"
+        id="transferAmount"
+        placeholder="Min: 1,000 UGX"
+        min="1000"
+        class="w-full bg-gray-50 border border-gray-300 rounded px-3 py-2 text-sm"
+      />
+      <p id="transferAmountUSDT" class="text-xs text-gray-500 mt-1">~0.00 USDT</p>
+      <p id="transferLimitNotice" class="text-xs text-gray-500 mt-1">Daily limit: 10,000,000 UGX</p>
+    </div>
+    <button
+      id="sendTransferBtn"
+      onclick="sendTransfer()"
+      class="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 py-2 rounded text-white font-bold shadow"
+    >
+      Send Funds
+    </button>
+  </div>
+</div>
+
 <div class="mining-card mt-4">
 <h3 class="font-bold text-gray-900 mb-2">Transaction History</h3>
 <div id="transactionHistoryList" class="text-xs space-y-1 max-h-32 overflow-y-auto">
@@ -749,6 +786,8 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let user = null;
 let timer;
 const UGX_PER_USDT = 3700;
+const DAILY_TRANSFER_LIMIT = 10000000; // 10 million UGX
+
 // ==== FOMO DATA GENERATOR ====
 const ugNames = ["Mugisha", "Nalweyiso", "Kato", "Namutebi", "Ssebunya", "Kyomuhendo", "Nabwire", "Okello", "Tumwine", "Ahebwe"];
 const boosterTypes = ["Eager_Miner", "Falcon_Miner", "Phoenix_Miner"];
@@ -800,6 +839,7 @@ if (container.children.length > 5) container.removeChild(container.lastChild);
 const interval = setInterval(feed, 8000 + Math.random() * 4000);
 fomoIntervals.push({ id: containerId, interval });
 }
+
 // ========================
 // LIVE USDT UPDATE FOR DEPOSIT INPUT
 // ========================
@@ -808,6 +848,7 @@ const amount = parseFloat(document.getElementById('depositAmountInput').value) |
 const usdt = (amount / UGX_PER_USDT).toFixed(4);
 document.getElementById('depositAmountUSDT').textContent = `~${usdt} USDT`;
 });
+
 // ========================
 // SHOW DEPOSIT INPUT MODAL
 // ========================
@@ -816,6 +857,7 @@ document.getElementById('depositInputModal').classList.remove('hidden');
 document.getElementById('depositAmountInput').value = '';
 document.getElementById('depositAmountUSDT').textContent = '~0.00 USDT';
 }
+
 // ========================
 // CONFIRM DEPOSIT AMOUNT & OPEN PAYMENT MODAL
 // ========================
@@ -829,6 +871,7 @@ return;
 document.getElementById('depositInputModal').classList.add('hidden');
 openPaymentModal('deposit', amount, 'Deposit Funds');
 }
+
 // ========================
 // INVESTMENT LOGIC (10X at 100 days)
 // ========================
@@ -869,6 +912,7 @@ btn.disabled = (amount <= 0);
 }
 document.getElementById('customInvestAmount').addEventListener('input', updateInvestPreview);
 document.getElementById('durationSlider').addEventListener('input', updateInvestPreview);
+
 // ========================
 // UNIFIED PAYMENT SYSTEM
 // ========================
@@ -944,9 +988,11 @@ alert('Withdrawal request submitted!\nSend the 20% fee and wait for admin approv
 alert(`Request submitted! Wait for admin approval.`);
 }
 }
+
 // ========================
 // ORIGINAL openDepositModal REMOVED – REPLACED BY showDepositInput()
 // ========================
+
 function openInvestModal() {
 const amount = parseFloat(document.getElementById('customInvestAmount').value);
 const minAmount = (user?.balance || 0) * 2;
@@ -960,6 +1006,7 @@ const balance = user.balance || 0;
 const fee = balance * 0.2;
 openPaymentModal('withdraw', fee, 'Withdraw Fee');
 }
+
 // ========================
 // BOOSTER SYSTEM (UNCHANGED)
 // ========================
@@ -1025,6 +1072,7 @@ document.getElementById('boosterModal').classList.add('hidden');
 maybeRefreshHistory();
 alert('Booster request submitted! Wait for admin approval.');
 }
+
 // ========================
 // CLAIM BUTTON LOGIC
 // ========================
@@ -1084,6 +1132,7 @@ user.next_claim_time = next;
 updateHomeDashboard();
 startTimer();
 };
+
 // ========================
 // 💰 UNIFIED BALANCE SYSTEM
 // ========================
@@ -1115,6 +1164,7 @@ document.getElementById('miningStatus').innerHTML = statusText;
 updateBoosterPrices();
 updateInvestPreview();
 }
+
 // ========================
 // 🎡 WHEEL GAME LOGIC — FULLY UPDATED
 // ========================
@@ -1122,14 +1172,14 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let isSpinning = false;
 // ✅ UPDATED SECTORS: 5 losses, max 10x, evenly spaced
 const sectors = [
-  "0x", "1.2x",
-  "0x", "1.5x",
-  "0x", "2x",
-  "0x", "5x",
-  "0x", "10x",
-  "1.2x", "1.2x",
-  "1.2x", "1.5x",
-  "2x", "5x"
+"0x", "1.2x",
+"0x", "1.5x",
+"0x", "2x",
+"0x", "5x",
+"0x", "10x",
+"1.2x", "1.2x",
+"1.2x", "1.5x",
+"2x", "5x"
 ];
 const canvas = document.getElementById('wheel');
 const ctx = canvas.getContext('2d');
@@ -1334,6 +1384,7 @@ rainCanvas.height = container.clientHeight;
 }
 window.addEventListener('resize', resizeRainCanvas);
 resizeRainCanvas();
+
 // ========================
 // PROFILE & NAV
 // ========================
@@ -1412,6 +1463,7 @@ document.getElementById('authCard').classList.remove('hidden');
 }
 document.getElementById('authToggle').onclick = logout;
 document.getElementById('logoutBtn').onclick = logout;
+
 // ✅ HELPER: Refresh history if on Me tab
 function maybeRefreshHistory() {
 const meTab = document.getElementById('tab-profile');
@@ -1419,172 +1471,342 @@ if (meTab.classList.contains('active')) {
 loadTransactionHistory();
 }
 }
-function switchTab(tabName) {
-// Clear previous FOMO intervals to avoid memory leak
-fomoIntervals.forEach(f => clearInterval(f.interval));
-fomoIntervals = [];
-document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-document.getElementById(`tab-${tabName}`).classList.add('active');
-document.querySelectorAll('#bottomNav button').forEach(btn => btn.classList.remove('active'));
-const activeBtn = Array.from(document.querySelectorAll('#bottomNav button')).find(btn =>
-btn.getAttribute('onclick')?.includes(`switchTab('${tabName}')`)
-);
-if (activeBtn) activeBtn.classList.add('active');
-// Start FOMO feeds per tab
-if (tabName === 'home') {
-startFomoFeed('fomoBoosterFeed', 'booster');
-// Alternate deposit/withdraw every 10 sec in same feed
-let txType = 'deposit';
-setInterval(() => {
-const container = document.getElementById('fomoTxFeed');
-if (!container) return;
-const name = generateFakeName();
-const item = document.createElement('div');
-item.className = 'text-xs py-1 border-b border-gray-100 dark:border-gray-700 flex justify-between';
-if (txType === 'deposit') {
-const amt = (Math.random() * 300000 + 10000).toFixed(0);
-item.innerHTML = `<span><strong>${name}</strong> deposited</span> <span class="text-emerald-600">+${amt} UGX</span>`;
-} else {
-const amt = (Math.random() * 200000 + 50000).toFixed(0);
-item.innerHTML = `<span><strong>${name}</strong> withdrew</span> <span class="text-red-600">-${amt} UGX</span>`;
-}
-container.prepend(item);
-if (container.children.length > 5) container.removeChild(container.lastChild);
-txType = txType === 'deposit' ? 'withdraw' : 'deposit';
-}, 10000);
-} else if (tabName === 'investments') {
-startFomoFeed('fomoInvestFeed', 'invest');
-} else if (tabName === 'casino') {
-startFomoFeed('fomoCasinoFeed', 'win');
-// Occasionally inject withdrawal
-setInterval(() => {
-const container = document.getElementById('fomoCasinoFeed');
-if (container && Math.random() > 0.7) {
-const name = generateFakeName();
-const amt = (Math.random() * 150000 + 30000).toFixed(0);
-const item = document.createElement('div');
-item.className = 'text-xs py-1 border-b border-gray-100 dark:border-gray-700 flex justify-between';
-item.innerHTML = `<span><strong>${name}</strong> cashed out</span> <span class="text-red-600">-${amt} UGX</span>`;
-container.prepend(item);
-if (container.children.length > 5) container.removeChild(container.lastChild);
-}
-}, 12000);
-} else if (tabName === 'profile') {
-loadTransactionHistory();
-}
-}
+
 // ========================
-// ✅ TRANSACTION HISTORY SYNC — FULLY FIXED
+// ✅ TRANSFER FUNDS SYSTEM
+// ========================
+document.getElementById('transferAmount').addEventListener('input', () => {
+const amount = parseFloat(document.getElementById('transferAmount').value) || 0;
+const usdt = (amount / UGX_PER_USDT).toFixed(4);
+document.getElementById('transferAmountUSDT').textContent = `~${usdt} USDT`;
+});
+
+async function sendTransfer() {
+if (!user) return alert("Not logged in.");
+
+const recipientId = document.getElementById('transferRecipientId').value.trim();
+const amountInput = document.getElementById('transferAmount');
+const amount = parseFloat(amountInput.value);
+
+if (!recipientId) return alert("Enter recipient's User ID.");
+if (isNaN(amount) || amount < 1000) return alert("Minimum transfer is 1,000 UGX.");
+if (amount > (user.balance || 0)) return alert("Insufficient balance.");
+if (recipientId === user.user_id) return alert("You cannot send funds to yourself.");
+
+// ✅ CHECK DAILY LIMIT
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+const todayStr = today.toISOString().split('T')[0];
+
+const { data: dailyTransfers, error: fetchError } = await _supabase
+  .from('transfer_requests')
+  .select('ugx_amount')
+  .eq('sender_username', user.username)
+  .gte('requested_at', today.toISOString());
+
+if (fetchError) {
+  console.error("Error checking daily limit:", fetchError);
+  return alert("Unable to verify daily limit. Try again later.");
+}
+
+const totalToday = dailyTransfers.reduce((sum, tx) => sum + (tx.ugx_amount || 0), 0);
+if (totalToday + amount > DAILY_TRANSFER_LIMIT) {
+  const remaining = DAILY_TRANSFER_LIMIT - totalToday;
+  return alert(`Daily transfer limit exceeded!\nYou can send up to ${remaining.toLocaleString()} UGX more today.`);
+}
+
+// Confirm
+const usdtDisplay = (amount / UGX_PER_USDT).toFixed(4);
+if (!confirm(`Send ${amount.toLocaleString()} UGX (~${usdtDisplay} USDT) to User ID: ${recipientId}?`)) return;
+
+try {
+  // Find recipient
+  const { data: recipient, error: recError } = await _supabase
+    .from('users')
+    .select('username, balance')
+    .eq('user_id', recipientId)
+    .maybeSingle();
+
+  if (recError || !recipient) return alert("Recipient not found.");
+
+  // Update balances
+  const newSenderBalance = (user.balance || 0) - amount;
+  const newRecipientBalance = (recipient.balance || 0) + amount;
+
+  const { error: updateError } = await _supabase.from('users').upsert([
+    { username: user.username, balance: newSenderBalance },
+    { username: recipient.username, balance: newRecipientBalance }
+  ]);
+
+  if (updateError) throw updateError;
+
+  // Log transfer
+  const receiptId = 'RCP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+  await _supabase.from('transfer_requests').insert({
+    sender_id: user.user_id,
+    sender_username: user.username,
+    recipient_id: recipientId,
+    recipient_username: recipient.username,
+    ugx_amount: amount,
+    usdt_amount: parseFloat((amount / UGX_PER_USDT).toFixed(4)),
+    status: 'completed',
+    requested_at: new Date().toISOString(),
+    receipt_id: receiptId
+  });
+
+  // Update UI
+  user.balance = newSenderBalance;
+  updateHomeDashboard();
+  maybeRefreshHistory();
+
+  // Clear form
+  document.getElementById('transferRecipientId').value = '';
+  document.getElementById('transferAmount').value = '';
+  document.getElementById('transferAmountUSDT').textContent = '~0.00 USDT';
+
+  alert(`✅ Successfully sent ${amount.toLocaleString()} UGX to ${recipientId}!`);
+
+} catch (err) {
+  console.error("Transfer failed:", err);
+  alert("Transfer failed. Please try again later.");
+}
+}
+
+// ========================
+// ✅ FIXED NAVIGATION FUNCTION
+// ========================
+function switchTab(tabName) {
+  // Clear previous FOMO intervals to avoid memory leak
+  fomoIntervals.forEach(f => clearInterval(f.interval));
+  fomoIntervals = [];
+
+  // Hide all tabs
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+
+  // Show target tab
+  const targetTab = document.getElementById(`tab-${tabName}`);
+  if (targetTab) {
+    targetTab.classList.add('active');
+
+    // Update bottom nav active state
+    document.querySelectorAll('#bottomNav button').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = Array.from(document.querySelectorAll('#bottomNav button')).find(btn =>
+      btn.getAttribute('onclick')?.includes(`switchTab('${tabName}')`)
+    );
+    if (activeBtn) activeBtn.classList.add('active');
+
+    // Special actions per tab
+    if (tabName === 'home') {
+      startFomoFeed('fomoBoosterFeed', 'booster');
+      let txType = 'deposit';
+      setInterval(() => {
+        const container = document.getElementById('fomoTxFeed');
+        if (!container) return;
+        const name = generateFakeName();
+        const item = document.createElement('div');
+        item.className = 'text-xs py-1 border-b border-gray-100 dark:border-gray-700 flex justify-between';
+        if (txType === 'deposit') {
+          const amt = (Math.random() * 300000 + 10000).toFixed(0);
+          item.innerHTML = `<span><strong>${name}</strong> deposited</span> <span class="text-emerald-600">+${amt} UGX</span>`;
+        } else {
+          const amt = (Math.random() * 200000 + 50000).toFixed(0);
+          item.innerHTML = `<span><strong>${name}</strong> withdrew</span> <span class="text-red-600">-${amt} UGX</span>`;
+        }
+        container.prepend(item);
+        if (container.children.length > 5) container.removeChild(container.lastChild);
+        txType = txType === 'deposit' ? 'withdraw' : 'deposit';
+      }, 10000);
+    } else if (tabName === 'investments') {
+      startFomoFeed('fomoInvestFeed', 'invest');
+    } else if (tabName === 'casino') {
+      startFomoFeed('fomoCasinoFeed', 'win');
+      setInterval(() => {
+        const container = document.getElementById('fomoCasinoFeed');
+        if (container && Math.random() > 0.7) {
+          const name = generateFakeName();
+          const amt = (Math.random() * 150000 + 30000).toFixed(0);
+          const item = document.createElement('div');
+          item.className = 'text-xs py-1 border-b border-gray-100 dark:border-gray-700 flex justify-between';
+          item.innerHTML = `<span><strong>${name}</strong> cashed out</span> <span class="text-red-600">-${amt} UGX</span>`;
+          container.prepend(item);
+          if (container.children.length > 5) container.removeChild(container.lastChild);
+        }
+      }, 12000);
+    } else if (tabName === 'profile') {
+      loadTransactionHistory();
+    }
+  }
+}
+
+// ========================
+// ✅ TRANSACTION HISTORY SYNC — INCLUDES TRANSFERS
 // ========================
 async function loadTransactionHistory() {
 if (!user) return;
 const list = document.getElementById('transactionHistoryList');
 list.innerHTML = '<p class="text-gray-500">Loading...</p>';
-
 try {
-const tables = ['deposit_requests', 'withdraw_requests', 'investment_requests', 'booster_requests'];
+const tables = [
+  { name: 'deposit_requests', type: 'Deposit' },
+  { name: 'withdraw_requests', type: 'Withdraw' },
+  { name: 'investment_requests', type: 'Investment' },
+  { name: 'booster_requests', type: 'Booster' },
+  { name: 'transfer_requests', type: 'Transfer' }
+];
 let allTxs = [];
-
-for (const table of tables) {
+for (const { name, type } of tables) {
 const { data, error } = await _supabase
-.from(table)
+.from(name)
 .select('*')
 .eq('username', user.username)
 .order('requested_at', { ascending: false });
-
 if (error) {
-console.error(`Failed to load ${table}:`, error);
+console.error(`Failed to load ${name}:`, error);
 continue;
 }
-
 if (data) {
 data.forEach(tx => {
-tx.type = table.replace('_requests', '');
+tx._displayType = type;
+tx._table = name;
 });
 allTxs = allTxs.concat(data);
 }
 }
-
 allTxs.sort((a, b) => new Date(b.requested_at) - new Date(a.requested_at));
-
 if (allTxs.length === 0) {
 list.innerHTML = '<p class="text-gray-500">No transactions yet.</p>';
 return;
 }
-
 list.innerHTML = '';
 allTxs.forEach(tx => {
-const div = document.createElement('div');
-div.className = 'flex justify-between items-start py-1 border-b border-gray-100 dark:border-gray-700 text-xs';
-
-let action, amount;
-
-if (tx.type === 'deposit') {
+let action, amountText;
+if (tx._displayType === 'Deposit') {
 action = 'Deposit';
-amount = `${(tx.ugx_amount || 0).toLocaleString()} UGX`;
-} else if (tx.type === 'withdraw') {
+amountText = `${(tx.ugx_amount || 0).toLocaleString()} UGX`;
+} else if (tx._displayType === 'Withdraw') {
 action = 'Withdraw';
-amount = `${(tx.ugx_amount || 0).toLocaleString()} UGX`;
-} else if (tx.type === 'investment') {
+amountText = `${(tx.ugx_amount || 0).toLocaleString()} UGX`;
+} else if (tx._displayType === 'Investment') {
 action = `Invest (${tx.days || '?'}d)`;
-amount = `${(tx.ugx_amount || 0).toLocaleString()} UGX`;
-} else if (tx.type === 'booster') {
+amountText = `${(tx.ugx_amount || 0).toLocaleString()} UGX`;
+} else if (tx._displayType === 'Booster') {
 action = `Booster: ${tx.booster_type || '—'}`;
-// Compute UGX from usdt_amount if available
-const ugx = tx.usdt_amount ? (tx.usdt_amount * UGX_PER_USDT) : 0;
-amount = `${Math.round(ugx).toLocaleString()} UGX`;
+const ugx = tx.usdt_amount ? Math.round(tx.usdt_amount * UGX_PER_USDT) : 0;
+amountText = `${ugx.toLocaleString()} UGX`;
+} else if (tx._displayType === 'Transfer') {
+const isSent = tx.sender_username === user.username;
+action = isSent ? `Sent to ${tx.recipient_id}` : `Received from ${tx.sender_id}`;
+amountText = `${(tx.ugx_amount || 0).toLocaleString()} UGX`;
 } else {
 action = 'Unknown';
-amount = '—';
+amountText = '—';
 }
-
-const statusColor = 
+const statusColor =
 tx.status === 'approved' ? 'text-emerald-600' :
 tx.status === 'rejected' ? 'text-red-600' :
 'text-amber-600';
-
+const div = document.createElement('div');
+div.className = 'flex justify-between items-start py-1 border-b border-gray-100 dark:border-gray-700 text-xs';
 div.innerHTML = `
 <div>
 <div class="font-medium">${action}</div>
-<div class="${statusColor}">${tx.status || 'pending'}</div>
+<div class="${statusColor} capitalize">${tx.status || 'pending'}</div>
 </div>
 <div class="text-right">
-<div>${amount}</div>
-<button onclick="viewReceipt('${tx.receipt_id || tx.id}')" class="text-blue-500 text-xs mt-1 underline">View Receipt</button>
+<div>${amountText}</div>
+<button onclick="viewReceipt('${tx.receipt_id}', '${tx._table}')" class="text-blue-500 text-xs mt-1 underline">View Receipt</button>
 </div>
 `;
 list.appendChild(div);
 });
-
 } catch (err) {
 console.error('Error loading transaction history:', err);
 list.innerHTML = '<p class="text-red-500">Failed to load history.</p>';
 }
 }
-// ✅ NEW: RECEIPT MODAL HANDLER
-function viewReceipt(receiptId) {
-// In real app, fetch from receipts table. For now, simulate.
-const mockData = {
-type: 'Investment',
-amount: '250,000 UGX',
-status: 'approved',
-date: new Date().toLocaleString(),
-txid: '0xabc123def456...',
-reason: 'Payment confirmed on Arbitrum.'
-};
-let statusColor = mockData.status === 'approved' ? 'text-emerald-600' :
-mockData.status === 'rejected' ? 'text-red-600' : 'text-amber-600';
+
+// ========================
+// ✅ VIEW REAL RECEIPT FROM SUPABASE
+// ========================
+async function viewReceipt(receiptId, tableName) {
+if (!tableName) {
+  // Fallback for old receipts (mock)
+  const mockData = {
+    type: 'Investment',
+    amount: '250,000 UGX',
+    status: 'approved',
+    date: new Date().toLocaleString(),
+    txid: '0xabc123def456...',
+    reason: 'Payment confirmed on Arbitrum.'
+  };
+  let statusColor = mockData.status === 'approved' ? 'text-emerald-600' :
+    mockData.status === 'rejected' ? 'text-red-600' : 'text-amber-600';
+  document.getElementById('receiptContent').innerHTML = `
+  <div><strong>Receipt ID:</strong> ${receiptId}</div>
+  <div><strong>Type:</strong> ${mockData.type}</div>
+  <div><strong>Amount:</strong> ${mockData.amount}</div>
+  <div><strong>Status:</strong> <span class="${statusColor}">${mockData.status}</span></div>
+  <div><strong>Date:</strong> ${mockData.date}</div>
+  <div><strong>TX ID:</strong> ${mockData.txid}</div>
+  <div><strong>Reason:</strong> ${mockData.reason}</div>
+  `;
+  document.getElementById('receiptModal').classList.remove('hidden');
+  return;
+}
+
+const { data, error } = await _supabase
+  .from(tableName)
+  .select('*')
+  .eq('receipt_id', receiptId)
+  .maybeSingle();
+
+if (error || !data) {
+  alert('Receipt not found.');
+  return;
+}
+
+// Map fields for display
+let type = '';
+let amount = '—';
+if (tableName === 'deposit_requests') {
+  type = 'Deposit';
+  amount = `${data.ugx_amount.toLocaleString()} UGX`;
+} else if (tableName === 'withdraw_requests') {
+  type = 'Withdrawal';
+  amount = `${data.ugx_amount.toLocaleString()} UGX`;
+} else if (tableName === 'investment_requests') {
+  type = `Investment (${data.days} days)`;
+  amount = `${data.ugx_amount.toLocaleString()} UGX`;
+} else if (tableName === 'booster_requests') {
+  type = `Booster: ${data.booster_type}`;
+  const ugx = Math.round(data.usdt_amount * UGX_PER_USDT);
+  amount = `${ugx.toLocaleString()} UGX`;
+} else if (tableName === 'transfer_requests') {
+  const isSent = data.sender_username === user.username;
+  type = isSent ? `Sent to ${data.recipient_id}` : `Received from ${data.sender_id}`;
+  amount = `${data.ugx_amount.toLocaleString()} UGX`;
+}
+
+const statusColor =
+  data.status === 'approved' ? 'text-emerald-600' :
+  data.status === 'rejected' ? 'text-red-600' :
+  'text-amber-600';
+
+const reason = data.admin_note || 
+  (data.status === 'approved' ? 'Payment confirmed on Arbitrum.' : 'Pending admin review.');
+
 document.getElementById('receiptContent').innerHTML = `
-<div><strong>Receipt ID:</strong> ${receiptId}</div>
-<div><strong>Type:</strong> ${mockData.type}</div>
-<div><strong>Amount:</strong> ${mockData.amount}</div>
-<div><strong>Status:</strong> <span class="${statusColor}">${mockData.status}</span></div>
-<div><strong>Date:</strong> ${mockData.date}</div>
-<div><strong>TX ID:</strong> ${mockData.txid}</div>
-<div><strong>Reason:</strong> ${mockData.reason}</div>
+  <div><strong>Receipt ID:</strong> ${receiptId}</div>
+  <div><strong>Type:</strong> ${type}</div>
+  <div><strong>Amount:</strong> ${amount}</div>
+  <div><strong>Status:</strong> <span class="${statusColor}">${data.status}</span></div>
+  <div><strong>Date:</strong> ${new Date(data.requested_at).toLocaleString()}</div>
+  <div><strong>TX ID:</strong> ${data.txid}</div>
+  <div><strong>Reason:</strong> ${reason}</div>
 `;
 document.getElementById('receiptModal').classList.remove('hidden');
 }
+
 function printReceipt() {
 const printContent = document.getElementById('receiptContent').innerHTML;
 const originalBody = document.body.innerHTML;
@@ -1601,6 +1823,7 @@ window.print();
 document.body.innerHTML = originalBody;
 location.reload(); // restore full app after print
 }
+
 async function loadDashboard() {
 ['UserName', 'UserEmail', 'UserId'].forEach(key => {
 const el1 = document.getElementById(`profile${key}`);
@@ -1617,6 +1840,7 @@ updateHomeDashboard();
 startTimer();
 switchTab('home');
 }
+
 async function restoreSession() {
 const saved = localStorage.getItem('ugxmine_session');
 if (!saved) return false;
@@ -1628,6 +1852,7 @@ if (data) { user = data; return true; }
 localStorage.removeItem('ugxmine_session');
 return false;
 }
+
 // INIT
 (async () => {
 const hasSession = await restoreSession();
