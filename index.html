@@ -280,7 +280,6 @@ gap: 1.25rem;
 width: 100%;
 max-width: 24rem; /* ~xs size */
 }
-
 /* PAYMENT METHOD TOGGLE ACTIVE STATE */
 .auth-tab.active {
 background: rgba(16, 185, 129, 0.15);
@@ -315,7 +314,6 @@ color: #10b981;
 </form>
 </div>
 </div>
-
 <!-- ✅ DEPOSIT INPUT MODAL -->
 <div id="depositInputModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
 <div class="bg-white p-6 rounded-xl w-96">
@@ -338,7 +336,6 @@ min="10000"
 </div>
 </div>
 </div>
-
 <!-- Main App (initially hidden) -->
 <div id="mainApp" class="hidden">
 <div class="container mx-auto px-4 pb-[72px] pt-4">
@@ -703,7 +700,6 @@ Send Funds
 </div>
 </nav>
 </div>
-
 <!-- MODALS -->
 <div id="editProfileModal" class="fixed inset-0 bg-black/70 flex items-center justify-center hidden z-50">
 <div class="bg-white p-6 rounded-xl w-96 shadow-xl">
@@ -727,77 +723,78 @@ Send Funds
 </div>
 </div>
 
-<!-- ✅ UNIFIED PAYMENT MODAL (WITH PESAPAL + CRYPTO) -->
+<!-- ✅ UNIFIED PAYMENT MODAL (MOBILE MONEY → DIRECT REDIRECT) -->
 <div id="paymentModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
-  <div class="bg-white p-6 rounded-xl w-96">
-    <h3 class="text-lg font-bold mb-3" id="paymentModalTitle">Confirm Action</h3>
-    
-    <!-- Payment Method Toggle -->
-    <div class="flex mb-4 bg-gray-100 rounded-lg p-1">
-      <button id="payMethodCrypto" class="auth-tab active flex-1 text-center">Crypto (USDT)</button>
-      <button id="payMethodMobile" class="auth-tab flex-1 text-center">Mobile Money</button>
-    </div>
-
-    <div class="bg-gray-50 p-3 rounded mb-3 text-sm">
-      <div class="flex justify-between"><span>Action:</span> <span id="paymentAction">—</span></div>
-      <div class="flex justify-between"><span>Amount:</span> <span id="paymentAmount">—</span></div>
-      <div class="flex justify-between"><span>UGX/USDT:</span> <span id="paymentUSDT" class="font-bold text-emerald-600">—</span></div>
-    </div>
-
-    <!-- CRYPTO SECTION -->
-    <div id="cryptoSection">
-      <p class="text-sm mb-2">Send <strong id="usdtToSend">—</strong> USDT to the admin wallet below using <strong>Arbitrum Network</strong>:</p>
-      <div class="flex items-center bg-gray-100 p-2 rounded mb-3">
-        <code id="adminWalletDisplay" class="text-xs break-all flex-1">0xb9fec9b1a49726089f058de4f4225ecbaa88cbbc</code>
-        <button onclick="copyAdminWallet()" class="text-emerald-500 ml-2 text-sm">Copy</button>
-      </div>
-      <p class="text-xs text-red-500 mb-3">⚠️ <strong>Arbitrum ONLY!</strong> Sending from BSC, Ethereum, or TRON will lose your funds.</p>
-      <p class="text-sm mb-2">Enter Transaction ID:</p>
-      <input type="text" id="paymentTxId" class="w-full bg-gray-100 p-2 rounded mb-4" placeholder="e.g. 0xabc123...">
-    </div>
-
-    <!-- MOBILE MONEY SECTION (HIDDEN BY DEFAULT) -->
-    <div id="mobileSection" class="hidden">
-      <p class="text-sm mb-2">You’ll pay <strong id="mmAmount">—</strong> UGX via Mobile Money.</p>
-      <p class="text-xs text-gray-600 mb-3">Enter your Ugandan phone number (e.g. 07XXXXXXXX):</p>
-      <input
-        type="tel"
-        id="mmPhoneNumber"
-        class="w-full bg-gray-100 p-2 rounded mb-3"
-        placeholder="07XXXXXXXX"
-        pattern="07[0-9]{8}"
-        title="Ugandan number starting with 07"
-      >
-      <p class="text-xs text-amber-600 mb-3">✅ Payment will be processed via PesaPal.</p>
-    </div>
-
-    <div class="flex gap-2">
-      <button id="submitPaymentBtn" onclick="submitPayment()" class="flex-1 bg-emerald-600 py-2 rounded text-white">Continue</button>
-      <button onclick="document.getElementById('paymentModal').classList.add('hidden')" class="flex-1 bg-gray-300 py-2 rounded">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- BOOSTER MODAL -->
-<div id="boosterModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
 <div class="bg-white p-6 rounded-xl w-96">
-<h3 class="text-lg font-bold mb-3" id="boosterModalTitle">Activate Booster</h3>
-<p id="boosterModalCurrent" class="text-gray-600 text-sm mb-1">Currently: ...</p>
-<p id="boosterModalNew" class="text-emerald-600 font-bold mb-2">After: ...</p>
-<p class="text-sm mb-1">Price: <span id="boosterModalPriceUGX">0 UGX</span></p>
-<p class="text-sm mb-3">Send <strong id="boosterModalPriceUSDT">0.00</strong> USDT to the admin wallet below using <strong>Arbitrum Network</strong>:</p>
+<h3 class="text-lg font-bold mb-3" id="paymentModalTitle">Confirm Action</h3>
+<!-- Payment Method Toggle -->
+<div class="flex mb-4 bg-gray-100 rounded-lg p-1">
+<button id="payMethodCrypto" class="auth-tab active flex-1 text-center">Crypto (USDT)</button>
+<button id="payMethodMobile" class="auth-tab flex-1 text-center">Mobile Money</button>
+</div>
+<div class="bg-gray-50 p-3 rounded mb-3 text-sm">
+<div class="flex justify-between"><span>Action:</span> <span id="paymentAction">—</span></div>
+<div class="flex justify-between"><span>Amount:</span> <span id="paymentAmount">—</span></div>
+<div class="flex justify-between"><span>UGX/USDT:</span> <span id="paymentUSDT" class="font-bold text-emerald-600">—</span></div>
+</div>
+<!-- CRYPTO SECTION -->
+<div id="cryptoSection">
+<p class="text-sm mb-2">Send <strong id="usdtToSend">—</strong> USDT to the admin wallet below using <strong>Arbitrum Network</strong>:</p>
 <div class="flex items-center bg-gray-100 p-2 rounded mb-3">
-<code id="adminWalletBooster" class="text-xs break-all flex-1">0xb9fec9b1a49726089f058de4f4225ecbaa88cbbc</code>
+<code id="adminWalletDisplay" class="text-xs break-all flex-1">0xb9fec9b1a49726089f058de4f4225ecbaa88cbbc</code>
 <button onclick="copyAdminWallet()" class="text-emerald-500 ml-2 text-sm">Copy</button>
 </div>
 <p class="text-xs text-red-500 mb-3">⚠️ <strong>Arbitrum ONLY!</strong> Sending from BSC, Ethereum, or TRON will lose your funds.</p>
 <p class="text-sm mb-2">Enter Transaction ID:</p>
-<input type="text" id="txIdInput" class="w-full bg-gray-100 p-2 rounded mb-4" placeholder="e.g. 0xabc123...">
+<input type="text" id="paymentTxId" class="w-full bg-gray-100 p-2 rounded mb-4" placeholder="e.g. 0xabc123...">
+</div>
+<!-- MOBILE MONEY SECTION (NO INPUT – JUST REDIRECT) -->
+<div id="mobileSection" class="hidden">
+  <p class="text-sm text-center text-amber-600">Redirecting to PesaPal...</p>
+</div>
 <div class="flex gap-2">
-<button id="submitBoosterBtn" onclick="submitBoosterRequest()" class="flex-1 bg-emerald-600 py-2 rounded text-white">Submit for Approval</button>
-<button onclick="document.getElementById('boosterModal').classList.add('hidden')" class="flex-1 bg-gray-300 py-2 rounded">Cancel</button>
+<button id="submitPaymentBtn" onclick="submitPayment()" class="flex-1 bg-emerald-600 py-2 rounded text-white">Continue</button>
+<button onclick="document.getElementById('paymentModal').classList.add('hidden')" class="flex-1 bg-gray-300 py-2 rounded">Cancel</button>
 </div>
 </div>
+</div>
+
+<!-- ✅ BOOSTER MODAL (MOBILE MONEY → DIRECT REDIRECT) -->
+<div id="boosterModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
+  <div class="bg-white p-6 rounded-xl w-96">
+    <h3 class="text-lg font-bold mb-3" id="boosterModalTitle">Activate Booster</h3>
+    <p id="boosterModalCurrent" class="text-gray-600 text-sm mb-1">Currently: ...</p>
+    <p id="boosterModalNew" class="text-emerald-600 font-bold mb-2">After: ...</p>
+
+    <!-- Payment Method Toggle -->
+    <div class="flex mb-4 bg-gray-100 rounded-lg p-1 mt-3">
+      <button id="boosterPayMethodCrypto" class="auth-tab active flex-1 text-center">Crypto (USDT)</button>
+      <button id="boosterPayMethodMobile" class="auth-tab flex-1 text-center">Mobile Money</button>
+    </div>
+
+    <!-- CRYPTO SECTION -->
+    <div id="boosterCryptoSection">
+      <p class="text-sm mb-1">Price: <span id="boosterModalPriceUGX">0 UGX</span></p>
+      <p class="text-sm mb-3">Send <strong id="boosterModalPriceUSDT">0.00</strong> USDT to the admin wallet below using <strong>Arbitrum Network</strong>:</p>
+      <div class="flex items-center bg-gray-100 p-2 rounded mb-3">
+        <code id="adminWalletBooster" class="text-xs break-all flex-1">0xb9fec9b1a49726089f058de4f4225ecbaa88cbbc</code>
+        <button onclick="copyAdminWallet()" class="text-emerald-500 ml-2 text-sm">Copy</button>
+      </div>
+      <p class="text-xs text-red-500 mb-3">⚠️ <strong>Arbitrum ONLY!</strong> Sending from BSC, Ethereum, or TRON will lose your funds.</p>
+      <p class="text-sm mb-2">Enter Transaction ID:</p>
+      <input type="text" id="txIdInput" class="w-full bg-gray-100 p-2 rounded mb-4" placeholder="e.g. 0xabc123...">
+    </div>
+
+    <!-- MOBILE MONEY SECTION (NO INPUT) -->
+    <div id="boosterMobileSection" class="hidden">
+      <p class="text-sm text-center text-amber-600">Redirecting to PesaPal...</p>
+    </div>
+
+    <div class="flex gap-2">
+      <button id="submitBoosterBtn" onclick="submitBoosterRequest()" class="flex-1 bg-emerald-600 py-2 rounded text-white">Continue</button>
+      <button onclick="document.getElementById('boosterModal').classList.add('hidden')" class="flex-1 bg-gray-300 py-2 rounded">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <!-- ✅ RECEIPT MODAL -->
@@ -818,7 +815,6 @@ Send Funds
 </div>
 </div>
 </div>
-
 <!-- SCRIPTS -->
 <script>
 // 🔥 SUPABASE
@@ -835,11 +831,9 @@ const ugNames = ["Mugisha", "Nalweyiso", "Kato", "Namutebi", "Ssebunya", "Kyomuh
 const boosterTypes = ["Eager_Miner", "Falcon_Miner", "Phoenix_Miner"];
 const investDurations = [10, 20, 30, 50, 75, 100];
 let fomoIntervals = [];
-
 function generateFakeName() {
 return ugNames[Math.floor(Math.random() * ugNames.length)] + Math.floor(Math.random() * 900 + 100);
 }
-
 function startFomoFeed(containerId, type) {
 const container = document.getElementById(containerId);
 if (!container) return;
@@ -882,7 +876,6 @@ if (container.children.length > 5) container.removeChild(container.lastChild);
 const interval = setInterval(feed, 8000 + Math.random() * 4000);
 fomoIntervals.push({ id: containerId, interval });
 }
-
 // ========================
 // LIVE USDT UPDATE FOR DEPOSIT INPUT
 // ========================
@@ -891,7 +884,6 @@ const amount = parseFloat(document.getElementById('depositAmountInput').value) |
 const usdt = (amount / UGX_PER_USDT).toFixed(4);
 document.getElementById('depositAmountUSDT').textContent = `~${usdt} USDT`;
 });
-
 // ========================
 // SHOW DEPOSIT INPUT MODAL
 // ========================
@@ -900,7 +892,6 @@ document.getElementById('depositInputModal').classList.remove('hidden');
 document.getElementById('depositAmountInput').value = '';
 document.getElementById('depositAmountUSDT').textContent = '~0.00 USDT';
 }
-
 // ========================
 // CONFIRM DEPOSIT AMOUNT & OPEN PAYMENT MODAL
 // ========================
@@ -914,7 +905,6 @@ return;
 document.getElementById('depositInputModal').classList.add('hidden');
 openPaymentModal('deposit', amount, 'Deposit Funds');
 }
-
 // ========================
 // INVESTMENT LOGIC (10X at 100 days)
 // ========================
@@ -923,7 +913,6 @@ const clampedDays = Math.min(100, Math.max(10, days));
 const multiplier = 2 + (clampedDays - 10) * (8 / 90);
 return parseFloat(multiplier.toFixed(2));
 }
-
 function updateInvestPreview() {
 const amountInput = document.getElementById('customInvestAmount');
 const amount = parseFloat(amountInput.value) || 0;
@@ -954,43 +943,44 @@ minNotice.classList.add('hidden');
 btn.disabled = (amount <= 0);
 }
 }
-
 document.getElementById('customInvestAmount').addEventListener('input', updateInvestPreview);
 document.getElementById('durationSlider').addEventListener('input', updateInvestPreview);
-
 // ========================
 // UNIFIED PAYMENT SYSTEM
 // ========================
 const ADMIN_WALLET = "0xb9fec9b1a49726089f058de4f4225ecbaa88cbbc";
-
 function copyAdminWallet() {
 navigator.clipboard.writeText(ADMIN_WALLET);
 alert('Admin Arbitrum wallet copied!');
 }
 
-let currentPaymentType = null;
-let currentPaymentAmountUGX = 0;
-let currentPaymentUSDT = 0;
+// 💥 CRITICAL: UNIFIED MOBILE MONEY REDIRECTS
+document.getElementById('payMethodMobile').onclick = () => {
+  window.location.href = 'https://store.pesapal.com/ugxmine';
+};
 
-// PAYMENT METHOD TOGGLE
-let currentPaymentMethod = 'crypto'; // 'crypto' or 'mobile'
+document.getElementById('boosterPayMethodMobile').onclick = () => {
+  window.location.href = 'https://store.pesapal.com/ugxmine';
+};
 
+// Keep crypto toggles for UI consistency
 document.getElementById('payMethodCrypto').onclick = () => {
-  currentPaymentMethod = 'crypto';
   document.getElementById('payMethodCrypto').classList.add('active');
   document.getElementById('payMethodMobile').classList.remove('active');
   document.getElementById('cryptoSection').classList.remove('hidden');
   document.getElementById('mobileSection').classList.add('hidden');
 };
 
-document.getElementById('payMethodMobile').onclick = () => {
-  currentPaymentMethod = 'mobile';
-  document.getElementById('payMethodMobile').classList.add('active');
-  document.getElementById('payMethodCrypto').classList.remove('active');
-  document.getElementById('mobileSection').classList.remove('hidden');
-  document.getElementById('cryptoSection').classList.add('hidden');
-  document.getElementById('mmAmount').textContent = `${currentPaymentAmountUGX.toLocaleString()} UGX`;
+document.getElementById('boosterPayMethodCrypto').onclick = () => {
+  document.getElementById('boosterPayMethodCrypto').classList.add('active');
+  document.getElementById('boosterPayMethodMobile').classList.remove('active');
+  document.getElementById('boosterCryptoSection').classList.remove('hidden');
+  document.getElementById('boosterMobileSection').classList.add('hidden');
 };
+
+let currentPaymentType = null;
+let currentPaymentAmountUGX = 0;
+let currentPaymentUSDT = 0;
 
 function openPaymentModal(type, amountUGX, description) {
 currentPaymentType = type;
@@ -1008,54 +998,15 @@ document.getElementById('usdtToSend').textContent = currentPaymentUSDT;
 document.getElementById('adminWalletDisplay').textContent = ADMIN_WALLET;
 document.getElementById('paymentTxId').value = '';
 // Reset to crypto by default
-currentPaymentMethod = 'crypto';
 document.getElementById('payMethodCrypto').click();
 document.getElementById('paymentModal').classList.remove('hidden');
 }
 
-// ✅ UPDATED submitPayment with Pesapal integration
+// ✅ submitPayment handles ONLY crypto now
 async function submitPayment() {
-  if (currentPaymentMethod === 'mobile') {
-    const phone = document.getElementById('mmPhoneNumber').value.trim();
-    if (!phone || !/^07\d{8}$/.test(phone)) {
-      return alert('Please enter a valid Ugandan phone number (e.g. 07XXXXXXXX).');
-    }
-
-    try {
-      const response = await fetch('https://rryvibgbpqyumfmgsiua.supabase.co/functions/v1/init-pesapal-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone: phone,
-          amount: currentPaymentAmountUGX,
-          username: user.username,
-          description: 'Deposit to UGX Mine'
-        })
-      });
-
-      const result = await response.json();
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      if (result.redirect_url) {
-        window.location.href = result.redirect_url;
-        return;
-      } else {
-        throw new Error('No redirect URL received from Pesapal');
-      }
-    } catch (err) {
-      console.error('Pesapal error:', err);
-      alert('Failed to initiate mobile payment:\n' + (err.message || 'Unknown error'));
-      return;
-    }
-  }
-
-  // === CRYPTO PATH ===
+  // === CRYPTO PATH ONLY ===
   const txId = document.getElementById('paymentTxId').value.trim();
   if (!txId) return alert('Please enter Transaction ID.');
-
   const actionMap = {
     deposit: 'deposit_requests',
     invest: 'investment_requests',
@@ -1063,7 +1014,6 @@ async function submitPayment() {
   };
   const table = actionMap[currentPaymentType];
   if (!table) return;
-
   const receiptId = 'RCP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
   const data = {
     username: user.username,
@@ -1072,7 +1022,6 @@ async function submitPayment() {
     requested_at: new Date().toISOString(),
     receipt_id: receiptId
   };
-
   if (currentPaymentType === 'deposit') {
     data.ugx_amount = currentPaymentAmountUGX;
     data.usdt_amount = parseFloat(currentPaymentUSDT);
@@ -1092,11 +1041,9 @@ async function submitPayment() {
     data.ugx_fee = currentPaymentAmountUGX;
     data.usdt_fee = parseFloat(currentPaymentUSDT);
   }
-
   await _supabase.from(table).insert(data);
   document.getElementById('paymentModal').classList.add('hidden');
   maybeRefreshHistory();
-
   if (currentPaymentType === 'withdraw') {
     alert('Withdrawal request submitted!\nSend the 20% fee and wait for admin approval.');
   } else {
@@ -1114,7 +1061,6 @@ if (!amount || amount <= 0) return alert("Enter a valid amount");
 if (amount < minAmount) return alert(`Minimum: ${minAmount.toLocaleString()} UGX`);
 openPaymentModal('invest', amount, 'Lock Investment');
 }
-
 function openWithdrawModal() {
 if (!user || (user.balance || 0) <= 0) return alert("No balance to withdraw");
 const balance = user.balance || 0;
@@ -1123,7 +1069,7 @@ openPaymentModal('withdraw', fee, 'Withdraw Fee');
 }
 
 // ========================
-// BOOSTER SYSTEM (UNCHANGED)
+// ✅ BOOSTER SYSTEM WITH DIRECT PESAPAL REDIRECT
 // ========================
 function updateBoosterPrices() {
 if (!user) return;
@@ -1143,50 +1089,67 @@ document.getElementById(`price${b.id}`).textContent =
 
 let selectedBoosterType, selectedBoosterHours, selectedBoosterReward;
 function openBoosterModal(type, hours, reward) {
-if (!user) return;
-selectedBoosterType = type;
-selectedBoosterHours = hours;
-selectedBoosterReward = reward;
-const balance = user.balance || 0;
-const multiplier = type === 'eagle' ? 2 : type === 'falcon' ? 4 : 8;
-const priceUGX = balance * multiplier;
-const priceUSDT = (priceUGX / UGX_PER_USDT).toFixed(4);
-const currentReward = user.mining_reward || 5000;
-const currentHours = user.mining_cycle_hours || 24;
-const newReward = currentReward + reward;
-document.getElementById('boosterModalTitle').textContent = `Activate ${type.charAt(0).toUpperCase() + type.slice(1)}_Miner`;
-document.getElementById('boosterModalCurrent').innerHTML = `Currently: <strong>${currentReward.toLocaleString()} UGX / ${currentHours}h</strong>`;
-document.getElementById('boosterModalNew').innerHTML = `After: <strong>${newReward.toLocaleString()} UGX / 2h</strong>`;
-document.getElementById('boosterModalPriceUGX').textContent = `${priceUGX.toLocaleString()} UGX`;
-document.getElementById('boosterModalPriceUSDT').textContent = priceUSDT;
-document.getElementById('adminWalletBooster').textContent = ADMIN_WALLET;
-document.getElementById('txIdInput').value = '';
-document.getElementById('boosterModal').classList.remove('hidden');
+  if (!user) return;
+  selectedBoosterType = type;
+  selectedBoosterHours = hours;
+  selectedBoosterReward = reward;
+
+  const balance = user.balance || 0;
+  const multiplier = type === 'eagle' ? 2 : type === 'falcon' ? 4 : 8;
+  const priceUGX = balance * multiplier;
+  const priceUSDT = (priceUGX / UGX_PER_USDT).toFixed(4);
+
+  const currentReward = user.mining_reward || 5000;
+  const currentHours = user.mining_cycle_hours || 24;
+  const newReward = currentReward + reward;
+
+  document.getElementById('boosterModalTitle').textContent = `Activate ${type.charAt(0).toUpperCase() + type.slice(1)}_Miner`;
+  document.getElementById('boosterModalCurrent').innerHTML = `Currently: <strong>${currentReward.toLocaleString()} UGX / ${currentHours}h</strong>`;
+  document.getElementById('boosterModalNew').innerHTML = `After: <strong>${newReward.toLocaleString()} UGX / 2h</strong>`;
+
+  // Update crypto section
+  document.getElementById('boosterModalPriceUGX').textContent = `${priceUGX.toLocaleString()} UGX`;
+  document.getElementById('boosterModalPriceUSDT').textContent = priceUSDT;
+  document.getElementById('adminWalletBooster').textContent = ADMIN_WALLET;
+  document.getElementById('txIdInput').value = '';
+
+  // Reset to crypto tab
+  document.getElementById('boosterPayMethodCrypto').click();
+
+  document.getElementById('boosterModal').classList.remove('hidden');
 }
 
+// Only handle crypto submissions now
 async function submitBoosterRequest() {
-const txId = document.getElementById('txIdInput').value.trim();
-if (!txId) return alert('Please enter TRX ID');
-const balance = user.balance || 0;
-const multiplier = selectedBoosterType === 'eagle' ? 2 : selectedBoosterType === 'falcon' ? 4 : 8;
-const priceUGX = balance * multiplier;
-const priceUSDT = (priceUGX / UGX_PER_USDT).toFixed(4);
-const boosterName =
-selectedBoosterType === 'eagle' ? 'Eager_Miner' :
-selectedBoosterType === 'falcon' ? 'Falcon_Miner' : 'Phoenix_Miner';
-const receiptId = 'RCP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
-await _supabase.from('booster_requests').insert({
-username: user.username,
-booster_type: boosterName,
-usdt_amount: parseFloat(priceUSDT),
-txid: txId,
-status: 'pending',
-requested_at: new Date().toISOString(),
-receipt_id: receiptId
-});
-document.getElementById('boosterModal').classList.add('hidden');
-maybeRefreshHistory();
-alert('Booster request submitted! Wait for admin approval.');
+  const txId = document.getElementById('txIdInput').value.trim();
+  if (!txId) return alert('Please enter Transaction ID.');
+
+  if (!user || !selectedBoosterType) return;
+
+  const balance = user.balance || 0;
+  const multiplier = selectedBoosterType === 'eagle' ? 2 : selectedBoosterType === 'falcon' ? 4 : 8;
+  const priceUGX = balance * multiplier;
+  const priceUSDT = (priceUGX / UGX_PER_USDT).toFixed(4);
+
+  const boosterName =
+    selectedBoosterType === 'eagle' ? 'Eager_Miner' :
+    selectedBoosterType === 'falcon' ? 'Falcon_Miner' : 'Phoenix_Miner';
+
+  const receiptId = 'RCP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+
+  await _supabase.from('booster_requests').insert({
+    username: user.username,
+    booster_type: boosterName,
+    usdt_amount: parseFloat(priceUSDT),
+    txid: txId,
+    status: 'pending',
+    requested_at: new Date().toISOString(),
+    receipt_id: receiptId
+  });
+
+  document.getElementById('boosterModal').classList.add('hidden');
+  maybeRefreshHistory();
+  alert('Booster request submitted! Wait for admin approval.');
 }
 
 // ========================
@@ -1215,7 +1178,6 @@ miningBtn.disabled = true;
 updateClaimButton();
 timer = setInterval(updateClaimButton, 1000);
 }
-
 document.getElementById('miningBtn').onclick = async () => {
 const btn = document.getElementById('miningBtn');
 if (btn.textContent !== "Claim Funds") return;
@@ -1249,7 +1211,6 @@ user.next_claim_time = next;
 updateHomeDashboard();
 startTimer();
 };
-
 // ========================
 // 💰 UNIFIED BALANCE SYSTEM
 // ========================
@@ -1278,7 +1239,6 @@ document.getElementById('miningStatus').innerHTML = statusText;
 updateBoosterPrices();
 updateInvestPreview();
 }
-
 // ========================
 // 🎡 WHEEL GAME LOGIC — FULLY UPDATED
 // ========================
@@ -1290,7 +1250,6 @@ const ctx = canvas.getContext('2d');
 const rainCanvas = document.getElementById('rain-canvas');
 const rainCtx = rainCanvas.getContext('2d');
 let particles = [];
-
 function playTone(freq, type, dur, vol = 0.1) {
 const osc = audioCtx.createOscillator();
 const gain = audioCtx.createGain();
@@ -1301,7 +1260,6 @@ gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
 osc.connect(gain); gain.connect(audioCtx.destination);
 osc.start(); osc.stop(audioCtx.currentTime + dur);
 }
-
 const sounds = {
 tick: () => playTone(600, 'sine', 0.1, 0.05),
 loss: () => { playTone(150, 'sawtooth', 0.5); playTone(110, 'sawtooth', 0.5); },
@@ -1309,7 +1267,6 @@ smallWin: () => { playTone(523, 'sine', 0.2); setTimeout(() => playTone(659, 'si
 bigWin: () => { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => playTone(f, 'square', 0.4, 0.05), i * 100)); },
 jackpot: () => { [523, 659, 783, 1046, 1318, 1567].forEach((f, i) => setTimeout(() => playTone(f, 'sine', 1, 0.1), i * 100)); }
 };
-
 function createRain() {
 for(let i = 0; i < 100; i++) {
 particles.push({
@@ -1322,7 +1279,6 @@ color: `hsl(${Math.random() * 360}, 70%, 60%)`
 }
 animateRain();
 }
-
 function animateRain() {
 rainCtx.clearRect(0, 0, rainCanvas.width, rainCanvas.height);
 particles.forEach((p, i) => {
@@ -1334,7 +1290,6 @@ if(p.y > window.innerHeight) particles.splice(i, 1);
 });
 if(particles.length > 0) requestAnimationFrame(animateRain);
 }
-
 function drawWheel() {
 const totalSectors = sectors.length;
 const arc = (2 * Math.PI) / totalSectors;
@@ -1363,13 +1318,11 @@ ctx.fillText(label, 137, 5);
 ctx.restore();
 });
 }
-
 document.getElementById('stakeInput').addEventListener('input', () => {
 const stake = parseFloat(document.getElementById('stakeInput').value) || 0;
 const usdt = (stake / UGX_PER_USDT).toFixed(4);
 document.getElementById('stakeUSDT').textContent = `~${usdt} USDT`;
 });
-
 async function spin() {
 if (isSpinning || !user) return;
 const stakeInput = document.getElementById('stakeInput');
@@ -1464,9 +1417,7 @@ btn.textContent = "SPIN WHEEL";
 btn.disabled = false;
 }, 4000);
 }
-
 document.getElementById('spinBtn').onclick = spin;
-
 function addWheelHistory(res, amount) {
 const list = document.getElementById('wheelGameHistory');
 const item = document.createElement('div');
@@ -1476,9 +1427,7 @@ item.innerHTML = `<span>${res}</span><span style="color:${isWin ? '#00ff88' : '#
 list.insertBefore(item, list.firstChild);
 if (list.children.length > 10) list.removeChild(list.lastChild);
 }
-
 setTimeout(() => drawWheel(), 100);
-
 function resizeRainCanvas() {
 const container = document.querySelector('#tab-casino .mining-card');
 if (container) {
@@ -1486,10 +1435,8 @@ rainCanvas.width = container.clientWidth;
 rainCanvas.height = container.clientHeight;
 }
 }
-
 window.addEventListener('resize', resizeRainCanvas);
 resizeRainCanvas();
-
 // ========================
 // PROFILE & NAV
 // ========================
@@ -1500,7 +1447,6 @@ document.getElementById('editEmail').value = user.user_email || '';
 document.getElementById('editWallet').value = user.user_wallet || '';
 document.getElementById('editProfileModal').classList.remove('hidden');
 };
-
 document.getElementById('saveProfileBtn').onclick = async () => {
 const email = document.getElementById('editEmail').value.trim();
 const wallet = document.getElementById('editWallet').value.trim();
@@ -1514,7 +1460,6 @@ document.getElementById('profileUserEmail2').textContent = email;
 alert("Profile updated!");
 document.getElementById('editProfileModal').classList.add('hidden');
 };
-
 document.getElementById('avatarInput').onchange = (e) => {
 const file = e.target.files[0];
 if (file && file.type.startsWith('image/')) {
@@ -1525,21 +1470,18 @@ document.getElementById('profileAvatar').src = event.target.result;
 reader.readAsDataURL(file);
 }
 };
-
 document.getElementById('tabSignup').onclick = () => {
 document.getElementById('signupForm').classList.remove('hidden');
 document.getElementById('loginForm').classList.add('hidden');
 document.getElementById('tabSignup').classList.add('active');
 document.getElementById('tabLogin').classList.remove('active');
 };
-
 document.getElementById('tabLogin').onclick = () => {
 document.getElementById('loginForm').classList.remove('hidden');
 document.getElementById('signupForm').classList.add('hidden');
 document.getElementById('tabLogin').classList.add('active');
 document.getElementById('tabSignup').classList.remove('active');
 };
-
 document.getElementById('signupForm').onsubmit = async (e) => {
 e.preventDefault();
 const u = document.getElementById('signupUsername').value;
@@ -1553,7 +1495,6 @@ withdraw_day: null, booster_expires_at: null, booster_type: null, referral_count
 }]);
 if (error) alert(error.message); else alert("Signup Success! Please Login.");
 };
-
 document.getElementById('loginForm').onsubmit = async (e) => {
 e.preventDefault();
 const u = document.getElementById('loginUsername').value;
@@ -1566,24 +1507,20 @@ document.getElementById('authCard').classList.add('hidden');
 document.getElementById('mainApp').classList.remove('hidden');
 loadDashboard();
 };
-
 function logout() {
 user = null;
 localStorage.removeItem('ugxmine_session');
 document.getElementById('mainApp').classList.add('hidden');
 document.getElementById('authCard').classList.remove('hidden');
 }
-
 document.getElementById('authToggle').onclick = logout;
 document.getElementById('logoutBtn').onclick = logout;
-
 function maybeRefreshHistory() {
 const meTab = document.getElementById('tab-profile');
 if (meTab.classList.contains('active')) {
 loadTransactionHistory();
 }
 }
-
 // ========================
 // ✅ TRANSFER FUNDS SYSTEM
 // ========================
@@ -1592,7 +1529,6 @@ const amount = parseFloat(document.getElementById('transferAmount').value) || 0;
 const usdt = (amount / UGX_PER_USDT).toFixed(4);
 document.getElementById('transferAmountUSDT').textContent = `~${usdt} USDT`;
 });
-
 async function sendTransfer() {
 if (!user) return alert("Not logged in.");
 const recipientId = document.getElementById('transferRecipientId').value.trim();
@@ -1658,7 +1594,6 @@ console.error("Transfer failed:", err);
 alert("Transfer failed. Please try again later.");
 }
 }
-
 // ========================
 // ✅ FIXED NAVIGATION FUNCTION
 // ========================
@@ -1715,7 +1650,6 @@ loadTransactionHistory();
 }
 }
 }
-
 // ========================
 // ✅ FIXED TRANSACTION HISTORY
 // ========================
@@ -1785,7 +1719,6 @@ console.error('Error loading transaction history:', err);
 list.innerHTML = '<p class="text-red-500 text-center py-2">Failed to load history.</p>';
 }
 }
-
 // ========================
 // ✅ VIEW REAL RECEIPT FROM SUPABASE
 // ========================
@@ -1843,7 +1776,6 @@ document.getElementById('receiptContent').innerHTML = `
 `;
 document.getElementById('receiptModal').classList.remove('hidden');
 }
-
 function printReceipt() {
 const printContent = document.getElementById('receiptContent').innerHTML;
 const originalBody = document.body.innerHTML;
@@ -1860,7 +1792,6 @@ window.print();
 document.body.innerHTML = originalBody;
 location.reload();
 }
-
 async function loadDashboard() {
 ['UserName', 'UserEmail', 'UserId'].forEach(key => {
 const el1 = document.getElementById(`profile${key}`);
@@ -1877,7 +1808,6 @@ updateHomeDashboard();
 startTimer();
 switchTab('home');
 }
-
 async function restoreSession() {
 const saved = localStorage.getItem('ugxmine_session');
 if (!saved) return false;
@@ -1889,7 +1819,6 @@ if (data) { user = data; return true; }
 localStorage.removeItem('ugxmine_session');
 return false;
 }
-
 // INIT
 (async () => {
 const hasSession = await restoreSession();
