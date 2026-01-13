@@ -50,6 +50,14 @@ to { transform: rotate(360deg); }
 0%, 100% { opacity: 0.05; }
 50% { opacity: 0.12; }
 }
+/* === ANIMATED HELP TEXT BUTTON === */
+@keyframes help-flash {
+  0%, 100% { opacity: 1; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }
+  50% { opacity: 0.9; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.7); }
+}
+.animate-help-flash {
+  animation: help-flash 2.5s ease-in-out infinite;
+}
 /* 🖥️ BASE STYLES */
 body {
 background-color: #f3f4f6;
@@ -285,6 +293,11 @@ max-width: 24rem; /* ~xs size */
 background: rgba(16, 185, 129, 0.15);
 color: #10b981;
 }
+/* === HELP MODAL STYLES === */
+#helpModal {
+backdrop-filter: blur(12px);
+-webkit-backdrop-filter: blur(12px);
+}
 </style>
 </head>
 <body>
@@ -314,28 +327,7 @@ color: #10b981;
 </form>
 </div>
 </div>
-<!-- ✅ DEPOSIT INPUT MODAL -->
-<div id="depositInputModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
-<div class="bg-white p-6 rounded-xl w-96">
-<h3 class="text-lg font-bold mb-4">Enter Deposit Amount</h3>
-<p class="text-xs text-gray-600 mb-3">Minimum deposit: <strong>10,000 UGX</strong></p>
-<div class="mb-3">
-<label class="block text-xs text-gray-600 mb-1">Amount (UGX)</label>
-<input
-type="number"
-id="depositAmountInput"
-placeholder="e.g. 10000"
-class="w-full bg-gray-50 border border-gray-300 rounded px-3 py-2 text-sm"
-min="10000"
->
-<p id="depositAmountUSDT" class="text-xs text-gray-500 mt-1">~0.00 USDT</p>
-</div>
-<div class="flex gap-2">
-<button id="confirmDepositBtn" onclick="confirmDepositAmount()" class="flex-1 bg-emerald-600 py-2 rounded text-white text-sm font-medium">Continue</button>
-<button onclick="document.getElementById('depositInputModal').classList.add('hidden')" class="flex-1 bg-gray-300 py-2 rounded text-sm">Cancel</button>
-</div>
-</div>
-</div>
+
 <!-- Main App (initially hidden) -->
 <div id="mainApp" class="hidden">
 <div class="container mx-auto px-4 pb-[72px] pt-4">
@@ -372,7 +364,7 @@ min="10000"
 <p id="totalBalance" class="text-3xl font-bold text-amber-700">0 UGX</p>
 <p id="totalBalanceUSDT" class="text-sm text-gray-600">~0.00 USDT</p>
 <div class="grid grid-cols-2 gap-3 mt-4">
-<button onclick="showDepositInput()" class="bg-amber-500 hover:bg-amber-600 py-2 rounded text-sm text-white font-medium">Deposit</button>
+<button onclick="openDepositModal()" class="bg-amber-500 hover:bg-amber-600 py-2 rounded text-sm text-white font-medium">Deposit</button>
 <button onclick="openWithdrawModal()" class="bg-emerald-500 hover:bg-emerald-600 py-2 rounded text-sm text-white font-medium">Withdraw (20% fee)</button>
 </div>
 </div>
@@ -448,7 +440,7 @@ Claim Funds
 <p id="investTotalBalance" class="text-3xl font-bold text-amber-700">0 UGX</p>
 <p id="investTotalBalanceUSDT" class="text-sm text-gray-600">~0.00 USDT</p>
 <div class="grid grid-cols-2 gap-3 mt-4">
-<button onclick="showDepositInput()" class="bg-amber-500 hover:bg-amber-600 py-2 rounded text-sm text-white font-medium">Deposit</button>
+<button onclick="openDepositModal()" class="bg-amber-500 hover:bg-amber-600 py-2 rounded text-sm text-white font-medium">Deposit</button>
 <button onclick="openWithdrawModal()" class="bg-emerald-500 hover:bg-emerald-600 py-2 rounded text-sm text-white font-medium">Withdraw (20% fee)</button>
 </div>
 </div>
@@ -534,7 +526,7 @@ LOCK INVESTMENT
 <p id="casinoTotalBalance" class="text-3xl font-bold text-amber-700">0 UGX</p>
 <p id="casinoTotalBalanceUSDT" class="text-sm text-gray-600">~0.00 USDT</p>
 <div class="grid grid-cols-2 gap-3 mt-4">
-<button onclick="showDepositInput()" class="bg-amber-500 hover:bg-amber-600 py-2 rounded text-sm text-white font-medium">Deposit</button>
+<button onclick="openDepositModal()" class="bg-amber-500 hover:bg-amber-600 py-2 rounded text-sm text-white font-medium">Deposit</button>
 <button onclick="openWithdrawModal()" class="bg-emerald-500 hover:bg-emerald-600 py-2 rounded text-sm text-white font-medium">Withdraw (20% fee)</button>
 </div>
 </div>
@@ -699,6 +691,33 @@ Send Funds
 </button>
 </div>
 </nav>
+
+<!-- ✨ Animated "Help" Floating Button (Post-Login Only) -->
+<div id="helpButton" class="fixed bottom-20 right-4 z-50 px-3 py-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg cursor-pointer hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 animate-help-flash">
+  <span class="text-white font-bold text-sm tracking-wide">Help</span>
+</div>
+
+<!-- Help Chat Modal -->
+<div id="helpModal" class="fixed bottom-24 right-4 w-80 max-w-[90vw] bg-white/90 backdrop-blur-sm rounded-xl shadow-2xl p-4 z-50 hidden border border-emerald-200">
+  <div class="flex justify-between items-center mb-3">
+    <h4 class="font-bold text-gray-800">Help Center</h4>
+    <button id="closeHelpBtn" class="text-gray-500 hover:text-gray-800"><i class="fas fa-times text-sm"></i></button>
+  </div>
+  <div id="helpMessages" class="mb-3 max-h-40 overflow-y-auto space-y-2 text-sm">
+    <div class="bg-gray-100 p-2 rounded-lg">Ask me about: deposits, withdrawals, boosters, claiming, investments, or transfers.</div>
+  </div>
+  <div class="flex gap-2">
+    <input
+      type="text"
+      id="helpInput"
+      placeholder="Type your question..."
+      class="flex-1 bg-gray-50 border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+      maxlength="100"
+    />
+    <button id="sendHelpBtn" class="bg-emerald-600 text-white px-3 rounded text-sm">Send</button>
+  </div>
+</div>
+
 </div>
 <!-- MODALS -->
 <div id="editProfileModal" class="fixed inset-0 bg-black/70 flex items-center justify-center hidden z-50">
@@ -722,7 +741,6 @@ Send Funds
 </div>
 </div>
 </div>
-
 <!-- ✅ UNIFIED PAYMENT MODAL (MOBILE MONEY → DIRECT REDIRECT) -->
 <div id="paymentModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
 <div class="bg-white p-6 rounded-xl w-96">
@@ -750,7 +768,7 @@ Send Funds
 </div>
 <!-- MOBILE MONEY SECTION (NO INPUT – JUST REDIRECT) -->
 <div id="mobileSection" class="hidden">
-  <p class="text-sm text-center text-amber-600">Redirecting to PesaPal...</p>
+<p class="text-sm text-center text-amber-600">Redirecting to PesaPal...</p>
 </div>
 <div class="flex gap-2">
 <button id="submitPaymentBtn" onclick="submitPayment()" class="flex-1 bg-emerald-600 py-2 rounded text-white">Continue</button>
@@ -758,45 +776,39 @@ Send Funds
 </div>
 </div>
 </div>
-
 <!-- ✅ BOOSTER MODAL (MOBILE MONEY → DIRECT REDIRECT) -->
 <div id="boosterModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
-  <div class="bg-white p-6 rounded-xl w-96">
-    <h3 class="text-lg font-bold mb-3" id="boosterModalTitle">Activate Booster</h3>
-    <p id="boosterModalCurrent" class="text-gray-600 text-sm mb-1">Currently: ...</p>
-    <p id="boosterModalNew" class="text-emerald-600 font-bold mb-2">After: ...</p>
-
-    <!-- Payment Method Toggle -->
-    <div class="flex mb-4 bg-gray-100 rounded-lg p-1 mt-3">
-      <button id="boosterPayMethodCrypto" class="auth-tab active flex-1 text-center">Crypto (USDT)</button>
-      <button id="boosterPayMethodMobile" class="auth-tab flex-1 text-center">Mobile Money</button>
-    </div>
-
-    <!-- CRYPTO SECTION -->
-    <div id="boosterCryptoSection">
-      <p class="text-sm mb-1">Price: <span id="boosterModalPriceUGX">0 UGX</span></p>
-      <p class="text-sm mb-3">Send <strong id="boosterModalPriceUSDT">0.00</strong> USDT to the admin wallet below using <strong>Arbitrum Network</strong>:</p>
-      <div class="flex items-center bg-gray-100 p-2 rounded mb-3">
-        <code id="adminWalletBooster" class="text-xs break-all flex-1">0xb9fec9b1a49726089f058de4f4225ecbaa88cbbc</code>
-        <button onclick="copyAdminWallet()" class="text-emerald-500 ml-2 text-sm">Copy</button>
-      </div>
-      <p class="text-xs text-red-500 mb-3">⚠️ <strong>Arbitrum ONLY!</strong> Sending from BSC, Ethereum, or TRON will lose your funds.</p>
-      <p class="text-sm mb-2">Enter Transaction ID:</p>
-      <input type="text" id="txIdInput" class="w-full bg-gray-100 p-2 rounded mb-4" placeholder="e.g. 0xabc123...">
-    </div>
-
-    <!-- MOBILE MONEY SECTION (NO INPUT) -->
-    <div id="boosterMobileSection" class="hidden">
-      <p class="text-sm text-center text-amber-600">Redirecting to PesaPal...</p>
-    </div>
-
-    <div class="flex gap-2">
-      <button id="submitBoosterBtn" onclick="submitBoosterRequest()" class="flex-1 bg-emerald-600 py-2 rounded text-white">Continue</button>
-      <button onclick="document.getElementById('boosterModal').classList.add('hidden')" class="flex-1 bg-gray-300 py-2 rounded">Cancel</button>
-    </div>
-  </div>
+<div class="bg-white p-6 rounded-xl w-96">
+<h3 class="text-lg font-bold mb-3" id="boosterModalTitle">Activate Booster</h3>
+<p id="boosterModalCurrent" class="text-gray-600 text-sm mb-1">Currently: ...</p>
+<p id="boosterModalNew" class="text-emerald-600 font-bold mb-2">After: ...</p>
+<!-- Payment Method Toggle -->
+<div class="flex mb-4 bg-gray-100 rounded-lg p-1 mt-3">
+<button id="boosterPayMethodCrypto" class="auth-tab active flex-1 text-center">Crypto (USDT)</button>
+<button id="boosterPayMethodMobile" class="auth-tab flex-1 text-center">Mobile Money</button>
 </div>
-
+<!-- CRYPTO SECTION -->
+<div id="boosterCryptoSection">
+<p class="text-sm mb-1">Price: <span id="boosterModalPriceUGX">0 UGX</span></p>
+<p class="text-sm mb-3">Send <strong id="boosterModalPriceUSDT">0.00</strong> USDT to the admin wallet below using <strong>Arbitrum Network</strong>:</p>
+<div class="flex items-center bg-gray-100 p-2 rounded mb-3">
+<code id="adminWalletBooster" class="text-xs break-all flex-1">0xb9fec9b1a49726089f058de4f4225ecbaa88cbbc</code>
+<button onclick="copyAdminWallet()" class="text-emerald-500 ml-2 text-sm">Copy</button>
+</div>
+<p class="text-xs text-red-500 mb-3">⚠️ <strong>Arbitrum ONLY!</strong> Sending from BSC, Ethereum, or TRON will lose your funds.</p>
+<p class="text-sm mb-2">Enter Transaction ID:</p>
+<input type="text" id="txIdInput" class="w-full bg-gray-100 p-2 rounded mb-4" placeholder="e.g. 0xabc123...">
+</div>
+<!-- MOBILE MONEY SECTION (NO INPUT) -->
+<div id="boosterMobileSection" class="hidden">
+<p class="text-sm text-center text-amber-600">Redirecting to PesaPal...</p>
+</div>
+<div class="flex gap-2">
+<button id="submitBoosterBtn" onclick="submitBoosterRequest()" class="flex-1 bg-emerald-600 py-2 rounded text-white">Continue</button>
+<button onclick="document.getElementById('boosterModal').classList.add('hidden')" class="flex-1 bg-gray-300 py-2 rounded">Cancel</button>
+</div>
+</div>
+</div>
 <!-- ✅ RECEIPT MODAL -->
 <div id="receiptModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50">
 <div class="bg-white p-6 rounded-xl w-96 max-w-[95vw] shadow-xl">
@@ -825,7 +837,6 @@ let user = null;
 let timer;
 const UGX_PER_USDT = 3700;
 const DAILY_TRANSFER_LIMIT = 10000000; // 10 million UGX
-
 // ==== FOMO DATA GENERATOR ====
 const ugNames = ["Mugisha", "Nalweyiso", "Kato", "Namutebi", "Ssebunya", "Kyomuhendo", "Nabwire", "Okello", "Tumwine", "Ahebwe"];
 const boosterTypes = ["Eager_Miner", "Falcon_Miner", "Phoenix_Miner"];
@@ -877,33 +888,11 @@ const interval = setInterval(feed, 8000 + Math.random() * 4000);
 fomoIntervals.push({ id: containerId, interval });
 }
 // ========================
-// LIVE USDT UPDATE FOR DEPOSIT INPUT
+// ✅ DIRECT DEPOSIT — NO PROMPT
 // ========================
-document.getElementById('depositAmountInput').addEventListener('input', () => {
-const amount = parseFloat(document.getElementById('depositAmountInput').value) || 0;
-const usdt = (amount / UGX_PER_USDT).toFixed(4);
-document.getElementById('depositAmountUSDT').textContent = `~${usdt} USDT`;
-});
-// ========================
-// SHOW DEPOSIT INPUT MODAL
-// ========================
-function showDepositInput() {
-document.getElementById('depositInputModal').classList.remove('hidden');
-document.getElementById('depositAmountInput').value = '';
-document.getElementById('depositAmountUSDT').textContent = '~0.00 USDT';
-}
-// ========================
-// CONFIRM DEPOSIT AMOUNT & OPEN PAYMENT MODAL
-// ========================
-function confirmDepositAmount() {
-const input = document.getElementById('depositAmountInput');
-const amount = parseFloat(input.value);
-if (!amount || amount < 10000) {
-alert('Minimum deposit is 10,000 UGX');
-return;
-}
-document.getElementById('depositInputModal').classList.add('hidden');
-openPaymentModal('deposit', amount, 'Deposit Funds');
+function openDepositModal() {
+  const minDeposit = 10000; // 10,000 UGX minimum
+  openPaymentModal('deposit', minDeposit, 'Deposit Funds');
 }
 // ========================
 // INVESTMENT LOGIC (10X at 100 days)
@@ -953,35 +942,29 @@ function copyAdminWallet() {
 navigator.clipboard.writeText(ADMIN_WALLET);
 alert('Admin Arbitrum wallet copied!');
 }
-
 // 💥 CRITICAL: UNIFIED MOBILE MONEY REDIRECTS
 document.getElementById('payMethodMobile').onclick = () => {
-  window.location.href = 'https://store.pesapal.com/ugxmine';
+window.location.href = 'https://store.pesapal.com/ugxmine';
 };
-
 document.getElementById('boosterPayMethodMobile').onclick = () => {
-  window.location.href = 'https://store.pesapal.com/ugxmine';
+window.location.href = 'https://store.pesapal.com/ugxmine';
 };
-
 // Keep crypto toggles for UI consistency
 document.getElementById('payMethodCrypto').onclick = () => {
-  document.getElementById('payMethodCrypto').classList.add('active');
-  document.getElementById('payMethodMobile').classList.remove('active');
-  document.getElementById('cryptoSection').classList.remove('hidden');
-  document.getElementById('mobileSection').classList.add('hidden');
+document.getElementById('payMethodCrypto').classList.add('active');
+document.getElementById('payMethodMobile').classList.remove('active');
+document.getElementById('cryptoSection').classList.remove('hidden');
+document.getElementById('mobileSection').classList.add('hidden');
 };
-
 document.getElementById('boosterPayMethodCrypto').onclick = () => {
-  document.getElementById('boosterPayMethodCrypto').classList.add('active');
-  document.getElementById('boosterPayMethodMobile').classList.remove('active');
-  document.getElementById('boosterCryptoSection').classList.remove('hidden');
-  document.getElementById('boosterMobileSection').classList.add('hidden');
+document.getElementById('boosterPayMethodCrypto').classList.add('active');
+document.getElementById('boosterPayMethodMobile').classList.remove('active');
+document.getElementById('boosterCryptoSection').classList.remove('hidden');
+document.getElementById('boosterMobileSection').classList.add('hidden');
 };
-
 let currentPaymentType = null;
 let currentPaymentAmountUGX = 0;
 let currentPaymentUSDT = 0;
-
 function openPaymentModal(type, amountUGX, description) {
 currentPaymentType = type;
 currentPaymentAmountUGX = amountUGX;
@@ -1001,58 +984,56 @@ document.getElementById('paymentTxId').value = '';
 document.getElementById('payMethodCrypto').click();
 document.getElementById('paymentModal').classList.remove('hidden');
 }
-
 // ✅ submitPayment handles ONLY crypto now
 async function submitPayment() {
-  // === CRYPTO PATH ONLY ===
-  const txId = document.getElementById('paymentTxId').value.trim();
-  if (!txId) return alert('Please enter Transaction ID.');
-  const actionMap = {
-    deposit: 'deposit_requests',
-    invest: 'investment_requests',
-    withdraw: 'withdraw_requests'
-  };
-  const table = actionMap[currentPaymentType];
-  if (!table) return;
-  const receiptId = 'RCP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
-  const data = {
-    username: user.username,
-    txid: txId,
-    status: 'pending',
-    requested_at: new Date().toISOString(),
-    receipt_id: receiptId
-  };
-  if (currentPaymentType === 'deposit') {
-    data.ugx_amount = currentPaymentAmountUGX;
-    data.usdt_amount = parseFloat(currentPaymentUSDT);
-  }
-  else if (currentPaymentType === 'invest') {
-    const days = parseInt(document.getElementById('durationSlider').value);
-    const multiplier = getMultiplier(days);
-    data.ugx_amount = currentPaymentAmountUGX;
-    data.ugx_return = currentPaymentAmountUGX * multiplier;
-    data.usdt_paid = parseFloat(currentPaymentUSDT);
-    data.days = days;
-    data.multiplier = multiplier;
-    data.maturity_time = new Date(Date.now() + days * 24 * 3600000).toISOString();
-  }
-  else if (currentPaymentType === 'withdraw') {
-    data.ugx_amount = user.balance || 0;
-    data.ugx_fee = currentPaymentAmountUGX;
-    data.usdt_fee = parseFloat(currentPaymentUSDT);
-  }
-  await _supabase.from(table).insert(data);
-  document.getElementById('paymentModal').classList.add('hidden');
-  maybeRefreshHistory();
-  if (currentPaymentType === 'withdraw') {
-    alert('Withdrawal request submitted!\nSend the 20% fee and wait for admin approval.');
-  } else {
-    alert(`Request submitted! Wait for admin approval.`);
-  }
+// === CRYPTO PATH ONLY ===
+const txId = document.getElementById('paymentTxId').value.trim();
+if (!txId) return alert('Please enter Transaction ID.');
+const actionMap = {
+deposit: 'deposit_requests',
+invest: 'investment_requests',
+withdraw: 'withdraw_requests'
+};
+const table = actionMap[currentPaymentType];
+if (!table) return;
+const receiptId = 'RCP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+const data = {
+username: user.username,
+txid: txId,
+status: 'pending',
+requested_at: new Date().toISOString(),
+receipt_id: receiptId
+};
+if (currentPaymentType === 'deposit') {
+data.ugx_amount = currentPaymentAmountUGX;
+data.usdt_amount = parseFloat(currentPaymentUSDT);
 }
-
+else if (currentPaymentType === 'invest') {
+const days = parseInt(document.getElementById('durationSlider').value);
+const multiplier = getMultiplier(days);
+data.ugx_amount = currentPaymentAmountUGX;
+data.ugx_return = currentPaymentAmountUGX * multiplier;
+data.usdt_paid = parseFloat(currentPaymentUSDT);
+data.days = days;
+data.multiplier = multiplier;
+data.maturity_time = new Date(Date.now() + days * 24 * 3600000).toISOString();
+}
+else if (currentPaymentType === 'withdraw') {
+data.ugx_amount = user.balance || 0;
+data.ugx_fee = currentPaymentAmountUGX;
+data.usdt_fee = parseFloat(currentPaymentUSDT);
+}
+await _supabase.from(table).insert(data);
+document.getElementById('paymentModal').classList.add('hidden');
+maybeRefreshHistory();
+if (currentPaymentType === 'withdraw') {
+alert('Withdrawal request submitted!\nSend the 20% fee and wait for admin approval.');
+} else {
+alert(`Request submitted! Wait for admin approval.`);
+}
+}
 // ========================
-// ORIGINAL openDepositModal REMOVED – REPLACED BY showDepositInput()
+// ORIGINAL openDepositModal REMOVED – REPLACED BY openDepositModal()
 // ========================
 function openInvestModal() {
 const amount = parseFloat(document.getElementById('customInvestAmount').value);
@@ -1067,7 +1048,6 @@ const balance = user.balance || 0;
 const fee = balance * 0.2;
 openPaymentModal('withdraw', fee, 'Withdraw Fee');
 }
-
 // ========================
 // ✅ BOOSTER SYSTEM WITH DIRECT PESAPAL REDIRECT
 // ========================
@@ -1086,72 +1066,57 @@ document.getElementById(`price${b.id}`).textContent =
 `${priceUGX.toLocaleString()} UGX (~${priceUSDT} USDT)`;
 });
 }
-
 let selectedBoosterType, selectedBoosterHours, selectedBoosterReward;
 function openBoosterModal(type, hours, reward) {
-  if (!user) return;
-  selectedBoosterType = type;
-  selectedBoosterHours = hours;
-  selectedBoosterReward = reward;
-
-  const balance = user.balance || 0;
-  const multiplier = type === 'eagle' ? 2 : type === 'falcon' ? 4 : 8;
-  const priceUGX = balance * multiplier;
-  const priceUSDT = (priceUGX / UGX_PER_USDT).toFixed(4);
-
-  const currentReward = user.mining_reward || 5000;
-  const currentHours = user.mining_cycle_hours || 24;
-  const newReward = currentReward + reward;
-
-  document.getElementById('boosterModalTitle').textContent = `Activate ${type.charAt(0).toUpperCase() + type.slice(1)}_Miner`;
-  document.getElementById('boosterModalCurrent').innerHTML = `Currently: <strong>${currentReward.toLocaleString()} UGX / ${currentHours}h</strong>`;
-  document.getElementById('boosterModalNew').innerHTML = `After: <strong>${newReward.toLocaleString()} UGX / 2h</strong>`;
-
-  // Update crypto section
-  document.getElementById('boosterModalPriceUGX').textContent = `${priceUGX.toLocaleString()} UGX`;
-  document.getElementById('boosterModalPriceUSDT').textContent = priceUSDT;
-  document.getElementById('adminWalletBooster').textContent = ADMIN_WALLET;
-  document.getElementById('txIdInput').value = '';
-
-  // Reset to crypto tab
-  document.getElementById('boosterPayMethodCrypto').click();
-
-  document.getElementById('boosterModal').classList.remove('hidden');
+if (!user) return;
+selectedBoosterType = type;
+selectedBoosterHours = hours;
+selectedBoosterReward = reward;
+const balance = user.balance || 0;
+const multiplier = type === 'eagle' ? 2 : type === 'falcon' ? 4 : 8;
+const priceUGX = balance * multiplier;
+const priceUSDT = (priceUGX / UGX_PER_USDT).toFixed(4);
+const currentReward = user.mining_reward || 5000;
+const currentHours = user.mining_cycle_hours || 24;
+const newReward = currentReward + reward;
+document.getElementById('boosterModalTitle').textContent = `Activate ${type.charAt(0).toUpperCase() + type.slice(1)}_Miner`;
+document.getElementById('boosterModalCurrent').innerHTML = `Currently: <strong>${currentReward.toLocaleString()} UGX / ${currentHours}h</strong>`;
+document.getElementById('boosterModalNew').innerHTML = `After: <strong>${newReward.toLocaleString()} UGX / 2h</strong>`;
+// Update crypto section
+document.getElementById('boosterModalPriceUGX').textContent = `${priceUGX.toLocaleString()} UGX`;
+document.getElementById('boosterModalPriceUSDT').textContent = priceUSDT;
+document.getElementById('adminWalletBooster').textContent = ADMIN_WALLET;
+document.getElementById('txIdInput').value = '';
+// Reset to crypto tab
+document.getElementById('boosterPayMethodCrypto').click();
+document.getElementById('boosterModal').classList.remove('hidden');
 }
-
 // Only handle crypto submissions now
 async function submitBoosterRequest() {
-  const txId = document.getElementById('txIdInput').value.trim();
-  if (!txId) return alert('Please enter Transaction ID.');
-
-  if (!user || !selectedBoosterType) return;
-
-  const balance = user.balance || 0;
-  const multiplier = selectedBoosterType === 'eagle' ? 2 : selectedBoosterType === 'falcon' ? 4 : 8;
-  const priceUGX = balance * multiplier;
-  const priceUSDT = (priceUGX / UGX_PER_USDT).toFixed(4);
-
-  const boosterName =
-    selectedBoosterType === 'eagle' ? 'Eager_Miner' :
-    selectedBoosterType === 'falcon' ? 'Falcon_Miner' : 'Phoenix_Miner';
-
-  const receiptId = 'RCP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
-
-  await _supabase.from('booster_requests').insert({
-    username: user.username,
-    booster_type: boosterName,
-    usdt_amount: parseFloat(priceUSDT),
-    txid: txId,
-    status: 'pending',
-    requested_at: new Date().toISOString(),
-    receipt_id: receiptId
-  });
-
-  document.getElementById('boosterModal').classList.add('hidden');
-  maybeRefreshHistory();
-  alert('Booster request submitted! Wait for admin approval.');
+const txId = document.getElementById('txIdInput').value.trim();
+if (!txId) return alert('Please enter Transaction ID.');
+if (!user || !selectedBoosterType) return;
+const balance = user.balance || 0;
+const multiplier = selectedBoosterType === 'eagle' ? 2 : selectedBoosterType === 'falcon' ? 4 : 8;
+const priceUGX = balance * multiplier;
+const priceUSDT = (priceUGX / UGX_PER_USDT).toFixed(4);
+const boosterName =
+selectedBoosterType === 'eagle' ? 'Eager_Miner' :
+selectedBoosterType === 'falcon' ? 'Falcon_Miner' : 'Phoenix_Miner';
+const receiptId = 'RCP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+await _supabase.from('booster_requests').insert({
+username: user.username,
+booster_type: boosterName,
+usdt_amount: parseFloat(priceUSDT),
+txid: txId,
+status: 'pending',
+requested_at: new Date().toISOString(),
+receipt_id: receiptId
+});
+document.getElementById('boosterModal').classList.add('hidden');
+maybeRefreshHistory();
+alert('Booster request submitted! Wait for admin approval.');
 }
-
 // ========================
 // CLAIM BUTTON LOGIC
 // ========================
@@ -1819,6 +1784,67 @@ if (data) { user = data; return true; }
 localStorage.removeItem('ugxmine_session');
 return false;
 }
+
+// === FLOATING HELP BOT ===
+document.getElementById('helpButton').onclick = () => {
+  document.getElementById('helpModal').classList.remove('hidden');
+  document.getElementById('helpInput').focus();
+};
+
+document.getElementById('closeHelpBtn').onclick = () => {
+  document.getElementById('helpModal').classList.add('hidden');
+};
+
+function addHelpMessage(text, isUser = false) {
+  const msgDiv = document.createElement('div');
+  msgDiv.className = `p-2 rounded-lg text-xs ${isUser ? 'bg-emerald-100 ml-auto max-w-[80%]' : 'bg-gray-100'}`;
+  msgDiv.textContent = text;
+  document.getElementById('helpMessages').appendChild(msgDiv);
+  document.getElementById('helpMessages').scrollTop = document.getElementById('helpMessages').scrollHeight;
+}
+
+const helpResponses = {
+  deposit: "To deposit, go to Home → click 'Deposit', enter at least 10,000 UGX, and pay via USDT (Arbitrum) or Mobile Money.",
+  withdraw: "Withdrawals require a 20% fee paid upfront (it is shown on withdraw window). Your full balance is sent after admin approval (Make sure the same number paying, is the same number to receive automatically). Go to Home → Withdraw.",
+  claim: "Click 'Claim Funds' every 24h (or faster with a booster). Boosters reset after withdrawal.",
+  booster: "Boosters reduce your claim cycle to 2h and increase rewards. Prices are based on your current balance. Buy from the Home tab.",
+  invest: "Investments require at least 2× your balance. Returns scale up to 10× over 100 days. Use the Invest tab to lock funds.",
+  transfer: "You can send UGX to other users by ID. Daily limit: 10,000,000 UGX. Find it in the 'Me' section.",
+  wallet: "Set your Arbitrum wallet in 'Me' → Edit Profile. All withdrawals go to this address after approval.",
+  mobile: "Mobile Money payments redirect to PesaPal. Make sure to complete the payment there.",
+  crypto: "Always use Arbitrum network for USDT. Sending from BSC/Ethereum will lose your funds!",
+  support: "Contact admin at auraaimoney@gmail.com for urgent issues."
+};
+
+function getAutoReply(query) {
+  const q = query.toLowerCase();
+  if (q.includes('deposit') || q.includes('fund') || q.includes('add money')) return helpResponses.deposit;
+  if (q.includes('withdraw') || q.includes('cash out') || q.includes('take money')) return helpResponses.withdraw;
+  if (q.includes('claim') || q.includes('reward') || q.includes('mine')) return helpResponses.claim;
+  if (q.includes('boost') || q.includes('eager') || q.includes('falcon') || q.includes('phoenix')) return helpResponses.booster;
+  if (q.includes('invest') || q.includes('lock') || q.includes('return')) return helpResponses.invest;
+  if (q.includes('send') || q.includes('transfer') || q.includes('give')) return helpResponses.transfer;
+  if (q.includes('wallet') || q.includes('address') || q.includes('arbitrum')) return helpResponses.wallet;
+  if (q.includes('mobile') || q.includes('pesapal') || q.includes('momo')) return helpResponses.mobile;
+  if (q.includes('crypto') || q.includes('usdt') || q.includes('bsc') || q.includes('ethereum')) return helpResponses.crypto;
+  if (q.includes('help') || q.includes('support') || q.includes('contact') || q.includes('admin')) return helpResponses.support;
+  return "I'm not sure. Try asking about: deposits, withdrawals, boosters, claiming, investments, or transfers.";
+}
+
+document.getElementById('sendHelpBtn').onclick = () => {
+  const input = document.getElementById('helpInput');
+  const query = input.value.trim();
+  if (!query) return;
+  addHelpMessage(query, true);
+  const reply = getAutoReply(query);
+  setTimeout(() => addHelpMessage(reply), 300);
+  input.value = '';
+};
+
+document.getElementById('helpInput').onkeypress = (e) => {
+  if (e.key === 'Enter') document.getElementById('sendHelpBtn').click();
+};
+
 // INIT
 (async () => {
 const hasSession = await restoreSession();
